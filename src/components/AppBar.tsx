@@ -1,5 +1,5 @@
-import React from 'react';
-import { AppBar as MuiAppBar, IconButton, Toolbar, Typography, TextField, Box, InputAdornment, Avatar} from '@mui/material';
+import React, { useState } from 'react';
+import { AppBar as MuiAppBar, IconButton, Toolbar, Typography, TextField, Box, InputAdornment, Avatar, Menu, MenuItem} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import mailIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/mail icon small.svg"
@@ -10,6 +10,19 @@ import dropdownIcon from "../assets/logos and Icons-20230907T172301Z-001/logos a
 const drawerWidth = 232;
 
 const AppBar = ({ open, toggleDrawer }) => {
+  const [anchorElement,setAnchorElement] = useState<null| HTMLElement>(null);
+  const openUserProfile = Boolean(anchorElement)
+
+  const handleOpenUserProfile = (event: MouseEvent<HTMLButtonElement>) => {
+      setAnchorElement(event.currentTarget);
+  };
+
+  const handleCloseUserProfile = ()=>{
+    setAnchorElement(null);
+  }
+
+
+
   return (
     <MuiAppBar  position="fixed"  
       sx={{ height:"68px", boxShadow:"none", backgroundColor:"#fff", borderBottom:"1px solid #E5E7EB",
@@ -47,11 +60,18 @@ const AppBar = ({ open, toggleDrawer }) => {
             <img src={bellIcon} alt="mailIcon" style={{ width:"24px", height:"24px", color:"#111827"}} />
           </IconButton>
 
-          <Box sx={{display:"flex", alignItems:"center", gap:"4px" }}>
+          <Box onClick={handleOpenUserProfile} sx={{ cursor:"pointer", display:"flex", alignItems:"center", gap:"4px" }}>
               <Avatar src={userImage} alt='userImage' />
               <Typography sx={{fontSize:"16px", fontWeight:"400", color:"#374151" }}>James Miano</Typography>
               <img src={dropdownIcon} alt="dropdownIcon" />
           </Box>
+
+          <Menu id="basic-menu" sx={{ '& .MuiPaper-root': { width: '168px', maxWidth: 'none'}}} anchorEl={anchorElement} open={openUserProfile} onClose={handleCloseUserProfile} MenuListProps={{'aria-labelledby': 'basic-button',}}>
+            <MenuItem onClick={handleCloseUserProfile}>Profile</MenuItem>
+            <MenuItem onClick={handleCloseUserProfile}>My account</MenuItem>
+            <MenuItem onClick={handleCloseUserProfile}>Logout</MenuItem>
+          </Menu>
+
         </Box>
       </Box>
       </Toolbar>

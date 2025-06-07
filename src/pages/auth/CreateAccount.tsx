@@ -9,17 +9,14 @@ import twitterIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos
 import facebookIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/facebook icon blue.svg"
 import eyeIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon eye.svg"
 import bgImage from "../../assets/images-20230907T172340Z-001/images/Sign up  Loading  1.jpg"
+import type { ICreateAccountFormData } from '../../types/auth'
+import { createAccount } from '../../components/services/authServices'
 
-
-interface formData {
-    name:string,
-    email:string,
-    password:string,
-} 
 
 const CreateAccount:React.FC = () => {
- const [formData,setFormData]  = useState<formData>({name:"", email:"",password:""});
+ const [formData,setFormData]  = useState<ICreateAccountFormData>({username:"", email:"",password:"",acceptTermsAndConditions:false});
  const [showPassword,setShowPassword]  = useState(false)
+ const [isSubmitting,setIsSubmitting]  = useState<boolean>(false)
 
 
  const handleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
@@ -27,8 +24,32 @@ const CreateAccount:React.FC = () => {
     setFormData((prev)=>({...prev, [name]:value}))
  }
 
- const handleChecked = ()=>{
- }
+ const handleCreateAccount = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+   
+    const accountData = {
+      name: formData.username,
+      email: formData.email,
+      password: formData.password,
+      acceptTermsAndConditons: formData.acceptTermsAndConditions,
+    };
+    try {
+      const response = await createAccount(accountData);
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+      setFormData({ username:"", email:"", password:"", acceptTermsAndConditions:false})
+    
+    } catch (error) {
+      console.error("Error creating account:", error);
+    }finally{
+      setIsSubmitting(false)
+    }
+  };
+
+const handleChecked = (e: React.ChangeEvent<HTMLInputElement>) => {
+  setFormData(prev => ({...prev,acceptTermsAndConditions: e.target.checked }));
+};
 
   return (
      <Box sx={{ opacity:0.9, position:"relative", width:"100%", height:"100vh", backgroundColor:"rgba(36, 46, 58, 0.70)" }}>
@@ -56,11 +77,11 @@ const CreateAccount:React.FC = () => {
                   <Divider sx={{ borderWidth:"1px", width:"26%"}}/>
                 </Box>
 
-              <form style={{ width:"100%", display:"flex", alignItems:"start", flexDirection:"column", gap:"10px" }}>
+              <form onSubmit={handleCreateAccount} style={{ width:"100%", display:"flex", alignItems:"start", flexDirection:"column", gap:"10px" }}>
                 <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
-                    <FormLabel  htmlFor="name" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Name</FormLabel>
-                    <TextField type="text"  name="name" value={formData.name} onChange={handleChange} placeholder="Name" fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                    <FormLabel  htmlFor="username" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Username</FormLabel>
+                    <TextField type="text"  name="username" value={formData.username} onChange={handleChange} placeholder="username" fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
                   </FormControl>
                 </Box>
                 <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
@@ -84,7 +105,7 @@ const CreateAccount:React.FC = () => {
                     }}}  control={<Checkbox sx={{ borderRadius:"4px"}}  onChange={handleChecked}/>} /> 
                   </Box>
                 </Box>
-                <Button type="submit" variant="contained" disabled={!formData.email || !formData.password || !formData.name} sx={{ marginTop:"10px", width:"100%", height:"50px",backgroundColor:"#1A56DB" , color:"#fff", borderRadius:"12px", fontWeight:"600", fontSize:"16px", textAlign:"center" }}>Create account</Button>
+                <Button type="submit" variant="contained" loading={isSubmitting} disabled={!formData.username || !formData.password || !formData.email || !formData.acceptTermsAndConditions} sx={{ marginTop:"10px", width:"100%", height:"50px",backgroundColor:"#1A56DB" , color:"#fff", borderRadius:"12px", fontWeight:"600", fontSize:"16px", textAlign:"center" }}>Create account</Button>
                 <Box sx={{ marginTop:"10px", width:"100%", display:"flex", gap:"4px"}}>
                     <Typography variant="body2" sx={{fontSize:"14px", fontWeight:"500", textAlign:"start" }}>Already have account ?</Typography>
                     <Link to={"/"} style={{ textDecoration:"none", color:"#2563EB" , fontWeight:"500", fontSize:"14px"}}>Login here</Link>

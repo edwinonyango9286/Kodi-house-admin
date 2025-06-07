@@ -31,53 +31,64 @@ const drawerWidth = 232;
 
 const Drawer = ({open,toggleDrawer,children,
   navItems = [
-    { text: <Typography sx={{  fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Welcome James</Typography>, icon:<HiOutlineLightningBolt fontSize={20}/>, path:"/user-profile" },
-    { text: <Typography sx={{  fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Dashboard</Typography>, icon: <IoHomeOutline fontSize={20} />, path: '/dashboard' },
-    { text: <Typography sx={{ fontSize:"16px", fontWeight:"700" ,textAlign:"start"}}>Properties</Typography>, icon: <PiBuildingOffice  fontSize={20} />, path:"/properties"},
-    { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Landlords</Typography>, icon: <FiUsers fontSize={20} />, path:"/landlords",},
-    { text: <Typography sx={{  fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Users</Typography>, icon: <FiUsers fontSize={20 } />, path: '/users'},
-    { text: <Typography sx={{fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Reports</Typography>, icon: <SlBriefcase fontSize={20} />, path:"/reports",
+    { text: <Typography sx={{  fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Welcome James</Typography>, icon:<HiOutlineLightningBolt fontSize={20}/>, path:"user-profile" },
+    { text: <Typography sx={{  fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Dashboard</Typography>, icon: <IoHomeOutline fontSize={20} />, path: 'dashboard' },
+    { text: <Typography sx={{ fontSize:"16px", fontWeight:"700" ,textAlign:"start"}}>Properties</Typography>, icon: <PiBuildingOffice  fontSize={20} />, path:"properties"},
+    { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Landlords</Typography>, icon: <FiUsers fontSize={20} />, path:"landlords",},
+    { text: <Typography sx={{  fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Users</Typography>, icon: <FiUsers fontSize={20 } />, path: 'users'},
+    { text: <Typography sx={{fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Reports</Typography>, icon: <SlBriefcase fontSize={20} />, path:"reports",
       children: [
-        { text: <Typography sx={{ fontSize:"16px", fontWeight:"500", textAlign:"start"}}>Invoices</Typography>,path: '/invoices' },
-        { text: <Typography sx={{ fontSize:"16px", fontWeight:"500", textAlign:"start"}}>Payments</Typography>,path: '/payments' },
-        { text: <Typography sx={{ fontSize:"16px", fontWeight:"500", textAlign:"start"}}>Receipts</Typography>,path: '/receipts' },
+        { text: <Typography sx={{ fontSize:"16px", fontWeight:"500", textAlign:"start"}}>Invoices</Typography>,path: 'invoices' },
+        { text: <Typography sx={{ fontSize:"16px", fontWeight:"500", textAlign:"start"}}>Payments</Typography>,path: 'payments' },
+        { text: <Typography sx={{ fontSize:"16px", fontWeight:"500", textAlign:"start"}}>Receipts</Typography>,path: 'receipts' },
       ]
     },
-    { text: <Typography sx={{ cursor:"pointer", fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Setups</Typography>,icon: <HiAdjustments fontSize={20} />, path: '/settings' },
+    { text: <Typography sx={{ cursor:"pointer", fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Setups</Typography>,icon: <HiAdjustments fontSize={20} />, path: 'setups' },
   ]
 }: DrawerProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
-  const handleNavigation = (path?: string) => {
-    if (!path) return;
-    
-    if (path === '/logout') {
-      console.log('Logging out...');
-      // navigate('/login');
-    } else {
-      navigate(path);
-    }
-  };
+const handleNavigation = (path?: string) => {
+  if (!path) return;
+  
+  if (path === 'logout') {
+    console.log('Logging out...');
+    // navigate('/login');
+  } else if (path === 'dashboard') {
+    navigate('/dashboard'); // Special case for dashboard index route
+  } else {
+    navigate(`/dashboard/${path}`);
+  }
+};
+
+const isActive = (path?: string) => {
+  if (!path) return false;
+  
+  const currentPath = location.pathname.replace(/\/+$/, '');
+  
+  // Special case for dashboard
+  if (path === 'dashboard') {
+    return currentPath === '/dashboard';
+  }
+  
+  return currentPath === `/dashboard/${path}` || 
+         (path !== '' && currentPath.startsWith(`/dashboard/${path}/`));
+};
 
   const toggleExpand = (text: string) => {
     setExpandedItems(prev => ({...prev,[text]: !prev[text]}));
   };
 
-  const isActive = (path?: string) => {
-    if (!path) return false;
-    return location.pathname === path || (path !== '/' && location.pathname.startsWith(path))};
-
   const renderItem = (item: DrawerItem, depth = 0) => {
     const hasChildren = item.children && item.children.length > 0;
     const isItemExpanded = expandedItems[item.text] ?? false;
-    const itemIsActive = isActive(item.path) || 
-                        (hasChildren && item.children?.some(child => isActive(child.path)));
+    const itemIsActive = isActive(item.path) || (hasChildren && item.children?.some(child => isActive(child.path)));
 
     return (
       <React.Fragment key={`${item.text}-${depth}`}>
-        <ListItem  button 
+        <ListItem component={"div"}
           onClick={() => {
             if (hasChildren) {
               toggleExpand(item.text);
@@ -85,8 +96,7 @@ const Drawer = ({open,toggleDrawer,children,
               handleNavigation(item.path);
             }
           }}
-          sx={{ width:"208px", my:"4px", height:"40px", borderRadius:"8px",cursor:"pointer", pl: depth === 0 ? 2 : depth * 3, marginLeft:"10px", backgroundColor: itemIsActive ? 'rgba(37, 99, 235, 0.12)' : 'inherit',
-            '&:hover': { backgroundColor: 'rgba(37, 99, 235, 0.08)'}
+          sx={{ width:"208px", my:"4px", height:"40px", borderRadius:"8px",cursor:"pointer", pl: depth === 0 ? 2 : depth * 3, marginLeft:"10px", backgroundColor: itemIsActive ? 'rgba(37, 99, 235, 0.12)' : 'inherit', '&:hover': { backgroundColor: 'rgba(37, 99, 235, 0.08)'}
           }}
         >
           <ListItemIcon sx={{color:"#333", minWidth: depth > 0 ? '24px' : '36px'}}>{item.icon}</ListItemIcon>
@@ -106,56 +116,12 @@ const Drawer = ({open,toggleDrawer,children,
   };
 
   return (
-    <MuiDrawer  variant="permanent" 
-      open={open} 
-      sx={{
-        boxShadow:"none",
-        width: drawerWidth, 
-        flexShrink: 0,
-        '& .MuiDrawer-paper': { 
-          width: drawerWidth, 
-          boxSizing: 'border-box',
-          overflowX: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          borderRight: 'none',
-          boxShadow: '0px 0px 20px rgba(0, 0, 0, 0.1)'
-        }
-      }}
-    >
+    <MuiDrawer  variant="permanent" open={open} sx={{ boxShadow:"none", width: drawerWidth, flexShrink: 0, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', overflowX: 'hidden', display: 'flex', flexDirection: 'column', borderRight: 'none', boxShadow: '0px 0px 20px rgba(0, 0, 0, 0.1)' }}}>
       {/* Logo Section */}
-      <Box sx={{ 
-        position: "relative", 
-        padding: "20px", 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center", 
-        width: "100%", 
-        backgroundColor: "#2563EB", 
-        height: "68px",
-        flexShrink: 0
-      }}>
+      <Box sx={{ position: "relative",  padding: "20px",  display: "flex",  alignItems: "center", justifyContent: "center", width: "100%", backgroundColor: "#2563EB", height: "68px",flexShrink: 0}}>
         <img src={logoWhite} alt="logoWhite" style={{ maxWidth: '80%' }} />
-        <Box sx={{ 
-          top: "44px",
-          left: "78px",  
-          borderRadius: "4px", 
-          display: "flex",
-          alignItems: "center", 
-          justifyContent: "center", 
-          padding: "10px", 
-          position: "absolute",  
-          width: "60px", 
-          height: "20px",
-        }}>
-          <Typography sx={{
-            fontSize: "12px", 
-            fontWeight: "600", 
-            textAlign: "center", 
-            color: "#fff"
-          }}>
-            Admin
-          </Typography>
+        <Box sx={{top: "44px",left: "78px",borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", position: "absolute", width: "60px", height: "20px",}}>
+          <Typography sx={{fontSize: "12px", fontWeight: "600", textAlign: "center", color: "#fff"}}>Admin </Typography>
         </Box>
       </Box>
 
@@ -168,13 +134,7 @@ const Drawer = ({open,toggleDrawer,children,
 
       {/* Custom Children Content */}
       {children && (
-        <Box sx={{ 
-          p: 2,
-          borderTop: '1px solid rgba(0, 0, 0, 0.12)',
-          flexShrink: 0
-        }}>
-          {children}
-        </Box>
+        <Box sx={{padding:"16px", borderTop: '1px solid rgba(0, 0, 0, 0.12)',flexShrink: 0 }}>{children}</Box>
       )}
     </MuiDrawer>
   );

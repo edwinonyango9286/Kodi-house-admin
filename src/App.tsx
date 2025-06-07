@@ -8,6 +8,16 @@ import EmailVerification from './pages/auth/EmailVerification'
 import CodeVerification from './pages/auth/CodeVerification'
 import DashboardLayout from './components/DashboardLayout'
 import Dashboard from './pages/Dashboard'
+import Profile from './pages/Profile'
+import Payments from './pages/Payments'
+import Invoices from './pages/Invoices'
+import Receipts from './pages/Receipts'
+import Setups from './pages/Setups'
+import Users from './pages/Users'
+import Landlords from './pages/Landlords'
+import Properties from './pages/Properties'
+
+
 
 
 function App() {
@@ -22,12 +32,17 @@ function App() {
         <Route path='/email-verification' element={<EmailVerification/>}/>
         <Route path='/code-verification' element={<CodeVerification/>}/>
 
-        <Route  path='/dashboard' element={<DashboardLayout/>}>
+        <Route path='/dashboard' element={<DashboardLayout/>}>
         <Route index element={<Dashboard/>}/> 
-
+        <Route path='user-profile' element={<Profile/>}/>
+        <Route path='payments' element={<Payments/>} />
+        <Route path="invoices" element={<Invoices/>}/>
+        <Route path="receipts" element={<Receipts/>}/>
+        <Route path="setups" element={<Setups/>}/>
+        <Route path="properties" element={<Properties/>}/>
+        <Route path="users" element={<Users/>}/>
+        <Route path='landlords' element={<Landlords/>}/>
         </Route>
-
- 
       </Routes>
     </Router>
     </>
