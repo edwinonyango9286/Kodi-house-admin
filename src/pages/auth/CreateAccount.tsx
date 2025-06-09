@@ -9,12 +9,12 @@ import twitterIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos
 import facebookIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/facebook icon blue.svg"
 import eyeIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon eye.svg"
 import bgImage from "../../assets/images-20230907T172340Z-001/images/Sign up  Loading  1.jpg"
-import type { ICreateAccountFormData } from '../../types/auth'
+import type { ICreateAccountPayload } from '../../types/types'
 import { createAccount } from '../../components/services/authServices'
 
 
 const CreateAccount:React.FC = () => {
- const [formData,setFormData]  = useState<ICreateAccountFormData>({username:"", email:"",password:"",acceptTermsAndConditions:false});
+ const [formData,setFormData]  = useState<ICreateAccountPayload>({username:"", email:"",password:"",acceptTermsAndConditions:false});
  const [showPassword,setShowPassword]  = useState<boolean>(false)
  const [isSubmitting,setIsSubmitting]  = useState<boolean>(false)
 
@@ -29,11 +29,12 @@ const CreateAccount:React.FC = () => {
     setIsSubmitting(true);
    
     const accountData = {
-      name: formData.username,
+      username: formData.username,
       email: formData.email,
       password: formData.password,
-      acceptTermsAndConditons: formData.acceptTermsAndConditions,
+      acceptTermsAndConditions: formData.acceptTermsAndConditions,
     };
+
     try {
       const response = await createAccount(accountData);
       localStorage.setItem('accessToken', response.accessToken);
@@ -94,7 +95,7 @@ const handleChecked = (e: React.ChangeEvent<HTMLInputElement>) => {
                 <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
                     <FormLabel htmlFor="password" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Password</FormLabel>
-                    <TextField type={showPassword ? "password" : "text"} name="password" value={formData.password} onChange={handleChange} placeholder="************************" fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}} InputProps={{ endAdornment:(<InputAdornment onClick={()=>setShowPassword(!showPassword)} sx={{cursor:"pointer"}} position='end'><img style={{ width:"20px", height:"20px" }} src={eyeIcon} alt="eyeIcon" /></InputAdornment>) }} />
+                    <TextField type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} placeholder="************************" fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}} InputProps={{ endAdornment:(<InputAdornment onClick={()=>setShowPassword(!showPassword)} sx={{cursor:"pointer"}} position='end'><img style={{ width:"20px", height:"20px" }} src={eyeIcon} alt="eyeIcon" /></InputAdornment>) }} />
                   </FormControl>
                 </Box>
 

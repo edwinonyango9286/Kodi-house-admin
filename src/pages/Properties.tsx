@@ -53,7 +53,7 @@ const Properties = () => {
 
         <Divider sx={{ borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1"}}/>
 
-        <Box sx={{display:"flex", justifyContent:"space-between"}}>
+        <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
 
           <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
             <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>

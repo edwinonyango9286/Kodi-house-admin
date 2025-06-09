@@ -1,20 +1,10 @@
 import { newRequest } from "../newRequest";
+import type {ICreateAccountPayload, ICreateAccountResponse} from "../../types/types"
 
-interface CreateAccountPayload {
-  name:string,
-  email: string;
-  password: string;
-  acceptTermsAndConditons:boolean
-}
 
-interface CreateAccountResponse {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export const createAccount = async (accountData: CreateAccountPayload): Promise<CreateAccountResponse> => {
+export const createAccount = async (accountData: ICreateAccountPayload): Promise<ICreateAccountResponse> => {
   try {
-    const response = await newRequest.post<CreateAccountResponse>('create-account',accountData);
+    const response = await newRequest.post<ICreateAccountResponse>('create-account',accountData);
     return response.data;
   } catch (error) {
     console.log(error)

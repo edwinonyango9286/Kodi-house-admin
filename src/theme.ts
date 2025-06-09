@@ -113,3 +113,17 @@ export const getDesignTokens = (mode: PaletteMode) => createTheme({
 
   },
 });
+
+export const getModalStyle = (mode: PaletteMode) => ({
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: { xs: '90%', sm: 400, md: 500 },
+  bgcolor: mode === 'dark' ? '#1e1e1e' : '#fff',
+  border: 'none',
+  borderRadius: '12px',
+  boxSadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",
+  padding:"24px",
+  outline: 'none',
+});

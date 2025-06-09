@@ -65,7 +65,7 @@ const SignIn : React.FC = () => {
                   <Box sx={{display:"flex",}}>
                     <FormControlLabel label="Remember me" sx={{ "& .MuiFormControlLabel-label":{
                       fontSize:"12px", color:"#6B7280", fontWeight:"500"
-                    }}}  control={<Checkbox sx={{ borderRadius:"4px"}}  onChange={handleChecked}/>} /> 
+                    }}}  control={<Checkbox onChange={handleChecked}/>}/> 
                   </Box>
                     <Link to={"/forgot-password"} style={{ fontSize:"12px", fontWeight:"500", textAlign:"end", color:"#2563EB", textDecoration:"none",}}>Forgot your password?</Link>
                 </Box>
