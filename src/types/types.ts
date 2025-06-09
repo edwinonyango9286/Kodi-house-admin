@@ -20,6 +20,16 @@ export interface ICreateRolePayload {
 export interface ICreateRoleResponse {
   status: boolean;
   message: string;
-  data?: []; 
+}
+
+export interface ICreatePermissionPayload {
+  permissionName:string,
+  status:string,
+  description:string
+}
+
+export interface ICreatePermissionResponse {
+  status:boolean,
+  message:string
 }
 

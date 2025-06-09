@@ -4,14 +4,14 @@ import arrowUpIcon from "../assets/logos and Icons-20230907T172301Z-001/logos an
 import chatIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/chat Icon.svg"
 import arrowDownRedIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/arrow down red.svg"
 import chartRedIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/chat red icon.svg"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import {Link } from "react-router-dom"
 import userImage from "../assets/Avatars square-20230907T172556Z-001/Avatars square/WebP/Demi Wilkinson.webp"
 import adilFloyd from "../assets/Avatars square-20230907T172556Z-001/Avatars square/WebP/Adil Floyd.webp"
 import { useState } from 'react';
 import dotVerticalIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
 import {DataGrid} from "@mui/x-data-grid"
-import type {GridColDef,GridRowsProp } from "@mui/x-data-grid"
+import type {GridColDef,} from "@mui/x-data-grid"
 
 
 const Dashboard = () => {
@@ -29,19 +29,19 @@ interface Transaction {
   description?: string;
 }
 
-const transactionsRows:GridRowsProp<Transaction>[] = [
-  { id: 1, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
-  { id: 2, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
-  { id: 3, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
-  { id: 4, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
-  { id: 5, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
-  { id: 6, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
-  { id: 7, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
-  { id: 8, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
-  { id: 9, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
-  { id: 10, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
-  { id: 11, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
-  { id: 12, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+const transactionsRows:Transaction[] = [
+  { id: 1, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"completed"},
+  { id: 2, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"pending"},
+  { id: 3, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"pending"},
+  { id: 4, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"failed"},
+  { id: 5, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"completed"},
+  { id: 6, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"failed"},
+  { id: 7, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"refunded"},
+  { id: 8, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"failed"},
+  { id: 9, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"completed"},
+  { id: 10, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"pending"},
+  { id: 11, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"pending"},
+  { id: 12, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"failed"},
 ]
 
   const transactionsColumns: GridColDef<Transaction>[] =[
@@ -49,11 +49,37 @@ const transactionsRows:GridRowsProp<Transaction>[] = [
     { field: 'transactionId', headerName: 'Transaction Id', flex:1 },
     { field: 'date',headerName: 'Date',type: 'date', flex:1,},
     { field: 'amount', headerName: 'Amount', flex:1 },
-    { field: 'status', headerName: 'Status', flex:1 },
+    { field: 'status', headerName: 'Status', flex:1 , renderCell:(params) =>(<Typography sx={{ paddingY:"4px", display:"flex",alignItems:"center", justifyContent:"center", borderRadius:"16px", marginTop:"10px", width:"100px", color: params.value === "completed" ? "#027A48" : params.value === "pending" ? "#2563EB" : params.value === "failed" ? "#B42318": params.value === "refunded" ? "#344054" : "", textAlign:"center",  backgroundColor: params.value === "completed" ? "#ECFDF3": params.value ==="pending" ? "#EFF6FF" : params.value === "failed" ? "#FEF3F2" : params.value === "refunded" ? "#F2F4F7" :"" }}>{params.value}</Typography>) },
   ]  
+
+
+    const salesData = [
+    { month: 'Jan', sales: 4000 },
+    { month: 'Feb', sales: 3000 },
+    { month: 'Mar', sales: 5000 },
+    { month: 'Apr', sales: 2780 },
+    { month: 'May', sales: 1890 },
+    { month: 'Jun', sales: 2390 },
+    { month: 'Jul', sales: 3490 },
+    { month: 'Aug', sales: 4000 },
+    { month: 'Sep', sales: 6000 },
+    { month: 'Oct', sales: 7000 },
+    { month: 'Nov', sales: 8000 },
+    { month: 'Dec', sales: 9000 },
+  ];
+
+  const dailyData = [
+  { day: 'Mon', sales: 1200 },
+  { day: 'Tue', sales: 1900 },
+  { day: 'Wed', sales: 1500 },
+  { day: 'Thu', sales: 2100 },
+  { day: 'Fri', sales: 1800 },
+  { day: 'Sat', sales: 2500 },
+  { day: 'Sun', sales: 1700 },
+];
   
   return (
-    <Box sx={{width:"100%",}}>
+    <Box sx={{width:"100%",}}> 
       <Box sx={{width:"100%",display:"flex",alignItems:"start",gap:"12px", flexDirection:"column"}}>
       <Box sx={{ width:"100%", display: 'flex', gap:"24px", marginBottom:"24px", }}>
         <Paper elevation={0} sx={{ display:"flex", flexDirection:"column", gap:"12px", border:"1px solid #EAECF0", borderRadius:"8px", cursor:"pointer", padding:"20px 16px", flex: 1,boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)" }}>
@@ -138,7 +164,7 @@ const transactionsRows:GridRowsProp<Transaction>[] = [
       <Box sx={{ width:"100%", display:"flex",gap:"20px"}}>  
         <Box sx={{ width:"76%", display:"flex", gap:"20px", flexDirection:"column"}}>
 
-         <Paper elevation={0} sx={{padding:"24px",width:"100%", height:"400px", backgroundColor:"#fff",boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)"}}>
+         <Paper elevation={0} sx={{padding:"24px",width:"100%", height:"600px", backgroundColor:"#fff",boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)"}}>
           <Box sx={{ width:"100%",display:"flex",flexDirection:"column", gap:"10px"}}> 
             <Box sx={{width:"100%", display:"flex", justifyContent:"space-between"}}>
               <Typography variant='body2'  sx={{width:"50%",color:"#1F2937", fontWeight:"700", fontSize:"20px", textAlign:"start", }}>Total payment (Ksh 11,353,373.67)</Typography>
@@ -156,16 +182,30 @@ const transactionsRows:GridRowsProp<Transaction>[] = [
                 </IconButton>
 
               </Box>
-
             </Box>
-           <BarChart width={500} height={300} data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="value" fill="#1976d2" />
-          </BarChart>
+            <Box sx={{width:"100%", marginTop:"14px"}}>
+              <ResponsiveContainer width="100%" height={500}>
+                { selectedTimePeriod ==="Weekly" ? 
+                    <BarChart data={dailyData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                       <XAxis dataKey="day" />
+                       <YAxis />
+                       <Tooltip />
+                       <Legend />
+                       <Bar dataKey="sales" fill="#2563EB" />
+                  </BarChart>
+                :
+                <BarChart data={salesData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="sales" fill="#2563EB" />
+                </BarChart>}
+              </ResponsiveContainer>
+            </Box>
+
           </Box>
          </Paper>
 
@@ -200,7 +240,7 @@ const transactionsRows:GridRowsProp<Transaction>[] = [
          </Box>
         </Box>
 
-        <Paper elevation={0} sx={{ padding:"20px 16px", width:"24%", height:"820px", backgroundColor:"#fff" , boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)"}}>
+        <Paper elevation={0} sx={{ padding:"20px 16px", width:"24%", height:"1020px", backgroundColor:"#fff" , boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"10px"}}>
            <Box sx={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between"}}>
               <Typography sx={{ fontSize:"20px", fontWeight:"700", color:"#101828"}}>Activity</Typography>
@@ -222,7 +262,7 @@ const transactionsRows:GridRowsProp<Transaction>[] = [
           <Typography sx={{fontWeight:"600", fontSize:"20px", color:"#111827", textAlign:"start"}}>Transactions</Typography>
           <Typography sx={{fontWeight:"400", fontSize:"14px", color:"##6B7280", textAlign:"start"}}>This is a list of latest transactions.</Typography>
           <Box sx={{ width:"100%", marginTop:"20px"}}>
-             <DataGrid sx={{ width:"100%", height:"476px"}} rows={transactionsRows} columns={transactionsColumns} pageSize={5} pageSizeOptions={[10,20,50,100]} />
+             <DataGrid sx={{ width:"100%", height:"476px"}} rows={transactionsRows} columns={transactionsColumns} pageSizeOptions={[10,20,50,100]} />
           </Box>
         </Box>
       </Paper>

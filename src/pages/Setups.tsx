@@ -4,19 +4,31 @@ import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/log
 import {useTheme } from '@mui/material';
 import { getModalStyle } from '../theme';
 import cancelIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/cancel Icon.svg"
-import type {ICreateRolePayload } from "../types/types"
+import type {ICreateRolePayload ,ICreatePermissionPayload } from "../types/types"
 import { createRole } from '../components/services/roleService';
+import { createPermission } from '../components/services/permissionServices';
 
 
 const Setups:React.FC = () => {
   const [formData,setFormData] = useState<ICreateRolePayload>({roleName:"",description:"", status:""})
+  const [permissionFormData, setPermissionFormData] = useState<ICreatePermissionPayload>({ permissionName: "", status:"", description:"" })
   const [isSubmiting,setIsSubmitting] = React.useState<boolean>(false)
   const theme = useTheme()
   const modalStyles =  getModalStyle(theme.palette.mode)
 
   const [openAddRoleModal, setOpenAddRoleModal] = React.useState(false);
   const handleOpenAddRoleModal = () => setOpenAddRoleModal(true);
-  const handleCloseAddRoleModal = () => setOpenAddRoleModal(false);
+  const handleCloseAddRoleModal = () =>{
+    setOpenAddRoleModal(false);
+    setFormData({ roleName:"", description:"",status:""})
+  };
+
+  const [openAddPermissionModal, setOpenAddPermissionModal] = React.useState(false);
+  const handleOpenAddPermissionModal = () => setOpenAddPermissionModal(true);
+  const handleCloseAddPermissionModal = () =>{
+    setOpenAddPermissionModal(false);
+    setPermissionFormData({permissionName:"", status:"", description:""})
+  }
 
 
   interface sidebarItem {
@@ -47,6 +59,11 @@ const Setups:React.FC = () => {
   const [permission,setPermission] = React.useState('');
   const handleChange = (event: SelectChangeEvent) => {
    setPermission(event.target.value as string);
+  };
+
+  const [selectedRole,setSelectedRole] = React.useState('');
+  const handleSelectRole = (event: SelectChangeEvent) => {
+   setSelectedRole(event.target.value as string);
   };
 
   const roles = [
@@ -85,6 +102,11 @@ const Setups:React.FC = () => {
   setFormData((prev)=>({...prev, [name]:value}))
  }
 
+ const handleInputChangeForPermissions = (e:React.ChangeEvent<HTMLInputElement>) =>{
+  const {name,value} = e.target
+  setPermissionFormData((prev)=>({ ...prev,[name]:value}))
+ }
+
  const roleStatus = [
   {id:1,name:"Active"},
   {id:2,name:"Inactive"},
@@ -111,9 +133,34 @@ const Setups:React.FC = () => {
   }
  }
 
+  const handleCreatePermission = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setIsSubmitting(true)
+
+    const permissionData = {
+      permissionName:permissionFormData.permissionName,
+      description:permissionFormData.description,
+      status:permissionFormData.status
+    }
+  try {
+    const response = await createPermission(permissionData);
+    console.log(response)
+
+  } catch (error) {
+    console.log(error)
+
+  } finally{
+    setIsSubmitting(false)
+  }
+ }
+
 
  const handleStatusChange = (e:SelectChangeEvent) => {
   setFormData((prev)=>({...prev,status:e.target.value as string }))
+ }
+
+ const handleStatusChangeForPermission = (e:SelectChangeEvent)=>{
+  setPermissionFormData((prev)=>({...prev, status:e.target.value as string}))
  }
 
   return (
@@ -132,8 +179,8 @@ const Setups:React.FC = () => {
           <Typography variant='body2' sx={{ fontSize:"18px", fontWeight:"500",color:"#374151"}}>Select Role and change its Permissions</Typography>
         <Box sx={{width:"24%",}}>
         <FormControl fullWidth>
-          <Select id="demo-simple-select" value={permission} onChange={handleChange} sx={{ height:"48px", width:"100%"}} >
-            {roles.map((role)=>(<MenuItem value={role.id}>{role.name}</MenuItem>))}
+          <Select id="demo-simple-select" value={selectedRole} onChange={handleSelectRole} sx={{ height:"48px", width:"100%"}} >
+            {roles.map((role)=>(<MenuItem key={role.id} value={role.id}>{role.name}</MenuItem>))}
          </Select>
         </FormControl>
         </Box>
@@ -161,7 +208,7 @@ const Setups:React.FC = () => {
                 <Box sx={{ width:"40%",}}>
                  <FormControl fullWidth>
                      <Select id="demo-simple-select" value={permission} onChange={handleChange} sx={{ height:"40px", width:"100%"}} >
-                       {roles.map((role)=>(<MenuItem value={role.id}>{role.name}</MenuItem>))}
+                       {permissions.map((permission)=>(<MenuItem key={permission.id} value={permission.id}>{permission.name}</MenuItem>))}
                      </Select>
                 </FormControl>
                 </Box> 
@@ -178,7 +225,6 @@ const Setups:React.FC = () => {
 
               </Box>
             
-               
             </Box>
             <Divider sx={{width:"100%", borderWidth:"1px", backgroundColor:"#EDF2F6)" }} />
 
@@ -203,7 +249,7 @@ const Setups:React.FC = () => {
                 <Button variant='contained' sx={{height:"48px" , backgroundColor:"#2563EB", color:"#fff", borderRadius:"8px", fontSize:"14px", fontWeight:"500" , boxShadow:"none",":hover":{ boxShadow:"none"}}}>Update</Button>
                 <Button onClick={handleOpenAddRoleModal} variant='contained' sx={{height:"48px" , backgroundColor:"#FFF", color:"#344054", borderRadius:"8px", fontSize:"14px", fontWeight:"500" , boxShadow:"none", ":hover":{boxShadow:"none"}}}>Add role</Button>
                 <Button variant='contained' sx={{height:"48px" , backgroundColor:"#FFF", color:"#344054", borderRadius:"8px", fontSize:"14px", fontWeight:"500" ,boxShadow:"none", ":hover":{boxShadow:"none"} }}>Rename Role</Button>
-                <Button variant='contained' sx={{height:"48px" , backgroundColor:"#FFF", color:"#344054", borderRadius:"8px", fontSize:"14px", fontWeight:"500" , boxShadow:"none" ,":hover":{boxShadow:"none"} }}>Add permission</Button>
+                <Button onClick={handleOpenAddPermissionModal} variant='contained' sx={{height:"48px" , backgroundColor:"#FFF", color:"#344054", borderRadius:"8px", fontSize:"14px", fontWeight:"500" , boxShadow:"none" ,":hover":{boxShadow:"none"} }}>Add permission</Button>
                 <Button variant='contained' sx={{height:"48px" , backgroundColor:"#FFF", color:"#344054", borderRadius:"8px", fontSize:"14px", fontWeight:"500" , boxShadow:"none", ":hover":{ boxShadow:"none"} }}>Delete permission</Button>
               </Box>
             </Box>
@@ -219,9 +265,8 @@ const Setups:React.FC = () => {
         <Box sx={modalStyles}>
           <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
              <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Create new role</Typography>
-             <IconButton onClick={handleCloseAddRoleModal} ><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+             <IconButton onClick={handleCloseAddRoleModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
           </Box>
-         <Divider sx={{width:"100%", borderWidth:"1px", backgroundColor:"#DDDFE1"}}/>
 
          <form onSubmit={handleCreateRole} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
             <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
@@ -248,14 +293,51 @@ const Setups:React.FC = () => {
               </Box>
 
               <Button type='submit' loading={isSubmiting} variant='contained' disabled={!formData.roleName || !formData.status || !formData.description} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
-
          </form>
 
         </Box>
       </Modal>
 
-      </Paper>}
 
+        {/* add permission modal */}
+       <Modal open={openAddPermissionModal} onClose={handleCloseAddPermissionModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <Box sx={modalStyles}>
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
+             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Create permission</Typography>
+             <IconButton onClick={handleCloseAddPermissionModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+          </Box>
+
+         <form onSubmit={handleCreatePermission} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
+            <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                     <FormLabel  htmlFor="PermissionName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Permission Name</FormLabel>
+                     <TextField type="text"  name="permissionName" value={permissionFormData.permissionName} onChange={handleInputChangeForPermissions} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+             </Box>
+
+                <Box sx={{ width:"100%",}}>
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
+                     <Select  value={permissionFormData.status} onChange={handleStatusChangeForPermission} sx={{width:"100%"}} >
+                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+                </Box> 
+
+                <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                    <FormLabel  htmlFor="description" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Description</FormLabel>
+                    <TextField type="text"  multiline rows={4} maxRows={4} name="description" value={permissionFormData.description} onChange={handleInputChangeForPermissions} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+              </Box>
+
+              <Button type='submit' loading={isSubmiting} variant='contained' disabled={!permissionFormData.permissionName || !permissionFormData.status || !permissionFormData.description} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+         </form>
+
+        </Box>
+      </Modal>
+
+    </Paper>}
 
       </Box>
     </Box>
