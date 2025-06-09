@@ -118,10 +118,10 @@ const isActive = (path?: string) => {
   return (
     <MuiDrawer  variant="permanent" open={open} sx={{ boxShadow:"none", width: drawerWidth, flexShrink: 0, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', overflowX: 'hidden', display: 'flex', flexDirection: 'column', borderRight: 'none', boxShadow: '0px 0px 20px rgba(0, 0, 0, 0.1)' }}}>
       {/* Logo Section */}
-      <Box sx={{ position: "relative",  padding: "20px",  display: "flex",  alignItems: "center", justifyContent: "center", width: "100%", backgroundColor: "#2563EB", height: "68px",flexShrink: 0}}>
+      <Box onClick={()=>navigate("")} sx={{ cursor:"pointer", position: "relative",  padding: "20px",  display: "flex",alignItems: "center",justifyContent: "center", width: "100%", backgroundColor: "#2563EB", height: "68px",flexShrink: 0}}>
         <img src={logoWhite} alt="logoWhite" style={{ maxWidth: '80%' }} />
         <Box sx={{top: "44px",left: "78px",borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", position: "absolute", width: "60px", height: "20px",}}>
-          <Typography sx={{fontSize: "12px", fontWeight: "600", textAlign: "center", color: "#fff"}}>Admin </Typography>
+          <Typography sx={{fontSize: "12px", fontWeight: "600", textAlign: "center", color: "#fff"}}>Admin</Typography>
         </Box>
       </Box>
 

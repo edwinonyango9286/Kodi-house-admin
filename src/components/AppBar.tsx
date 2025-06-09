@@ -49,7 +49,7 @@ const AppBar = ({ open, toggleDrawer }) => {
               <IconButton aria-label="open drawer" onClick={toggleDrawer}>
                 <MenuIcon sx={{color:"#242E3A"}} />
               </IconButton>
-           <TextField variant='outlined' placeholder='Search...' InputProps={{ startAdornment:(<InputAdornment position='start' sx={{display:"flex", alignItems:"center", justifyContent:"start"}}><img src={searchIcon} alt="searchIcon"/></InputAdornment>),sx:{ width:"400px", height:"56px"} }} sx={{ width:"168px", '& .MuiOutlinedInput-root': {height: '40px',}}}/>
+           <TextField variant='outlined' placeholder='Search' InputProps={{ startAdornment:(<InputAdornment position='start' sx={{display:"flex", alignItems:"center", justifyContent:"start"}}><img src={searchIcon} alt="searchIcon"/></InputAdornment>),sx:{ width:"400px", height:"56px"} }} sx={{ width:"168px", '& .MuiOutlinedInput-root': {height: '40px',}}}/>
         </Box>
          <Box sx={{width:"50%" , display:"flex", gap:'10px', justifyContent:"end", alignItems:"center"}}>
           <IconButton sx={{}}>

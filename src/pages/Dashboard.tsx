@@ -10,11 +10,47 @@ import userImage from "../assets/Avatars square-20230907T172556Z-001/Avatars squ
 import adilFloyd from "../assets/Avatars square-20230907T172556Z-001/Avatars square/WebP/Adil Floyd.webp"
 import { useState } from 'react';
 import dotVerticalIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
+import {DataGrid} from "@mui/x-data-grid"
+import type {GridColDef,GridRowsProp } from "@mui/x-data-grid"
 
 
 const Dashboard = () => {
   const data:[] =[]
   const [selectedTimePeriod, setSelectedTimePeriod] = useState<string>("Weekly")
+
+interface Transaction {
+  id:number;
+  date: Date;
+  transaction:string;
+  amount: string; 
+  status: 'pending' | 'completed' | 'failed' | 'refunded'; 
+  transactionId: string; 
+  currency?: string; 
+  description?: string;
+}
+
+const transactionsRows:GridRowsProp<Transaction>[] = [
+  { id: 1, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+  { id: 2, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+  { id: 3, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+  { id: 4, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+  { id: 5, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+  { id: 6, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+  { id: 7, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+  { id: 8, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+  { id: 9, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+  { id: 10, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+  { id: 11, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+  { id: 12, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"Completed"},
+]
+
+  const transactionsColumns: GridColDef<Transaction>[] =[
+    { field: 'transaction', headerName: 'Transaction', flex:1 },
+    { field: 'transactionId', headerName: 'Transaction Id', flex:1 },
+    { field: 'date',headerName: 'Date',type: 'date', flex:1,},
+    { field: 'amount', headerName: 'Amount', flex:1 },
+    { field: 'status', headerName: 'Status', flex:1 },
+  ]  
   
   return (
     <Box sx={{width:"100%",}}>
@@ -23,7 +59,9 @@ const Dashboard = () => {
         <Paper elevation={0} sx={{ display:"flex", flexDirection:"column", gap:"12px", border:"1px solid #EAECF0", borderRadius:"8px", cursor:"pointer", padding:"20px 16px", flex: 1,boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)" }}>
           <Box sx={{display:"flex", justifyContent:"space-between"}}>
            <Typography sx={{color:"#1F2937", fontSize:"20px", fontWeight:"700"}} variant="h6">Total Landlords</Typography>
-           <img src={dotsVerticalIcon} alt="dotsVerticalIcon"/>
+           <IconButton>
+            <img style={{width:"24px", height:'24px'}} src={dotsVerticalIcon} alt="dotsVerticalIcon"/>
+           </IconButton>
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
@@ -41,7 +79,9 @@ const Dashboard = () => {
        <Paper elevation={0} sx={{ display:"flex", flexDirection:"column", gap:"12px", border:"1px solid #EAECF0", borderRadius:"8px", cursor:"pointer", padding:"20px 16px", flex: 1,boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)" }}>
           <Box sx={{display:"flex", justifyContent:"space-between"}}>
            <Typography sx={{color:"#1F2937", fontSize:"20px", fontWeight:"700"}} variant="h6">Total Tenants</Typography>
-           <img src={dotsVerticalIcon} alt="dotsVerticalIcon"/>
+            <IconButton>
+             <img style={{height:"24px", width:"24px" }} src={dotsVerticalIcon} alt="dotsVerticalIcon"/>
+           </IconButton>
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
@@ -58,7 +98,9 @@ const Dashboard = () => {
         <Paper elevation={0} sx={{ display:"flex", flexDirection:"column", gap:"12px", border:"1px solid #EAECF0", borderRadius:"8px", cursor:"pointer", padding:"20px 16px", flex: 1,boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)" }}>
           <Box sx={{display:"flex", justifyContent:"space-between"}}>
            <Typography sx={{color:"#1F2937", fontSize:"20px", fontWeight:"700"}} variant="h6">Total Properties</Typography>
-           <img src={dotsVerticalIcon} alt="dotsVerticalIcon"/>
+           <IconButton>
+             <img style={{width:"24px", height:"24px"}} src={dotsVerticalIcon} alt="dotsVerticalIcon"/>
+           </IconButton>
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
@@ -75,7 +117,9 @@ const Dashboard = () => {
         <Paper elevation={0} sx={{ display:"flex", flexDirection:"column", gap:"12px", border:"1px solid #EAECF0", borderRadius:"8px", cursor:"pointer", padding:"20px 16px", flex: 1, boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)" }}>
           <Box sx={{display:"flex", justifyContent:"space-between"}}>
            <Typography sx={{color:"#1F2937", fontSize:"20px", fontWeight:"700"}} variant="h6">Total Units</Typography>
-           <img src={dotsVerticalIcon} alt="dotsVerticalIcon"/>
+           <IconButton>
+             <img style={{width:"24px", height:"24px"}} src={dotsVerticalIcon} alt="dotsVerticalIcon"/>
+           </IconButton>
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
@@ -173,10 +217,13 @@ const Dashboard = () => {
         </Paper> 
       </Box>
 
-      <Paper elevation={0} sx={{padding:"20px", width:"100%",height:"400px",backgroundColor:"#fff",marginTop:"10px", boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)"}}>
-        <Box sx={{ display:"flex", flexDirection:"column",gap:"4px"}}>
+      <Paper elevation={0} sx={{padding:"20px", width:"100%",height:"600px",backgroundColor:"#fff",marginTop:"10px", boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)"}}>
+        <Box sx={{ height:"100%", display:"flex", flexDirection:"column",gap:"4px"}}>
           <Typography sx={{fontWeight:"600", fontSize:"20px", color:"#111827", textAlign:"start"}}>Transactions</Typography>
           <Typography sx={{fontWeight:"400", fontSize:"14px", color:"##6B7280", textAlign:"start"}}>This is a list of latest transactions.</Typography>
+          <Box sx={{ width:"100%", marginTop:"20px"}}>
+             <DataGrid sx={{ width:"100%", height:"476px"}} rows={transactionsRows} columns={transactionsColumns} pageSize={5} pageSizeOptions={[10,20,50,100]} />
+          </Box>
         </Box>
       </Paper>
       

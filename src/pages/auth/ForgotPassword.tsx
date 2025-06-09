@@ -18,9 +18,6 @@ const ForgotPassword: React.FC =  () => {
         setFormData((prev)=>({...prev,[name]:value}))
     }
 
-    const handleChecked = (e) =>{
-
-    }
 
   return (
        <Box sx={{ opacity:0.9, position:"relative", width:"100%", height:"100vh", backgroundColor:"rgba(36, 46, 58, 0.70)" }}>

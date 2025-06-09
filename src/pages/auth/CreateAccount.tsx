@@ -15,7 +15,7 @@ import { createAccount } from '../../components/services/authServices'
 
 const CreateAccount:React.FC = () => {
  const [formData,setFormData]  = useState<ICreateAccountFormData>({username:"", email:"",password:"",acceptTermsAndConditions:false});
- const [showPassword,setShowPassword]  = useState(false)
+ const [showPassword,setShowPassword]  = useState<boolean>(false)
  const [isSubmitting,setIsSubmitting]  = useState<boolean>(false)
 
 

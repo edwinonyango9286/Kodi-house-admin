@@ -1,5 +1,6 @@
 import { createTheme } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material/styles'; 
+import type {} from '@mui/x-data-grid/themeAugmentation';
 
 
 // Augment the palette to include custom colors
@@ -18,7 +19,21 @@ declare module '@mui/material/styles' {
       dark?: string;
     };
   }
+    interface Components {
+    MuiDataGrid?: {
+      styleOverrides?: {
+        root?: React.CSSProperties;
+        columnHeader?: React.CSSProperties;
+        cell?: React.CSSProperties;
+        row?: React.CSSProperties;
+        footerContainer?: React.CSSProperties;
+      };
+    };
+  }
 }
+
+
+
 
 export const getDesignTokens = (mode: PaletteMode) => createTheme({
   palette: {
@@ -79,5 +94,22 @@ export const getDesignTokens = (mode: PaletteMode) => createTheme({
         },
       },
     },
+
+    MuiDataGrid:{
+      styleOverrides:{
+        root:{
+          borderRadius:"12px",
+          '& .MuiDataGrid-columnSeparator': {
+            display: 'none',
+          },
+         '& .MuiDataGrid-columnHeaderTitle': {
+          fontWeight:"700", 
+          fontSize:"16px",
+          color:"#1F2937"
+         },
+        },
+      }
+    }
+
   },
 });
