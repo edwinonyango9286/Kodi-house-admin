@@ -17,7 +17,7 @@ const Properties = () => {
     {field:"units", headerName:"Units" , flex:1},
     {field:"landlordName", headerName:"Landlord Name" , flex:1},
     {field:"status", headerName:"Status" , flex:1},
-    {field:"action", headerName:"action" , flex:1},
+    {field:"action", headerName:"Action" , flex:1},
   ]
 
   const rows = []
@@ -35,7 +35,7 @@ const Properties = () => {
           </Box>
           <Divider orientation='vertical' sx={{ height:"80px", borderWidth:"1px", backgroundColor:"#9CA3AF"}} />
            <Box sx={{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"10px"}}>
-            <Typography variant='body2' sx={{color:"##059669", fontSize:"16px", fontWeight:"400" }}>Occupied properties</Typography>
+            <Typography variant='body2' sx={{color:"#059669", fontSize:"16px", fontWeight:"400" }}>Occupied properties</Typography>
             <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>187</Typography>
           </Box>
           <Divider orientation='vertical' sx={{ height:"80px", borderWidth:"1px", backgroundColor:"#9CA3AF"}} />

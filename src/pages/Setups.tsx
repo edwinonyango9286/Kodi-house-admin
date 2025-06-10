@@ -1,41 +1,48 @@
-import { Box, Button, Checkbox, Divider, FormControl, FormControlLabel, FormLabel, IconButton, MenuItem, Modal, Paper, Select, TextField, Typography,type SelectChangeEvent } from '@mui/material'
-import React, { useState,} from 'react'
+import { Box, Button, Checkbox, Divider, FormControl, FormControlLabel, FormLabel, IconButton, InputAdornment, MenuItem, Modal, Paper, Select, TextField, Typography, type SelectChangeEvent } from '@mui/material'
+import React, { useState, type FormEvent,} from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import {useTheme } from '@mui/material';
 import { getModalStyle } from '../theme';
 import cancelIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/cancel Icon.svg"
-import type {ICreateRolePayload ,ICreatePermissionPayload } from "../types/types"
+import type {ICreateRolePayload ,ICreatePermissionPayload, ICreatePropertyTypePayload, ICreatePropertyCategoryPayload, ICreatePropertyTagPayload, ICreateSupportTicketPayload } from "../types/types"
 import { createRole } from '../components/services/roleService';
 import { createPermission } from '../components/services/permissionServices';
+import { DataGrid, type GridColDef } from '@mui/x-data-grid';
+import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
+import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/filter icon.svg"
+import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
+import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
+import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
+import { createPropertyCategory, createPropertyTag, createPropertyType } from '../components/services/propertyTypeServices';
+import { createSupportTicket } from '../components/services/supportTicketService';
 
 
 const Setups:React.FC = () => {
   const [formData,setFormData] = useState<ICreateRolePayload>({roleName:"",description:"", status:""})
-  const [permissionFormData, setPermissionFormData] = useState<ICreatePermissionPayload>({ permissionName: "", status:"", description:"" })
-  const [isSubmiting,setIsSubmitting] = React.useState<boolean>(false)
+  const [permissionFormData, setPermissionFormData] = useState<ICreatePermissionPayload>({ permissionName: "", status:"", description:"" });
+  const [propertyTypeData,setPropertyTypeData] = useState<ICreatePropertyTypePayload>({ propertyTypeName:"", status:"", description:"", })
+  const [isSubmiting,setIsSubmitting] = useState<boolean>(false)
   const theme = useTheme()
   const modalStyles =  getModalStyle(theme.palette.mode)
 
-  const [openAddRoleModal, setOpenAddRoleModal] = React.useState(false);
+  const [openAddRoleModal, setOpenAddRoleModal] = useState<boolean>(false);
   const handleOpenAddRoleModal = () => setOpenAddRoleModal(true);
   const handleCloseAddRoleModal = () =>{
     setOpenAddRoleModal(false);
     setFormData({ roleName:"", description:"",status:""})
   };
 
-  const [openAddPermissionModal, setOpenAddPermissionModal] = React.useState(false);
+  const [openAddPermissionModal, setOpenAddPermissionModal] = useState<boolean>(false);
   const handleOpenAddPermissionModal = () => setOpenAddPermissionModal(true);
   const handleCloseAddPermissionModal = () =>{
     setOpenAddPermissionModal(false);
     setPermissionFormData({permissionName:"", status:"", description:""})
   }
 
-
   interface sidebarItem {
     id:number,
     name:string,
   }
-
 
   const sidebarItems:sidebarItem[] = [
     {id:1,name:"Roles and Permissions "},
@@ -54,7 +61,6 @@ const Setups:React.FC = () => {
   const handleSidebarItemClick = (id: number) => {
     setSelectedItem(id);
   };
-
 
   const [permission,setPermission] = React.useState('');
   const handleChange = (event: SelectChangeEvent) => {
@@ -93,7 +99,6 @@ const Setups:React.FC = () => {
     {id:16, name:" publish_posts"},
   ]
 
-
     const handleChecked = ()=>{
   }
 
@@ -102,10 +107,13 @@ const Setups:React.FC = () => {
   setFormData((prev)=>({...prev, [name]:value}))
  }
 
+ const [creatingPermission,setCreatingPermission] = useState<boolean>(false)
  const handleInputChangeForPermissions = (e:React.ChangeEvent<HTMLInputElement>) =>{
   const {name,value} = e.target
   setPermissionFormData((prev)=>({ ...prev,[name]:value}))
  }
+
+ 
 
  const roleStatus = [
   {id:1,name:"Active"},
@@ -116,13 +124,8 @@ const Setups:React.FC = () => {
   e.preventDefault();
   setIsSubmitting(true)
 
-    const roleData = {
-      roleName:formData.roleName,
-      description:formData.description,
-      status:formData.status
-    }
   try {
-    const response = await createRole(roleData);
+    const response = await createRole(formData);
     console.log(response)
 
   } catch (error) {
@@ -135,22 +138,17 @@ const Setups:React.FC = () => {
 
   const handleCreatePermission = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
-  setIsSubmitting(true)
+  setCreatingPermission(true)
 
-    const permissionData = {
-      permissionName:permissionFormData.permissionName,
-      description:permissionFormData.description,
-      status:permissionFormData.status
-    }
   try {
-    const response = await createPermission(permissionData);
+    const response = await createPermission(permissionFormData);
     console.log(response)
 
   } catch (error) {
     console.log(error)
 
   } finally{
-    setIsSubmitting(false)
+    setCreatingPermission(false)
   }
  }
 
@@ -163,6 +161,144 @@ const Setups:React.FC = () => {
   setPermissionFormData((prev)=>({...prev, status:e.target.value as string}))
  }
 
+
+//  property type 
+  const [creatingPropertyType, setCreatingPropertyType] = useState<boolean>(false)
+  const [openPropertyTypeModal,setOpenPropertyTypeModal] = useState<boolean>(false);
+  const handleOpenPropertyTypeModal = ()=> setOpenPropertyTypeModal(true)
+  const handleClosePropertyTypeModal = ()=>{
+    setOpenPropertyTypeModal(false)
+    setPropertyTypeData({ propertyTypeName:"",status:"",description:"" })
+  }
+
+  const handlePropertyTypeChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
+    const {name, value} = e.target
+    setPropertyTypeData((prev)=>({...prev,[name]:value}))
+  }
+
+ const handlePropertyTypeStatusChange = (e:SelectChangeEvent) =>{
+  setPropertyTypeData((prev)=>({...prev,status:e.target.value as string}))
+ }
+
+   const handleCreatePropertyType = async (e:FormEvent<HTMLFormElement>) =>{
+    e.preventDefault();
+    setCreatingPropertyType(true)
+    try {
+      const response = await createPropertyType(propertyTypeData)
+      return response 
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setCreatingPropertyType(false)
+    }
+   }
+
+
+  //  property category
+  const [propertyCategoryData,setPropertyCategoryData] = useState<ICreatePropertyCategoryPayload>({propertyCategoryName:"", status:"", description:"" })
+  const [creatingPropertyCategory, setCreatingPropertyCategory] = useState<boolean>(false)
+  const [openPropertyCategoryModal,setOpenPropertyCategoryModal] = useState<boolean>(false);
+  const handleOpenPropertyCategoryModal = ()=> setOpenPropertyCategoryModal(true)
+  const handleClosePropertyCategoryModal = ()=>{
+    setOpenPropertyCategoryModal(false)
+    setPropertyCategoryData({ propertyCategoryName:"",status:"",description:"" })
+  }
+
+  const handlePropertyCategoryChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
+    const {name, value} = e.target
+    setPropertyCategoryData((prev)=>({...prev,[name]:value}))
+  }
+
+ const handlePropertyCategoryStatusChange = (e:SelectChangeEvent) =>{
+  setPropertyCategoryData((prev)=>({...prev,status:e.target.value as string}))
+ }
+
+   const handleCreatePropertyCategory = async (e:FormEvent<HTMLFormElement>) =>{
+    e.preventDefault();
+    setCreatingPropertyCategory(true)
+    try {
+      const response = await createPropertyCategory(propertyCategoryData)
+      return response 
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setCreatingPropertyCategory(false)
+    }
+   }
+
+
+    //  property Tag
+  const [propertyTagData,setPropertyTagData] = useState<ICreatePropertyTagPayload>({propertyTagName:"", status:"", description:"" })
+  const [creatingPropertyTag, setCreatingPropertyTag] = useState<boolean>(false)
+  const [openPropertyTagModal,setOpenPropertyTagModal] = useState<boolean>(false);
+  const handleOpenPropertyTagModal = ()=> setOpenPropertyTagModal(true)
+  const handleClosePropertyTagModal = ()=>{
+    setOpenPropertyTagModal(false)
+    setPropertyTagData({ propertyTagName:"",status:"",description:"" })
+  }
+
+  const handlePropertyTagChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
+    const {name, value} = e.target
+    setPropertyTagData((prev)=>({...prev,[name]:value}))
+  }
+
+ const handlePropertyTagStatusChange = (e:SelectChangeEvent) =>{
+  setPropertyTagData((prev)=>({...prev,status:e.target.value as string}))
+ }
+
+   const handleCreatePropertyTag = async (e:FormEvent<HTMLFormElement>) =>{
+    e.preventDefault();
+    setCreatingPropertyTag(true)
+    try {
+      const response = await createPropertyTag(propertyTagData)
+      return response 
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setCreatingPropertyTag(false)
+    }
+   }
+
+
+
+   // support Ticket
+  const [supportTicketData,setSupportTicketData] = useState<ICreateSupportTicketPayload>({supportTicketName:"", status:"", description:"" })
+  const [creatingSupportTicket, setCreatingSupportTicket] = useState<boolean>(false)
+  const [openSupportTicketModal,setOpenSupportTicketModal] = useState<boolean>(false);
+
+  const handleOpenSupportTicketModal = ()=> setOpenSupportTicketModal(true)
+  const handleCloseSupportTicketModal = ()=>{
+    setOpenSupportTicketModal(false)
+    setSupportTicketData({ supportTicketName:"",status:"",description:"" })
+  }
+
+  const handleSupportTicketChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
+    const {name, value} = e.target
+    setSupportTicketData((prev)=>({...prev,[name]:value}))
+  }
+
+ const handleSupportTicketStatusChange = (e:SelectChangeEvent) =>{
+  setSupportTicketData((prev)=>({...prev,status:e.target.value as string}))
+ }
+
+   const handleCreateSupportTicket = async (e:FormEvent<HTMLFormElement>) =>{
+    e.preventDefault();
+    setCreatingSupportTicket(true)
+    try {
+      const response = await createSupportTicket(supportTicketData)
+      return response 
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setCreatingSupportTicket(false)
+    }
+   }
+
+
+ const columns:GridColDef[] = []
+ const rows:[] = []
+
+
   return (
     <Box sx={{ width:"100%" }}>
       <Box sx={{ display:"flex", justifyContent:"space-between",gap:"20px"}}>
@@ -172,14 +308,16 @@ const Setups:React.FC = () => {
          </Box>
       </Paper>
 
-      { selectedItem === 1 && <Paper elevation={0} sx={{ display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
+      { selectedItem === 1 && 
+
+      <Paper elevation={0} sx={{ borderRadius:'8px', display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
         <Typography sx={{color:"#1F2937", fontSize:"20px", fontWeight:"700", textAlign:"start"}}>User Role and  Permission Editor</Typography>
         <Divider sx={{borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1",}}/>
         <Box sx={{ display:"flex", gap:"20px",alignItems:"center" }}>
           <Typography variant='body2' sx={{ fontSize:"18px", fontWeight:"500",color:"#374151"}}>Select Role and change its Permissions</Typography>
         <Box sx={{width:"24%",}}>
         <FormControl fullWidth>
-          <Select id="demo-simple-select" value={selectedRole} onChange={handleSelectRole} sx={{ height:"48px", width:"100%"}} >
+          <Select id="role-select" value={selectedRole} onChange={handleSelectRole} sx={{ height:"48px", width:"100%"}} >
             {roles.map((role)=>(<MenuItem key={role.id} value={role.id}>{role.name}</MenuItem>))}
          </Select>
         </FormControl>
@@ -207,7 +345,7 @@ const Setups:React.FC = () => {
                 <Typography sx={{color:"#4B5563" , fontSize:"14px", fontWeight:"400", textAlign:"start" }}>Quick filter:</Typography>
                 <Box sx={{ width:"40%",}}>
                  <FormControl fullWidth>
-                     <Select id="demo-simple-select" value={permission} onChange={handleChange} sx={{ height:"40px", width:"100%"}} >
+                     <Select id="permission-select" value={permission} onChange={handleChange} sx={{ height:"40px", width:"100%"}} >
                        {permissions.map((permission)=>(<MenuItem key={permission.id} value={permission.id}>{permission.name}</MenuItem>))}
                      </Select>
                 </FormControl>
@@ -259,8 +397,7 @@ const Setups:React.FC = () => {
         <Divider sx={{ marginBottom:"30px", borderWidth:"1px", backgroundColor:"#F6F7F7"}}/>
 
         {/* add role modal */}
-
-
+        
         <Modal open={openAddRoleModal} onClose={handleCloseAddRoleModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
         <Box sx={modalStyles}>
           <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
@@ -279,7 +416,7 @@ const Setups:React.FC = () => {
                 <Box sx={{ width:"100%",}}>
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
-                     <Select  value={formData.status} onChange={handleStatusChange} sx={{width:"100%"}} >
+                     <Select id='status-select'  value={formData.status} onChange={handleStatusChange} sx={{width:"100%"}} >
                        {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
@@ -292,7 +429,7 @@ const Setups:React.FC = () => {
                   </FormControl>
               </Box>
 
-              <Button type='submit' loading={isSubmiting} variant='contained' disabled={!formData.roleName || !formData.status || !formData.description} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+              <Button type='submit' loading={isSubmiting} variant='contained' disabled={!formData.roleName || !formData.status || !formData.description || isSubmiting} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
          </form>
 
         </Box>
@@ -331,13 +468,310 @@ const Setups:React.FC = () => {
                   </FormControl>
               </Box>
 
-              <Button type='submit' loading={isSubmiting} variant='contained' disabled={!permissionFormData.permissionName || !permissionFormData.status || !permissionFormData.description} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+              <Button type='submit' loading={creatingPermission} variant='contained' disabled={!permissionFormData.permissionName || !permissionFormData.status || !permissionFormData.description || creatingPermission} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
          </form>
 
         </Box>
       </Modal>
 
-    </Paper>}
+      </Paper>}
+
+
+
+    { selectedItem === 2 && 
+      <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
+        <Button onClick={handleOpenPropertyTypeModal} variant='contained' sx={{ alignSelf:"start", backgroundColor:"#2563EB", fontSize:"14px", fontWeight:"500", borderRadius:"4px", height:"40px", textAlign:"start"}}>+ New property type</Button>
+
+        <Divider sx={{ borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1"}}/>
+        <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
+
+          <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
+            <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>
+            <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
+            <img src={refreshIcon} alt="refreshIcon" />
+          </Box>
+          <Box sx={{ display:"flex", gap:"20px"}}>
+            <TextField placeholder='Search' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
+             <Box sx={{ height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
+               <Typography sx={{ color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
+               <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+          </Box>
+        </Box>
+
+        <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
+          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+        </Box>
+
+        {/* add property modal */}
+
+      <Modal open={openPropertyTypeModal} onClose={handleClosePropertyTypeModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <Box sx={modalStyles}>
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
+             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Create property type</Typography>
+             <IconButton onClick={handleClosePropertyTypeModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+          </Box>
+
+         <form  onSubmit={handleCreatePropertyType} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
+            <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                     <FormLabel  htmlFor="propertyTypeName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Property Type Name</FormLabel>
+                     <TextField type="text"  name="propertyTypeName" value={propertyTypeData.propertyTypeName} onChange={handlePropertyTypeChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+             </Box>
+
+                <Box sx={{ width:"100%",}}>
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
+                     <Select id='status-select'  value={propertyTypeData.status} onChange={handlePropertyTypeStatusChange} sx={{width:"100%"}} >
+                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+                </Box> 
+
+                <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                    <FormLabel  htmlFor="description" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Description</FormLabel>
+                    <TextField type="text"  multiline rows={4} maxRows={4} name="description" value={propertyTypeData.description} onChange={handlePropertyTypeChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+              </Box>
+
+              <Button type='submit' loading={creatingPropertyType} variant='contained' disabled={!propertyTypeData.propertyTypeName || !propertyTypeData.status || !propertyTypeData.description || creatingPropertyType} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+         </form>
+
+        </Box>
+      </Modal>
+    </Paper>
+    }
+
+    { selectedItem === 3 &&
+     <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
+        <Button onClick={handleOpenPropertyCategoryModal} variant='contained' sx={{ alignSelf:"start", backgroundColor:"#2563EB", fontSize:"14px", fontWeight:"500", borderRadius:"4px", height:"40px", textAlign:"start"}}>+ New property categories</Button>
+
+        <Divider sx={{ borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1"}}/>
+        <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
+
+          <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
+            <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>
+            <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
+            <img src={refreshIcon} alt="refreshIcon" />
+          </Box>
+          <Box sx={{ display:"flex", gap:"20px"}}>
+            <TextField placeholder='Search' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
+             <Box sx={{ height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
+               <Typography sx={{ color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
+               <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+          </Box>
+        </Box>
+
+        <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
+          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+        </Box>
+
+        {/* add property category modal */}
+
+      <Modal open={openPropertyCategoryModal} onClose={handleClosePropertyCategoryModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <Box sx={modalStyles}>
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
+             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Create property category</Typography>
+             <IconButton onClick={handleClosePropertyCategoryModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+          </Box>
+
+         <form  onSubmit={handleCreatePropertyCategory} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
+            <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                     <FormLabel  htmlFor="propertyCategoryName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Property Category Name</FormLabel>
+                     <TextField type="text"  name="propertyCategoryName" value={propertyCategoryData.propertyCategoryName} onChange={handlePropertyCategoryChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+             </Box>
+
+                <Box sx={{ width:"100%",}}>
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
+                     <Select id='status-select'  value={propertyCategoryData.status} onChange={handlePropertyCategoryStatusChange} sx={{width:"100%"}} >
+                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+                </Box> 
+
+                <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                    <FormLabel  htmlFor="description" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Description</FormLabel>
+                    <TextField type="text"  multiline rows={4} maxRows={4} name="description" value={propertyCategoryData.description} onChange={handlePropertyCategoryChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+              </Box>
+
+              <Button type='submit' loading={creatingPropertyCategory} variant='contained' disabled={!propertyCategoryData.propertyCategoryName || !propertyCategoryData.status || !propertyCategoryData.description || creatingPropertyCategory} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+         </form>
+
+        </Box>
+      </Modal>
+    </Paper>
+    }
+
+
+      { selectedItem === 4 &&
+     <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
+        <Button onClick={handleOpenPropertyTagModal} variant='contained' sx={{ alignSelf:"start", backgroundColor:"#2563EB", fontSize:"14px", fontWeight:"500", borderRadius:"4px", height:"40px", textAlign:"start"}}>+ New property tag</Button>
+
+        <Divider sx={{ borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1"}}/>
+        <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
+
+          <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
+            <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>
+            <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
+            <img src={refreshIcon} alt="refreshIcon" />
+          </Box>
+          <Box sx={{ display:"flex", gap:"20px"}}>
+            <TextField placeholder='Search' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
+             <Box sx={{ height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
+               <Typography sx={{ color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
+               <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+          </Box>
+        </Box>
+
+        <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
+          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+        </Box>
+
+        {/* add property tag */}
+
+      <Modal open={openPropertyTagModal} onClose={handleClosePropertyTagModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <Box sx={modalStyles}>
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
+             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Create property tag</Typography>
+             <IconButton onClick={handleClosePropertyTagModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+          </Box>
+
+         <form  onSubmit={handleCreatePropertyTag} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
+            <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                     <FormLabel  htmlFor="propertyTagName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Property Tag Name</FormLabel>
+                     <TextField type="text"  name="propertyTagName" value={propertyTagData.propertyTagName} onChange={handlePropertyTagChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+             </Box>
+
+                <Box sx={{ width:"100%",}}>
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
+                     <Select id='status-select'  value={propertyTagData.status} onChange={handlePropertyTagStatusChange} sx={{width:"100%"}} >
+                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+                </Box> 
+
+                <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                    <FormLabel  htmlFor="description" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Description</FormLabel>
+                    <TextField type="text"  multiline rows={4} maxRows={4} name="description" value={propertyTagData.description} onChange={handlePropertyTagChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+              </Box>
+
+              <Button type='submit' loading={creatingPropertyTag} variant='contained' disabled={!propertyTagData.propertyTagName || !propertyTagData.status || !propertyTagData.description || creatingPropertyTag} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+         </form>
+
+        </Box>
+      </Modal>
+    </Paper>
+    }
+
+
+
+    { selectedItem === 5 &&
+     <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
+        <Button onClick={handleOpenSupportTicketModal} variant='contained' sx={{ alignSelf:"start", backgroundColor:"#2563EB", fontSize:"14px", fontWeight:"500", borderRadius:"4px", height:"40px", textAlign:"start"}}>+ New Support ticket type</Button>
+
+        <Divider sx={{ borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1"}}/>
+        <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
+
+          <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
+            <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>
+            <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
+            <img src={refreshIcon} alt="refreshIcon" />
+          </Box>
+          <Box sx={{ display:"flex", gap:"20px"}}>
+            <TextField placeholder='Search' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
+             <Box sx={{ height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
+               <Typography sx={{ color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
+               <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+          </Box>
+        </Box>
+
+        <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
+          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+        </Box>
+
+        {/* add support ticket modal */}
+
+      <Modal open={openSupportTicketModal} onClose={handleCloseSupportTicketModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <Box sx={modalStyles}>
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
+             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Create new support ticket type</Typography>
+             <IconButton onClick={handleCloseSupportTicketModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+          </Box>
+
+         <form  onSubmit={handleCreateSupportTicket} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
+            <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                     <FormLabel  htmlFor="supportTicketName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Support Ticket Type Name</FormLabel>
+                     <TextField type="text"  name="supportTicketName" value={supportTicketData.supportTicketName} onChange={handleSupportTicketChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+             </Box>
+
+                <Box sx={{ width:"100%",}}>
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
+                     <Select id='status-select'  value={supportTicketData.status} onChange={handleSupportTicketStatusChange} sx={{width:"100%"}} >
+                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+                </Box> 
+
+                <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                    <FormLabel  htmlFor="description" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Description</FormLabel>
+                    <TextField type="text"  multiline rows={4} maxRows={4} name="description" value={supportTicketData.description} onChange={handleSupportTicketChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+              </Box>
+
+              <Button type='submit' loading={creatingSupportTicket} variant='contained' disabled={!supportTicketData.supportTicketName || !supportTicketData.status || !supportTicketData.description || creatingSupportTicket} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+         </form>
+
+        </Box>
+      </Modal>
+    </Paper>
+    }
 
       </Box>
     </Box>
