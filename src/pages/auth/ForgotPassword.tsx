@@ -1,23 +1,44 @@
 import { Box, Button, FormControl, FormLabel, TextField, Typography } from '@mui/material'
-import React, { useState,} from 'react'
+import React, { useState, type FormEvent,} from 'react'
 import iconBlue from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon blue.svg"
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import logoWhite from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/Logo white.svg"
 import bgImage from "../../assets/images-20230907T172340Z-001/images/Sign up  Loading  1.jpg"
+import type { IRequestResetPasswordEmail } from '../../types/types'
+import type { AxiosError } from 'axios'
+import { showErrorToast, showInfoToast } from '../../utils/toast'
+import { requestResetPasswordEmail } from '../../components/services/authServices'
 
 
-interface formData {
-    email:string,
-}
 
 const ForgotPassword: React.FC =  () => {
-    const [formData,setFormData] = useState<formData>({ email:""})
+    const [formData,setFormData] = useState<IRequestResetPasswordEmail>({ email:""})
+    const [isSubmiting,setIsSubmitting] = useState<boolean>(false)
+    const navigate = useNavigate();
 
     const handleChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
         const {name,value}  = e.target
         setFormData((prev)=>({...prev,[name]:value}))
     }
 
+    const handleSendResetPasswordLink =  async (e:FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setIsSubmitting(true)
+      try {
+        const response = await requestResetPasswordEmail(formData);
+        if(response.status === 200){
+          showInfoToast(response.data.message)
+          setFormData({email:""})
+          navigate("/")
+        }
+      } catch (err) {
+        const error = err as AxiosError<{message?:string}> ;
+        showErrorToast(error?.response?.data?.message || error.message)
+      }finally{
+        setIsSubmitting(false)
+      }
+    }
+ 
 
   return (
        <Box sx={{ opacity:0.9, position:"relative", width:"100%", height:"100vh", backgroundColor:"rgba(36, 46, 58, 0.70)" }}>
@@ -32,7 +53,7 @@ const ForgotPassword: React.FC =  () => {
                     <Typography variant='body2' sx={{ width:"100%", alignSelf:"start", fontWeight:"400", fontSize:"14px", textAlign:"start" }}>Don’t  fret! Just type your email and we will send you a code to reset  your password.  </Typography>
                 </Box>
 
-              <form style={{ width:"100%", display:"flex", alignItems:"start", flexDirection:"column", gap:"10px" }}>
+              <form onSubmit={handleSendResetPasswordLink} style={{ width:"100%", display:"flex", alignItems:"start", flexDirection:"column", gap:"10px" }}>
                 <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
                     <FormLabel  htmlFor="email" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Email</FormLabel>
@@ -40,7 +61,7 @@ const ForgotPassword: React.FC =  () => {
                   </FormControl>
                 </Box>
 
-                <Button type="submit" variant="contained" disabled={!formData.email} sx={{ marginTop:"20px", width:"100%", height:"50px",backgroundColor:"#1A56DB" , color:"#fff", borderRadius:"12px", fontWeight:"600", fontSize:"16px", textAlign:"center" }}>Recover password</Button>
+                <Button loading={isSubmiting} type="submit" variant="contained" disabled={!formData.email || isSubmiting} sx={{ marginTop:"20px", width:"100%", height:"50px",backgroundColor:"#1A56DB" , color:"#fff", borderRadius:"12px", fontWeight:"600", fontSize:"16px", textAlign:"center" }}>Recover password</Button>
                 <Box sx={{ marginTop:"10px", width:"100%", display:"flex", gap:"4px"}}>
                     <Typography variant="body2" sx={{fontSize:"14px", fontWeight:"500", textAlign:"start" }}>Remembered it ?</Typography>
                     <Link to={"/"} style={{ textDecoration:"none", color:"#2563EB" , fontWeight:"500", fontSize:"14px"}}>Sign in</Link>

@@ -39,6 +39,9 @@ const SignIn : React.FC = () => {
       if(response?.status === 200){
         setFormData({ email:"", password:""})
         navigate("/dashboard")
+        
+         Cookies.set("accessToken", response.data.accessToken)
+
         if(storeAccessTokenInCookies){
           Cookies.set("accessToken", response.data.accessToken,{expires:7})
         }

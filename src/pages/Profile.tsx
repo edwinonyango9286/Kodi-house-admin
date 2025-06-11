@@ -5,17 +5,20 @@ import uploadIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and
 import eyeIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon eye.svg"
 import type { IUpdatePasswordPayload, IUpdateUserInfoPayload } from '../types/types'
 import { updatePassword, updateUserInfo } from '../components/services/userServices'
+import { showErrorToast, showInfoToast } from '../utils/toast'
+import type { AxiosError } from 'axios'
+import Cookies from 'js-cookie'
+import { useNavigate } from 'react-router-dom'
 
 
 
 const Profile = () => {
-
+  const navigate = useNavigate()
   const [showCurrentPassword,setShowCurrentPassword] = useState<boolean>(false)
   const [showNewPassword,setShowNewPassword]  = useState<boolean>(false)
   const [showConfirmNewPassword,setShowConfirmNewPassword] = useState<boolean>(false)
   const [passwordData,setPasswordData] = useState<IUpdatePasswordPayload>({ currentPassword:"",newPassword:"", confirmNewPassword:""})
   const [isSubmitting,setIsSubmitting] = useState<boolean>(false)
-  const [error,setError] = useState<string>("")
   const [userInfoData,setUserInfoData] = useState<IUpdateUserInfoPayload>({ email:"",phoneNumber:"", firstName:"", secondName:"", lastName:"", nationalId:"", address:"" })
   const [updatingUserInfo,setUpdatingUserInfo] = useState<boolean>(false)
   const [securityAandNotificationsData,setSecurityAndNotificationsData] =  useState({twoFa:false, accountActivity:false, newMessages:false})
@@ -30,20 +33,32 @@ const Profile = () => {
     setIsSubmitting(true)
 
     if(passwordData.newPassword !== passwordData.confirmNewPassword){
-      console.log("New password and confirm password do not match.")
+      showErrorToast("New password and confirm password do not match.")
       setIsSubmitting(false)
       return
     }
     try {
       const response = await updatePassword(passwordData);
-      return response
-    } catch (error) {
-      console.log(error)
+      if(response.status === 200){
+        setPasswordData({ newPassword:"", currentPassword:"",confirmNewPassword:""})
+        Cookies.remove("refreshToken")
+        localStorage.clear();
+        const allCookies = Cookies.get();
+        for( const cookieName in allCookies){
+        Cookies.remove(cookieName)
+         }
+       showInfoToast(response.data.message)
+       navigate("/")
+      }
+    } catch (err) {
+      const error = err as AxiosError<{message?:string}>
+      showErrorToast(error?.response?.data?.message || error.message)
     }finally{
       setIsSubmitting(false)
     }
   }
 
+  
   const handleUserInfoChange = (e:React.ChangeEvent<HTMLInputElement>) => {
     const {name,value} = e.target;
     setUserInfoData((prev)=>({...prev, [name]:value}))

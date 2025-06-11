@@ -148,3 +148,7 @@ export interface ICreateTagResponse {
   message:string,
   status:string,
 }
+
+export interface IRequestResetPasswordEmail {
+  email:string
+}

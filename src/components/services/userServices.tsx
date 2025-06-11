@@ -1,5 +1,7 @@
-import type { IAddUserPayload, IAddUserResponse, IUpdatePasswordPayload, IUpdatePasswordResponse, IUpdateUserInfoPayload, IUpdateUserInfoResponse } from "../../types/types"
+import type { IAddUserPayload, IAddUserResponse, IUpdatePasswordPayload, IUpdateUserInfoPayload, IUpdateUserInfoResponse } from "../../types/types"
+import { config } from "../../utils/config";
 import { newRequest } from "../../utils/newRequest"
+
 
 export const addUser = async (userData:IAddUserPayload) : Promise<IAddUserResponse>  => {
     try {
@@ -11,10 +13,10 @@ export const addUser = async (userData:IAddUserPayload) : Promise<IAddUserRespon
     }
 }
 
-export const updatePassword =  async (passwordData:IUpdatePasswordPayload) : Promise<IUpdatePasswordResponse> =>{
+export const updatePassword =  async (passwordData:IUpdatePasswordPayload) =>{
   try {
-    const response = await  newRequest.patch<IUpdatePasswordResponse>(`update-password`, passwordData)
-    return response.data
+    const response = await  newRequest.put(`auth/update-password`, passwordData, config)
+    return response
   } catch (error) {
     console.log(error)
     throw error

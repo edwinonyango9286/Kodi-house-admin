@@ -26,12 +26,12 @@ function App() {
     <>
     <Router>
         <ToastContainer position="top-right" autoClose={5000} hideProgressBar={true} newestOnTop={false} closeOnClick  rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored"
-        toastStyle={{ textAlign:"left", fontWeight:"500", fontSize:"14px", width:"400px", height:'60px'}}/>    
+        toastStyle={{ textAlign:"left", fontWeight:"500", fontSize:"14px", width:"600px", height:'auto'}}/>    
         <Routes>
         <Route path='/' element={<SignIn/>} /> 
         <Route path='/create-account' element={<CreateAccount/>}/>
         <Route path='/forgot-password' element={<ForgotPassword/>}/>
-        <Route path='/reset-password' element={<ResetPassword/>}/>
+        <Route path='/reset-password/:token' element={<ResetPassword/>}/>
         <Route path='/email-verification' element={<EmailVerification/>}/>
         <Route path='/code-verification' element={<CodeVerification/>}/>
 

@@ -1,5 +1,5 @@
 import { newRequest } from "../../utils/newRequest";
-import type {ICreateAccountPayload, ISignInPayload, IVerifyCodePayload} from "../../types/types"
+import type {ICreateAccountPayload, IRequestResetPasswordEmail, ISignInPayload, IVerifyCodePayload} from "../../types/types"
 
 
 export const createAccount = async (accountData: ICreateAccountPayload) => {
@@ -31,5 +31,17 @@ export const signIn = async (signInData:ISignInPayload)=>{
     throw error
   }
 }
+
+export const requestResetPasswordEmail = async (email: IRequestResetPasswordEmail) =>{
+  try {
+    const response = await newRequest.post(`auth/password-reset-token`,email)
+    return response
+  } catch (error) {
+    console.log(error);
+    throw error
+  }
+}
+
+
 
 
