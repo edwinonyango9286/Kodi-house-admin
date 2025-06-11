@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { AppBar as MuiAppBar, IconButton, Toolbar, Typography, TextField, Box, InputAdornment, Avatar, Menu, MenuItem} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
@@ -6,22 +6,34 @@ import mailIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and I
 import bellIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/bell icon.svg"
 import userImage from "../assets/Avatars square-20230907T172556Z-001/Avatars square/WebP/Adil Floyd.webp"
 import dropdownIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown icon small.svg"
+import Cookies from "js-cookie"
+import { useNavigate } from 'react-router-dom';
 
 const drawerWidth = 232;
 
 const AppBar = ({ open, toggleDrawer }) => {
+  const navigate = useNavigate()
   const [anchorElement,setAnchorElement] = useState<null| HTMLElement>(null);
   const openUserProfile = Boolean(anchorElement)
 
-  const handleOpenUserProfile = (event: MouseEvent<HTMLButtonElement>) => {
-      setAnchorElement(event.currentTarget);
-  };
+  const handleOpenUserProfile = (e: MouseEvent<HTMLDivElement>) => {
+      setAnchorElement(e.currentTarget);
+     };
 
-  const handleCloseUserProfile = ()=>{
+  const handleCloseUserProfile = ()=>{ 
     setAnchorElement(null);
-  }
+    }
 
-
+    const handleLogout =() => {
+      localStorage.clear();
+      const allCookies = Cookies.get();
+      for( const cookieName in allCookies){
+        Cookies.remove(cookieName)
+      }
+      navigate("/")
+      // remove refresh token from cookies 
+      // Cookies.remove("refreshToken")
+    }
 
   return (
     <MuiAppBar  position="fixed"  
@@ -67,9 +79,9 @@ const AppBar = ({ open, toggleDrawer }) => {
           </Box>
 
           <Menu id="basic-menu" sx={{ '& .MuiPaper-root': { width: '168px', maxWidth: 'none'}}} anchorEl={anchorElement} open={openUserProfile} onClose={handleCloseUserProfile} MenuListProps={{'aria-labelledby': 'basic-button',}}>
-            <MenuItem onClick={handleCloseUserProfile}>Profile</MenuItem>
-            <MenuItem onClick={handleCloseUserProfile}>My account</MenuItem>
-            <MenuItem onClick={handleCloseUserProfile}>Logout</MenuItem>
+            <MenuItem onClick={()=>{navigate("user-profile"); handleCloseUserProfile()}}>Profile</MenuItem>
+            <MenuItem onClick={()=>{navigate("user-profile"); handleCloseUserProfile()}}>My account</MenuItem>
+            <MenuItem onClick={ ()=>{ handleLogout(); handleCloseUserProfile();} }>Logout</MenuItem>
           </Menu>
 
         </Box>

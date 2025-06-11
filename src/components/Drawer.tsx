@@ -52,12 +52,8 @@ const Drawer = ({open,toggleDrawer,children,
 
 const handleNavigation = (path?: string) => {
   if (!path) return;
-  
-  if (path === 'logout') {
-    console.log('Logging out...');
-    // navigate('/login');
-  } else if (path === 'dashboard') {
-    navigate('/dashboard'); // Special case for dashboard index route
+  if (path === 'dashboard') {
+    navigate('/dashboard'); 
   } else {
     navigate(`/dashboard/${path}`);
   }
@@ -116,8 +112,8 @@ const isActive = (path?: string) => {
   };
 
   return (
-    <MuiDrawer  variant="permanent" open={open} sx={{ boxShadow:"none", width: drawerWidth, flexShrink: 0, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', overflowX: 'hidden', display: 'flex', flexDirection: 'column', borderRight: 'none', boxShadow: '0px 0px 20px rgba(0, 0, 0, 0.1)' }}}>
-      {/* Logo Section */}
+    <MuiDrawer  variant="persistent" open={open} sx={{width: drawerWidth, flexShrink: 0, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', overflowX: 'hidden', display: 'flex', flexDirection: 'column',borderRight:"1px solid #E5E7EB"}}}>
+
       <Box onClick={()=>navigate("")} sx={{ cursor:"pointer", position: "relative",  padding: "20px",  display: "flex",alignItems: "center",justifyContent: "center", width: "100%", backgroundColor: "#2563EB", height: "68px",flexShrink: 0}}>
         <img src={logoWhite} alt="logoWhite" style={{ maxWidth: '80%' }} />
         <Box sx={{top: "44px",left: "78px",borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", position: "absolute", width: "60px", height: "20px",}}>
@@ -125,17 +121,16 @@ const isActive = (path?: string) => {
         </Box>
       </Box>
 
-      {/* Navigation Items */}
       <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
         <List>
           {navItems.map((item) => renderItem(item))}
         </List>
       </Box>
 
-      {/* Custom Children Content */}
       {children && (
         <Box sx={{padding:"16px", borderTop: '1px solid rgba(0, 0, 0, 0.12)',flexShrink: 0 }}>{children}</Box>
       )}
+
     </MuiDrawer>
   );
 };

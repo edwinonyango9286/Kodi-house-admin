@@ -1,4 +1,4 @@
-import { newRequest } from "../newRequest";
+import { newRequest } from "../../utils/newRequest";
 import type {ICreateRolePayload,ICreateRoleResponse} from "../../types/types"
 
  export const createRole = async (roleData:ICreateRolePayload ) :Promise<ICreateRoleResponse> =>{

@@ -1,6 +1,6 @@
 
 import type { ICreatePermissionPayload,ICreatePermissionResponse} from "../../types/types"
-import { newRequest } from "../newRequest"
+import { newRequest } from "../../utils/newRequest"
 
 export   const createPermission =  async (permissionData:ICreatePermissionPayload) : Promise<ICreatePermissionResponse> =>{
     try {

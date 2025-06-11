@@ -1,5 +1,5 @@
 import type {ICreatePropertyCategoryPayload, ICreatePropertyCategoryResponse, ICreatePropertyTagPayload, ICreatePropertyTagResponse, ICreatePropertyTypePayload, ICreatePropertyTypeResponse,} from "../../types/types"
-import { newRequest } from "../newRequest"
+import { newRequest } from "../../utils/newRequest"
 
 export const createPropertyType = async (propertyTypeData:ICreatePropertyTypePayload): Promise<ICreatePropertyTypeResponse> =>{
     try {

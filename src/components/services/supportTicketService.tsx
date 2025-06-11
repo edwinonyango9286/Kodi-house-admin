@@ -1,5 +1,5 @@
 import type { ICreateSupportTicketPayload, ICreateSupportTicketResponse } from "../../types/types"
-import { newRequest } from "../newRequest"
+import { newRequest } from "../../utils/newRequest"
 
 export const createSupportTicket = async (supportTicketData:ICreateSupportTicketPayload): Promise<ICreateSupportTicketResponse>=>{
     try {

@@ -1,5 +1,5 @@
 import type { IAddUserPayload, IAddUserResponse, IUpdatePasswordPayload, IUpdatePasswordResponse, IUpdateUserInfoPayload, IUpdateUserInfoResponse } from "../../types/types"
-import { newRequest } from "../newRequest"
+import { newRequest } from "../../utils/newRequest"
 
 export const addUser = async (userData:IAddUserPayload) : Promise<IAddUserResponse>  => {
     try {

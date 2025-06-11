@@ -1,6 +1,6 @@
 import React, { useState,} from 'react'
 import { Box, Button, Checkbox, Divider, FormControl, FormControlLabel, FormLabel, TextField, Typography, InputAdornment } from '@mui/material'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import iconBlue from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon blue.svg"
 import logoWhite from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/Logo white.svg"
 import appleIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/apple icon black.svg"
@@ -11,12 +11,15 @@ import eyeIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and
 import bgImage from "../../assets/images-20230907T172340Z-001/images/Sign up  Loading  1.jpg"
 import type { ICreateAccountPayload } from '../../types/types'
 import { createAccount } from '../../components/services/authServices'
+import { showErrorToast, showInfoToast } from '../../utils/toast'
+import type { AxiosError } from 'axios'
 
 
 const CreateAccount:React.FC = () => {
- const [formData,setFormData]  = useState<ICreateAccountPayload>({username:"", email:"",password:"",acceptTermsAndConditions:false});
+ const [formData,setFormData]  = useState<ICreateAccountPayload>({userName:"", email:"",password:"",termsAndConditionsAccepted:false});
  const [showPassword,setShowPassword]  = useState<boolean>(false)
  const [isSubmitting,setIsSubmitting]  = useState<boolean>(false)
+ const navigate = useNavigate()
 
 
  const handleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
@@ -27,29 +30,26 @@ const CreateAccount:React.FC = () => {
  const handleCreateAccount = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-   
-    const accountData = {
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-      acceptTermsAndConditions: formData.acceptTermsAndConditions,
-    };
 
     try {
-      const response = await createAccount(accountData);
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
-      setFormData({ username:"", email:"", password:"", acceptTermsAndConditions:false})
-    
-    } catch (error) {
+      const response = await createAccount(formData);
+      console.log(response.data, "=>response.data");
+      if(response.status === 200){
+        setFormData({ userName:"", email:"", password:"", termsAndConditionsAccepted:false})
+        showInfoToast(response.data.message);
+        navigate("/code-verification",{state:{email:response.data.data.email, activationToken:response.data.data.activationToken}})
+      }
+    } catch (err) {
+      const error = err as AxiosError<{message?: string}>;
+      showErrorToast(error?.response?.data?.message || error.message)
       console.error("Error creating account:", error);
-    }finally{
+    } finally {
       setIsSubmitting(false)
     }
   };
 
 const handleChecked = (e: React.ChangeEvent<HTMLInputElement>) => {
-  setFormData(prev => ({...prev,acceptTermsAndConditions: e.target.checked }));
+  setFormData(prev => ({...prev,termsAndConditionsAccepted: e.target.checked }));
 };
 
   return (
@@ -81,8 +81,8 @@ const handleChecked = (e: React.ChangeEvent<HTMLInputElement>) => {
               <form onSubmit={handleCreateAccount} style={{ width:"100%", display:"flex", alignItems:"start", flexDirection:"column", gap:"10px" }}>
                 <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
-                    <FormLabel  htmlFor="username" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Username</FormLabel>
-                    <TextField type="text"  name="username" value={formData.username} onChange={handleChange} placeholder="username" fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                    <FormLabel  htmlFor="userName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Name</FormLabel>
+                    <TextField type="text"  name="userName" value={formData.userName} onChange={handleChange} placeholder="Name" fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
                   </FormControl>
                 </Box>
                 <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
@@ -106,7 +106,7 @@ const handleChecked = (e: React.ChangeEvent<HTMLInputElement>) => {
                     }}}  control={<Checkbox sx={{ borderRadius:"4px"}}  onChange={handleChecked}/>} /> 
                   </Box>
                 </Box>
-                <Button type="submit" variant="contained" loading={isSubmitting} disabled={!formData.username || !formData.password || !formData.email || !formData.acceptTermsAndConditions} sx={{ marginTop:"10px", width:"100%", height:"50px",backgroundColor:"#1A56DB" , color:"#fff", borderRadius:"12px", fontWeight:"600", fontSize:"16px", textAlign:"center" }}>Create account</Button>
+                <Button type="submit" variant="contained" loading={isSubmitting} disabled={!formData.userName || !formData.password || !formData.email || !formData.termsAndConditionsAccepted} sx={{ marginTop:"10px", width:"100%", height:"50px",backgroundColor:"#1A56DB" , color:"#fff", borderRadius:"12px", fontWeight:"600", fontSize:"16px", textAlign:"center" }}>Create account</Button>
                 <Box sx={{ marginTop:"10px", width:"100%", display:"flex", gap:"4px"}}>
                     <Typography variant="body2" sx={{fontSize:"14px", fontWeight:"500", textAlign:"start" }}>Already have account ?</Typography>
                     <Link to={"/"} style={{ textDecoration:"none", color:"#2563EB" , fontWeight:"500", fontSize:"14px"}}>Login here</Link>

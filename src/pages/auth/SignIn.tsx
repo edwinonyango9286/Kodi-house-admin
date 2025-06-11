@@ -1,6 +1,6 @@
  
 import { Box,FormLabel ,FormControl,TextField, Button, Typography ,FormControlLabel, Checkbox, Divider, InputAdornment,} from "@mui/material"
-import React, { useState } from "react"
+import React, {useState, type ChangeEvent } from "react"
 import iconBlue from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon blue.svg"
 import { Link, useNavigate } from "react-router-dom"
 import googleIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/google icon.svg"
@@ -10,31 +10,51 @@ import facebookIcon from "../../assets/logos and Icons-20230907T172301Z-001/logo
 import logoWhite from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/Logo white.svg"
 import eyeIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon eye.svg"
 import bgImage from "../../assets/images-20230907T172340Z-001/images/Sign up  Loading  1.jpg"
+import type { ISignInPayload } from "../../types/types"
+import type { AxiosError } from "axios"
+import { showErrorToast } from "../../utils/toast"
+import { signIn } from "../../components/services/authServices"
+import Cookies from "js-cookie"
 
-
-interface formData {
-  email:string,
-  password:string
-}
 
 const SignIn : React.FC = () => {
   const navigate = useNavigate()
-  const [formData,setFormData]  = useState<formData>({email:"",password:""})
+  const [formData,setFormData]  = useState<ISignInPayload>({email:"",password:""})
   const [showPassword,setShowPassword] = useState<boolean>(false);
+  const [storeAccessTokenInCookies,setStoreAccessTokenInCookies] = useState<boolean>(false)
+  const [isSubmiting,setIsSubmitting] = useState<boolean>(false)
   
 
   const handleChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
     const {name,value} = e.target
     setFormData((prev)=>({ ...prev, [name]:value}))
   }
+  console.log(storeAccessTokenInCookies)
 
-  const handleSignIn = (e:React.FormEvent<HTMLFormElement>) => {
+  const handleSignIn = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    navigate("/dashboard")
+    setIsSubmitting(true);
+    try {
+      const response = await signIn(formData)
+      if(response?.status === 200){
+        setFormData({ email:"", password:""})
+        navigate("/dashboard")
+        if(storeAccessTokenInCookies){
+          Cookies.set("accessToken", response.data.accessToken,{expires:7})
+        }
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string}>
+      showErrorToast(error?.response?.data.message || error.message)
+      console.log(error.response?.data.message)
+    }finally{
+      setIsSubmitting(false)
+      setStoreAccessTokenInCookies(false)
+    }
   }
-
-  const handleChecked = ()=>{
-  }
+ const handleChecked = (e:ChangeEvent<HTMLInputElement>) => {
+  setStoreAccessTokenInCookies(e.target.checked)
+ }
 
   return (
     <Box sx={{ opacity:0.9, position:"relative", width:"100%", height:"100vh", backgroundColor:"rgba(36, 46, 58, 0.70)" }}>
@@ -66,11 +86,12 @@ const SignIn : React.FC = () => {
                   <Box sx={{display:"flex",}}>
                     <FormControlLabel label="Remember me" sx={{ "& .MuiFormControlLabel-label":{
                       fontSize:"12px", color:"#6B7280", fontWeight:"500"
-                    }}}  control={<Checkbox onChange={handleChecked}/>}/> 
+                    }}}  control={<Checkbox onChange={handleChecked} />}/> 
                   </Box>
                     <Link to={"/forgot-password"} style={{ fontSize:"12px", fontWeight:"500", textAlign:"end", color:"#2563EB", textDecoration:"none",}}>Forgot your password?</Link>
                 </Box>
-                <Button type="submit" variant="contained" disabled={!formData.email || !formData.password} sx={{ marginTop:"10px", width:"100%", height:"50px",backgroundColor:"#1A56DB" , color:"#fff", borderRadius:"12px", fontWeight:"600", fontSize:"16px", textAlign:"center" }}>Sign In</Button>
+
+                <Button loading={isSubmiting} type="submit" variant="contained" disabled={!formData.email || !formData.password} sx={{ marginTop:"10px", width:"100%", height:"50px",backgroundColor:"#1A56DB" , color:"#fff", borderRadius:"12px", fontWeight:"600", fontSize:"16px", textAlign:"center" }}>Sign In</Button>
 
                 <Box sx={{ marginY:"10px", width:"100%", alignItems:"center", alignContent:"center", display:"flex", gap:"14px"}}>
                   <Divider sx={{ borderWidth:"1px", width:"45%"}}/>

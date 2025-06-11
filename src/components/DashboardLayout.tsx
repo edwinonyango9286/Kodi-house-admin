@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, CssBaseline, Toolbar } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import AppBar from "../components/AppBar";
@@ -6,7 +6,7 @@ import Drawer from '../components/Drawer';
 
 
 const DashboardLayout = () => {
-  const [drawerOpen, setDrawerOpen] = React.useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(true);
 
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);

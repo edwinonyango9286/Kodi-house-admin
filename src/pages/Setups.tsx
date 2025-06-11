@@ -4,7 +4,7 @@ import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/log
 import {useTheme } from '@mui/material';
 import { getModalStyle } from '../theme';
 import cancelIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/cancel Icon.svg"
-import type {ICreateRolePayload ,ICreatePermissionPayload, ICreatePropertyTypePayload, ICreatePropertyCategoryPayload, ICreatePropertyTagPayload, ICreateSupportTicketPayload } from "../types/types"
+import type {ICreateRolePayload ,ICreatePermissionPayload, ICreatePropertyTypePayload, ICreatePropertyCategoryPayload, ICreatePropertyTagPayload, ICreateSupportTicketPayload, ICreateCategoryPayload, ICreateTagPayload } from "../types/types"
 import { createRole } from '../components/services/roleService';
 import { createPermission } from '../components/services/permissionServices';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
@@ -15,6 +15,8 @@ import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import { createPropertyCategory, createPropertyTag, createPropertyType } from '../components/services/propertyTypeServices';
 import { createSupportTicket } from '../components/services/supportTicketService';
+import { createCategory } from '../components/services/categoryService';
+import { createTag } from '../components/services/tagServices';
 
 
 const Setups:React.FC = () => {
@@ -56,10 +58,14 @@ const Setups:React.FC = () => {
     {id:9,name:"Tags"},
   ]
 
-  const [selectedItem,setSelectedItem]  = React.useState<number>(1)
+  const [selectedItem,setSelectedItem]  = useState<number>(()=>{
+    const localStorageSelectedItem =  localStorage.getItem("selectedItem")
+    return localStorageSelectedItem ? parseInt(localStorageSelectedItem) : 1
+  })
 
   const handleSidebarItemClick = (id: number) => {
     setSelectedItem(id);
+    localStorage.setItem("selectedItem",id.toString())
   };
 
   const [permission,setPermission] = React.useState('');
@@ -226,8 +232,40 @@ const Setups:React.FC = () => {
     }
    }
 
+   // support Ticket
+  const [supportTicketData,setSupportTicketData] = useState<ICreateSupportTicketPayload>({supportTicketName:"", status:"", description:"" })
+  const [creatingSupportTicket, setCreatingSupportTicket] = useState<boolean>(false)
+  const [openSupportTicketModal,setOpenSupportTicketModal] = useState<boolean>(false);
 
-    //  property Tag
+  const handleOpenSupportTicketModal = ()=> setOpenSupportTicketModal(true)
+  const handleCloseSupportTicketModal = ()=>{
+    setOpenSupportTicketModal(false)
+    setSupportTicketData({ supportTicketName:"",status:"",description:"" })
+  }
+
+  const handleSupportTicketChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
+    const {name, value} = e.target
+    setSupportTicketData((prev)=>({...prev,[name]:value}))
+  }
+
+ const handleSupportTicketStatusChange = (e:SelectChangeEvent) =>{
+  setSupportTicketData((prev)=>({...prev,status:e.target.value as string}))
+ }
+
+   const handleCreateSupportTicket = async (e:FormEvent<HTMLFormElement>) =>{
+    e.preventDefault();
+    setCreatingSupportTicket(true)
+    try {
+      const response = await createSupportTicket(supportTicketData)
+      return response 
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setCreatingSupportTicket(false)
+    }
+   }
+
+    // property tag
   const [propertyTagData,setPropertyTagData] = useState<ICreatePropertyTagPayload>({propertyTagName:"", status:"", description:"" })
   const [creatingPropertyTag, setCreatingPropertyTag] = useState<boolean>(false)
   const [openPropertyTagModal,setOpenPropertyTagModal] = useState<boolean>(false);
@@ -259,38 +297,84 @@ const Setups:React.FC = () => {
     }
    }
 
+   // category
+  const [categoryData,setCategoryData] = useState<ICreateCategoryPayload>({categoryName:"", parentCategory:"", options:"", status:"", description:"" })
+  const [creatingCategory, setCreatingCategory] = useState<boolean>(false)
+  const [openCategoryModal,setOpenCategoryModal] = useState<boolean>(false);
 
-
-   // support Ticket
-  const [supportTicketData,setSupportTicketData] = useState<ICreateSupportTicketPayload>({supportTicketName:"", status:"", description:"" })
-  const [creatingSupportTicket, setCreatingSupportTicket] = useState<boolean>(false)
-  const [openSupportTicketModal,setOpenSupportTicketModal] = useState<boolean>(false);
-
-  const handleOpenSupportTicketModal = ()=> setOpenSupportTicketModal(true)
-  const handleCloseSupportTicketModal = ()=>{
-    setOpenSupportTicketModal(false)
-    setSupportTicketData({ supportTicketName:"",status:"",description:"" })
+  const handleOpenCategoryModal = ()=> setOpenCategoryModal(true)
+  const handleCloseCategoryModal = ()=>{
+    setOpenCategoryModal(false)
+    setCategoryData({ categoryName:"",parentCategory:"", options :"" , status:"",description:"" })
   }
 
-  const handleSupportTicketChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
+  const handleCategoryInputChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
     const {name, value} = e.target
-    setSupportTicketData((prev)=>({...prev,[name]:value}))
+    setCategoryData((prev)=>({...prev,[name]:value}))
   }
 
- const handleSupportTicketStatusChange = (e:SelectChangeEvent) =>{
-  setSupportTicketData((prev)=>({...prev,status:e.target.value as string}))
+ const handleCategoryStatusChange = (e:SelectChangeEvent) =>{
+  setCategoryData((prev)=>({...prev,status:e.target.value as string}))
+ }
+ const handleParentCategoryChange = (e:SelectChangeEvent )=>{
+  setCategoryData((prev)=>({ ...prev, parentCategory:e.target.value }))
+
+ }
+ const handleCategoryOptionChange = (e:SelectChangeEvent)=>{
+  setCategoryData((prev)=>({ ...prev,options:e.target.value}))
+
  }
 
-   const handleCreateSupportTicket = async (e:FormEvent<HTMLFormElement>) =>{
+   const handleCreateCategory = async (e:FormEvent<HTMLFormElement>) =>{
     e.preventDefault();
-    setCreatingSupportTicket(true)
+    setCreatingCategory(true)
     try {
-      const response = await createSupportTicket(supportTicketData)
+      const response = await createCategory(categoryData)
       return response 
     } catch (error) {
       console.log(error)
     }finally{
-      setCreatingSupportTicket(false)
+      setCreatingCategory(false)
+    }
+   }
+
+
+   // category
+  const [tagData,setTagData] = useState<ICreateTagPayload>({tagName:"", parentTag:"", options:"", status:"", description:"" })
+  const [creatingTag, setCreatingTag] = useState<boolean>(false)
+  const [openTagModal,setOpenTagModal] = useState<boolean>(false);
+
+  const handleOpenTagModal = ()=> setOpenTagModal(true)
+  const handleCloseTagModal = ()=>{
+    setOpenTagModal(false)
+    setTagData({ tagName:"",parentTag:"", options :"" , status:"",description:"" })
+  }
+
+  const handleTagInputChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
+    const {name, value} = e.target
+    setTagData((prev)=>({...prev,[name]:value}))
+  }
+
+ const handleTagStatusChange = (e:SelectChangeEvent) =>{
+  setTagData((prev)=>({...prev,status:e.target.value as string}))
+ }
+ const handleParentTagChange = (e:SelectChangeEvent )=>{
+  setTagData((prev)=>({ ...prev, parentTag:e.target.value }))
+ }
+ const handleTagOptionsChange = (e:SelectChangeEvent)=>{
+  setTagData((prev)=>({ ...prev,options:e.target.value}))
+ }
+
+   const handleCreateTag = async (e:FormEvent<HTMLFormElement>) =>{
+    e.preventDefault();
+    setCreatingTag(true)
+    try {
+      const response = await createTag(tagData)
+      return response 
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setCreatingTag(false)
     }
    }
 
@@ -548,7 +632,7 @@ const Setups:React.FC = () => {
 
         </Box>
       </Modal>
-    </Paper>
+      </Paper>
     }
 
     { selectedItem === 3 &&
@@ -621,7 +705,7 @@ const Setups:React.FC = () => {
 
         </Box>
       </Modal>
-    </Paper>
+     </Paper>
     }
 
 
@@ -695,10 +779,8 @@ const Setups:React.FC = () => {
 
         </Box>
       </Modal>
-    </Paper>
-    }
-
-
+     </Paper>
+      }
 
     { selectedItem === 5 &&
      <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
@@ -770,8 +852,317 @@ const Setups:React.FC = () => {
 
         </Box>
       </Modal>
-    </Paper>
+     </Paper>
     }
+
+    { selectedItem === 6 && 
+     <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
+         <Button variant='contained' sx={{ alignSelf:"start", backgroundColor:"#2563EB", fontSize:"14px", fontWeight:"500", borderRadius:"4px", height:"40px", textAlign:"start"}}>+ New email template</Button>
+         <Divider sx={{borderWidth:"1px", width:'100%' }}/>
+         <Box sx={{display:"flex", width:"100%", justifyContent:"space-between", backgroundColor:"#F3F4F6", alignItems:"center", height:"40px"}}>
+            <Typography sx={{paddingLeft:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400"}}>Tickets  templates</Typography>
+            <Typography sx={{ paddingRight:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400",}}>Enable All  Disable All</Typography>
+         </Box>
+
+         <Box sx={{ marginX:"24px", widht:"100%", border:"1px solid #D1D5DB", height:"290px"}}>
+            <Typography sx={{ padding:"20px", fontSize:"15px", fontWeight:"400", color:"#4B5563"}}>Template Name</Typography>
+            <Divider sx={{borderWidth:"1px", width:"100%" }} />
+            <Box sx={{display:"flex", justifyContent:"space-between", marginX:'20px', marginY:"10px"}}>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>New Ticket Opened (Opened by User, Sent to Tenant)</Typography>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>Disable</Typography>
+            </Box>
+         </Box>
+
+          <Box sx={{display:"flex", width:"100%", justifyContent:"space-between", backgroundColor:"#F3F4F6", alignItems:"center", height:"40px"}}>
+            <Typography sx={{paddingLeft:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400"}}>Leases/Agreement templates</Typography>
+            <Typography sx={{ paddingRight:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400",}}>Enable All  Disable All</Typography>
+         </Box>
+
+         <Box sx={{ marginX:"24px", widht:"100%", border:"1px solid #D1D5DB", height:"290px"}}>
+            <Typography sx={{ padding:"20px", fontSize:"15px", fontWeight:"400", color:"#4B5563"}}>Template Name</Typography>
+            <Divider sx={{borderWidth:"1px", width:"100%" }} />
+            <Box sx={{display:"flex", justifyContent:"space-between", marginX:'20px', marginY:"10px"}}>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>New Ticket Opened (Opened by User, Sent to Tenant)</Typography>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>Disable</Typography>
+            </Box>
+         </Box>
+
+          <Box sx={{display:"flex", width:"100%", justifyContent:"space-between", backgroundColor:"#F3F4F6", alignItems:"center", height:"40px"}}>
+            <Typography sx={{paddingLeft:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400"}}>Invoices templates</Typography>
+            <Typography sx={{ paddingRight:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400",}}>Enable All  Disable All</Typography>
+         </Box>
+
+         <Box sx={{ marginX:"24px", widht:"100%", border:"1px solid #D1D5DB", height:"290px"}}>
+            <Typography sx={{ padding:"20px", fontSize:"15px", fontWeight:"400", color:"#4B5563"}}>Template Name</Typography>
+            <Divider sx={{borderWidth:"1px", width:"100%" }} />
+            <Box sx={{display:"flex", justifyContent:"space-between", marginX:'20px', marginY:"10px"}}>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>New Ticket Opened (Opened by User, Sent to Tenant)</Typography>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>Disable</Typography>
+            </Box>
+         </Box>
+
+           <Box sx={{display:"flex", width:"100%", justifyContent:"space-between", backgroundColor:"#F3F4F6", alignItems:"center", height:"40px"}}>
+            <Typography sx={{paddingLeft:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400"}}>Tasks templates</Typography>
+            <Typography sx={{ paddingRight:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400",}}>Enable All  Disable All</Typography>
+         </Box>
+
+         <Box sx={{ marginX:"24px", widht:"100%", border:"1px solid #D1D5DB", height:"290px"}}>
+            <Typography sx={{ padding:"20px", fontSize:"15px", fontWeight:"400", color:"#4B5563"}}>Template Name</Typography>
+            <Divider sx={{borderWidth:"1px", width:"100%" }} />
+            <Box sx={{display:"flex", justifyContent:"space-between", marginX:'20px', marginY:"10px"}}>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>New Ticket Opened (Opened by User, Sent to Tenant)</Typography>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>Disable</Typography>
+            </Box>
+         </Box>
+
+     </Paper>
+    }
+
+
+    { selectedItem === 7 && 
+     <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
+         <Button variant='contained' sx={{ alignSelf:"start", backgroundColor:"#2563EB", fontSize:"14px", fontWeight:"500", borderRadius:"4px", height:"40px", textAlign:"start"}}>+ New sms template</Button>
+         <Divider sx={{borderWidth:"1px", width:'100%' }}/>
+         <Box sx={{display:"flex", width:"100%", justifyContent:"space-between", backgroundColor:"#F3F4F6", alignItems:"center", height:"40px"}}>
+            <Typography sx={{paddingLeft:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400"}}>Tickets  templates</Typography>
+            <Typography sx={{ paddingRight:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400",}}>Enable All  Disable All</Typography>
+         </Box>
+
+         <Box sx={{ marginX:"24px", widht:"100%", border:"1px solid #D1D5DB", height:"290px"}}>
+            <Typography sx={{ padding:"20px", fontSize:"15px", fontWeight:"400", color:"#4B5563"}}>Template Name</Typography>
+            <Divider sx={{borderWidth:"1px", width:"100%" }} />
+            <Box sx={{display:"flex", justifyContent:"space-between", marginX:'20px', marginY:"10px"}}>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>New Ticket Opened (Opened by User, Sent to Tenant)</Typography>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>Disable</Typography>
+            </Box>
+         </Box>
+
+          <Box sx={{display:"flex", width:"100%", justifyContent:"space-between", backgroundColor:"#F3F4F6", alignItems:"center", height:"40px"}}>
+            <Typography sx={{paddingLeft:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400"}}>Leases/Agreement templates</Typography>
+            <Typography sx={{ paddingRight:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400",}}>Enable All  Disable All</Typography>
+         </Box>
+
+         <Box sx={{ marginX:"24px", widht:"100%", border:"1px solid #D1D5DB", height:"290px"}}>
+            <Typography sx={{ padding:"20px", fontSize:"15px", fontWeight:"400", color:"#4B5563"}}>Template Name</Typography>
+            <Divider sx={{borderWidth:"1px", width:"100%" }} />
+            <Box sx={{display:"flex", justifyContent:"space-between", marginX:'20px', marginY:"10px"}}>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>New Ticket Opened (Opened by User, Sent to Tenant)</Typography>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>Disable</Typography>
+            </Box>
+         </Box>
+
+          <Box sx={{display:"flex", width:"100%", justifyContent:"space-between", backgroundColor:"#F3F4F6", alignItems:"center", height:"40px"}}>
+            <Typography sx={{paddingLeft:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400"}}>Invoices templates</Typography>
+            <Typography sx={{ paddingRight:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400",}}>Enable All  Disable All</Typography>
+         </Box>
+
+         <Box sx={{ marginX:"24px", widht:"100%", border:"1px solid #D1D5DB", height:"290px"}}>
+            <Typography sx={{ padding:"20px", fontSize:"15px", fontWeight:"400", color:"#4B5563"}}>Template Name</Typography>
+            <Divider sx={{borderWidth:"1px", width:"100%" }} />
+            <Box sx={{display:"flex", justifyContent:"space-between", marginX:'20px', marginY:"10px"}}>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>New Ticket Opened (Opened by User, Sent to Tenant)</Typography>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>Disable</Typography>
+            </Box>
+         </Box>
+
+           <Box sx={{display:"flex", width:"100%", justifyContent:"space-between", backgroundColor:"#F3F4F6", alignItems:"center", height:"40px"}}>
+            <Typography sx={{paddingLeft:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400"}}>Tasks templates</Typography>
+            <Typography sx={{ paddingRight:"24px", color:"#4B5563", fontSize:"16px", fontWeight:"400",}}>Enable All  Disable All</Typography>
+         </Box>
+
+         <Box sx={{ marginX:"24px", widht:"100%", border:"1px solid #D1D5DB", height:"290px"}}>
+            <Typography sx={{ padding:"20px", fontSize:"15px", fontWeight:"400", color:"#4B5563"}}>Template Name</Typography>
+            <Divider sx={{borderWidth:"1px", width:"100%" }} />
+            <Box sx={{display:"flex", justifyContent:"space-between", marginX:'20px', marginY:"10px"}}>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>New Ticket Opened (Opened by User, Sent to Tenant)</Typography>
+                <Typography sx={{ color:"#2563EB", fontSize:"12px", fontWeight:"400" }}>Disable</Typography>
+            </Box>
+         </Box>
+         
+     </Paper>
+    }
+
+  { selectedItem === 8 &&
+     <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
+        <Button onClick={handleOpenCategoryModal} variant='contained' sx={{ alignSelf:"start", backgroundColor:"#2563EB", fontSize:"14px", fontWeight:"500", borderRadius:"4px", height:"40px", textAlign:"start"}}>+ New category</Button>
+
+        <Divider sx={{ borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1"}}/>
+        <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
+
+          <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
+            <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>
+              <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
+              <img src={refreshIcon} alt="refreshIcon" />
+          </Box>
+          <Box sx={{ display:"flex", gap:"20px"}}>
+            <TextField placeholder='Search' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
+             <Box sx={{ height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
+               <Typography sx={{ color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
+               <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+          </Box>
+        </Box>
+
+        <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
+          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+        </Box>
+
+        {/* add support ticket modal */}
+
+      <Modal open={openCategoryModal}  onClose={handleCloseCategoryModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <Box sx={modalStyles} style={{ width:"600px"}} >
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
+             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Create new category</Typography>
+             <IconButton onClick={handleCloseCategoryModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+          </Box>
+
+         <form  onSubmit={handleCreateCategory} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
+            <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                     <FormLabel  htmlFor="categoryName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Category Name</FormLabel>
+                     <TextField type="text"  name="categoryName" value={categoryData.categoryName} onChange={handleCategoryInputChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+             </Box>
+
+                <Box sx={{ width:"100%", display:"flex", gap:"10px"}}>
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="parentCategory" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Parent Category</FormLabel>
+                     <Select id='parent-category-select'  value={categoryData.parentCategory} onChange={handleParentCategoryChange} sx={{width:"100%"}} >
+                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="options" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Options</FormLabel>
+                     <Select id='options-select'  value={categoryData.options} onChange={handleCategoryOptionChange} sx={{width:"100%"}} >
+                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+
+                </Box> 
+
+                <Box sx={{ width:"100%" }}>
+                    <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
+                     <Select id='status-select'  value={supportTicketData.status} onChange={handleCategoryStatusChange} sx={{width:"100%"}} >
+                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+                </Box>
+
+                <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                    <FormLabel  htmlFor="description" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Description</FormLabel>
+                    <TextField type="text"  multiline rows={4} maxRows={4} name="description" value={categoryData.description} onChange={handleCategoryInputChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+              </Box>
+
+              <Button type='submit' loading={creatingCategory} variant='contained' disabled={!categoryData.categoryName || !categoryData.status || !categoryData.description ||  !categoryData.options || !categoryData.parentCategory || creatingCategory} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+         </form>
+
+        </Box>
+      </Modal>
+    </Paper>
+  }
+
+    { selectedItem === 9 &&
+     <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
+        <Button onClick={handleOpenTagModal} variant='contained' sx={{ alignSelf:"start", backgroundColor:"#2563EB", fontSize:"14px", fontWeight:"500", borderRadius:"4px", height:"40px", textAlign:"start"}}>+ New Tag</Button>
+
+        <Divider sx={{ borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1"}}/>
+        <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
+
+          <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
+            <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>
+              <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
+              <img src={refreshIcon} alt="refreshIcon" />
+          </Box>
+          <Box sx={{ display:"flex", gap:"20px"}}>
+            <TextField placeholder='Search' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
+             <Box sx={{ height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
+               <Typography sx={{ color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
+               <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
+             </Box>
+          </Box>
+        </Box>
+
+        <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
+          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+        </Box>
+
+        {/* add support ticket modal */}
+
+      <Modal open={openTagModal}  onClose={handleCloseTagModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <Box sx={modalStyles} style={{ width:"600px"}} >
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
+             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Create new tag</Typography>
+             <IconButton onClick={handleCloseTagModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+          </Box>
+
+         <form  onSubmit={handleCreateTag} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
+            <Box sx={{ width:"100%",display:"flex", gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                     <FormLabel  htmlFor="tagName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Tag Name</FormLabel>
+                     <TextField type="text"  name="tagName" value={tagData.tagName} onChange={handleTagInputChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+             </Box>
+             
+
+                <Box sx={{ width:"100%", display:"flex", gap:"10px"}}>
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="parentTag" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Parent Tag</FormLabel>
+                     <Select id='parent-tag-select'  value={tagData.parentTag} onChange={handleParentTagChange} sx={{width:"100%"}} >
+                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="options" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Options</FormLabel>
+                     <Select id='options-select' value={tagData.options} onChange={handleTagOptionsChange} sx={{width:"100%"}} >
+                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+
+                </Box> 
+
+                <Box sx={{ width:"100%" }}>
+                    <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
+                     <Select id='status-select'  value={tagData.status} onChange={handleTagStatusChange} sx={{width:"100%"}} >
+                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+                </Box>
+
+                <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                    <FormLabel  htmlFor="description" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Description</FormLabel>
+                    <TextField type="text"  multiline rows={4} maxRows={4} name="description" value={tagData.description} onChange={handleTagInputChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+              </Box>
+
+              <Button type='submit' loading={creatingTag} variant='contained' disabled={!tagData.tagName || !tagData.status || !tagData.description ||  !tagData.options || !tagData.parentTag || creatingTag} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+         </form>
+
+        </Box>
+      </Modal>
+    </Paper>
+  }
+
 
       </Box>
     </Box>

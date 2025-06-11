@@ -16,6 +16,7 @@ import Setups from './pages/Setups'
 import Users from './pages/Users'
 import Landlords from './pages/Landlords'
 import Properties from './pages/Properties'
+import {ToastContainer} from  "react-toastify"
 
 
 
@@ -24,7 +25,9 @@ function App() {
   return (
     <>
     <Router>
-      <Routes>
+        <ToastContainer position="top-right" autoClose={5000} hideProgressBar={true} newestOnTop={false} closeOnClick  rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored"
+        toastStyle={{ textAlign:"left", fontWeight:"500", fontSize:"14px", width:"400px", height:'60px'}}/>    
+        <Routes>
         <Route path='/' element={<SignIn/>} /> 
         <Route path='/create-account' element={<CreateAccount/>}/>
         <Route path='/forgot-password' element={<ForgotPassword/>}/>

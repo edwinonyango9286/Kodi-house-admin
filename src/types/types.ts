@@ -1,13 +1,18 @@
 export interface ICreateAccountPayload {
-  username: string;
+  userName: string;
   email: string;
   password: string;
-  acceptTermsAndConditions: boolean;
+  termsAndConditionsAccepted: boolean;
 }
 
-export interface ICreateAccountResponse {
-  accessToken: string;
-  refreshToken: string;
+export interface IVerifyCodePayload {
+  activationToken:string,
+  activationCode:string
+}
+
+export interface ISignInPayload {
+  email:string,
+  password:string,
 }
 
 // create role
@@ -116,4 +121,30 @@ export interface ICreateSupportTicketPayload {
 export interface ICreateSupportTicketResponse {
   status:string,
   message:string
+}
+
+export interface ICreateCategoryPayload {
+  categoryName:string,
+  parentCategory:string,
+  status:string,
+  options:string,
+  description:string
+}
+
+export interface ICreateCategoryResponse {
+  message:string,
+  status:string,
+}
+
+export interface ICreateTagPayload {
+  tagName:string,
+  parentTag:string,
+  status:string,
+  options:string,
+  description:string
+}
+
+export interface ICreateTagResponse {
+  message:string,
+  status:string,
 }
