@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import {Drawer as MuiDrawer, List,ListItem,ListItemIcon, ListItemText,Divider, Box,Typography,Collapse } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import {Drawer as MuiDrawer, List,ListItem,ListItemIcon, ListItemText,Box,Typography,Collapse } from '@mui/material';
 import {useNavigate, useLocation } from 'react-router-dom';
 import { HiOutlineLightningBolt } from "react-icons/hi";
-import { RiLogoutBoxRLine } from "react-icons/ri";
 import { IoHomeOutline } from "react-icons/io5";
 import { PiBuildingOffice } from "react-icons/pi";
 import { FiUsers } from "react-icons/fi";
@@ -29,14 +28,19 @@ type DrawerProps = {
 
 const drawerWidth = 232;
 
-const Drawer = ({open,toggleDrawer,children,
-  navItems = [
-    { text: <Typography sx={{  fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Welcome James</Typography>, icon:<HiOutlineLightningBolt fontSize={20}/>, path:"user-profile" },
-    { text: <Typography sx={{  fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Dashboard</Typography>, icon: <IoHomeOutline fontSize={20} />, path: 'dashboard' },
+const Drawer = ({open,children}: DrawerProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+  const [userData,setUserData] = useState(null)
+
+  const navItems: DrawerItem[] = [
+    { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Welcome {userData?.userName.split(" ")[0]}</Typography>, icon:<HiOutlineLightningBolt fontSize={20}/>, path:"user-profile" },
+    { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Dashboard</Typography>, icon: <IoHomeOutline fontSize={20} />, path: 'dashboard' },
     { text: <Typography sx={{ fontSize:"16px", fontWeight:"700" ,textAlign:"start"}}>Properties</Typography>, icon: <PiBuildingOffice  fontSize={20} />, path:"properties"},
     { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Landlords</Typography>, icon: <FiUsers fontSize={20} />, path:"landlords",},
-    { text: <Typography sx={{  fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Users</Typography>, icon: <FiUsers fontSize={20 } />, path: 'users'},
-    { text: <Typography sx={{fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Reports</Typography>, icon: <SlBriefcase fontSize={20} />, path:"reports",
+    { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Users</Typography>, icon: <FiUsers fontSize={20 } />, path: 'users'},
+    { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Reports</Typography>, icon: <SlBriefcase fontSize={20} />, path:"reports",
       children: [
         { text: <Typography sx={{ fontSize:"16px", fontWeight:"500", textAlign:"start"}}>Invoices</Typography>,path: 'invoices' },
         { text: <Typography sx={{ fontSize:"16px", fontWeight:"500", textAlign:"start"}}>Payments</Typography>,path: 'payments' },
@@ -45,10 +49,7 @@ const Drawer = ({open,toggleDrawer,children,
     },
     { text: <Typography sx={{ cursor:"pointer", fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Setups</Typography>,icon: <HiAdjustments fontSize={20} />, path: 'setups' },
   ]
-}: DrawerProps) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+
 
 const handleNavigation = (path?: string) => {
   if (!path) return;
@@ -111,13 +112,23 @@ const isActive = (path?: string) => {
     );
   };
 
+
+  useEffect(()=>{
+    const localStorageUserData = localStorage.getItem("userData");
+    const userData = JSON.parse(localStorageUserData)
+    setUserData(userData)
+  },[])
+
+  
+
+
   return (
     <MuiDrawer  variant="persistent" open={open} sx={{width: drawerWidth, flexShrink: 0, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', overflowX: 'hidden', display: 'flex', flexDirection: 'column',borderRight:"1px solid #E5E7EB"}}}>
 
       <Box onClick={()=>navigate("")} sx={{ cursor:"pointer", position: "relative",  padding: "20px",  display: "flex",alignItems: "center",justifyContent: "center", width: "100%", backgroundColor: "#2563EB", height: "68px",flexShrink: 0}}>
         <img src={logoWhite} alt="logoWhite" style={{ maxWidth: '80%' }} />
         <Box sx={{top: "44px",left: "78px",borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", position: "absolute", width: "60px", height: "20px",}}>
-          <Typography sx={{fontSize: "12px", fontWeight: "600", textAlign: "center", color: "#fff"}}>Admin</Typography>
+          <Typography sx={{fontSize: "12px", fontWeight: "600", textAlign: "center", color: "#fff"}}>{userData?.role?.name}</Typography>
         </Box>
       </Box>
 

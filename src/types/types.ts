@@ -22,10 +22,6 @@ export interface ICreateRolePayload {
   description:string,
 }
 
-export interface ICreateRoleResponse {
-  status: boolean;
-  message: string;
-}
 
 export interface ICreatePermissionPayload {
   permissionName:string,
@@ -80,7 +76,7 @@ export interface IUpdateUserInfoResponse {
 }
 
 export interface ICreatePropertyTypePayload {
-  propertyTypeName:string,
+  name:string,
   status:string,
   description:string,
 }
@@ -91,7 +87,7 @@ export interface ICreatePropertyTypeResponse {
 }
 
 export interface ICreatePropertyCategoryPayload {
-  propertyCategoryName:string,
+  name:string,
   status:string,
   description:string,
 }
@@ -151,4 +147,10 @@ export interface ICreateTagResponse {
 
 export interface IRequestResetPasswordEmail {
   email:string
+}
+
+export interface  IResetPasswordPayload {
+  password:string,
+  confirmPassword:string
+  token?:string
 }

@@ -1,16 +1,13 @@
 import { Avatar, Box, Button, FormControl, FormControlLabel, FormGroup, FormLabel, InputAdornment, Paper, Switch, TextField, Typography } from '@mui/material'
-import React, { useState } from 'react'
-import freyaBrowning from "../assets/Avatars square-20230907T172556Z-001/Avatars square/WebP/Freya Browning.webp"
+import React, { useEffect, useState } from 'react'
 import uploadIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/upload icon.svg"
 import eyeIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon eye.svg"
 import type { IUpdatePasswordPayload, IUpdateUserInfoPayload } from '../types/types'
-import { updatePassword, updateUserInfo } from '../components/services/userServices'
+import { getUserProfile, updatePassword, updateUserInfo } from '../components/services/userServices'
 import { showErrorToast, showInfoToast } from '../utils/toast'
 import type { AxiosError } from 'axios'
 import Cookies from 'js-cookie'
 import { useNavigate } from 'react-router-dom'
-
-
 
 const Profile = () => {
   const navigate = useNavigate()
@@ -22,6 +19,7 @@ const Profile = () => {
   const [userInfoData,setUserInfoData] = useState<IUpdateUserInfoPayload>({ email:"",phoneNumber:"", firstName:"", secondName:"", lastName:"", nationalId:"", address:"" })
   const [updatingUserInfo,setUpdatingUserInfo] = useState<boolean>(false)
   const [securityAandNotificationsData,setSecurityAndNotificationsData] =  useState({twoFa:false, accountActivity:false, newMessages:false})
+  const [userData,setUserData] = useState(null)
 
   const handleChangePasswordInput =  (e:React.ChangeEvent<HTMLInputElement>)=>{
     const {name, value} = e.target
@@ -82,18 +80,32 @@ const Profile = () => {
     setSecurityAndNotificationsData((prev)=>({...prev, [name]:checked}))
   }
 
+  // get current user profile 
+  const getCurrentUserProfile =  async ()=> {
+    try {
+      const response = await getUserProfile();
+      if(response.status === 200){
+        console.log(response.data,"=>userData")
+        setUserData(response.data.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
-
+  useEffect(()=>{
+  getCurrentUserProfile()
+  },[])
 
   return (
     <Box sx={{ width:"100%", display:"flex",gap:"20px",}}>
       <Box sx={{ width:"32%" , display:"flex", flexDirection:"column", gap:"20px"}}>
         <Paper elevation={0} sx={{ display:"flex", gap:"20px", alignItems:"center", paddingY:"24px", paddingX:"32px", height:"176px",width:"100%", backgroundColor:"#fff", borderRadius:"8px"}}>
-          <Avatar src={freyaBrowning} sx={{ width:"112px", height:"112px" }}/>
+          <Avatar src={userData?.avatar?.secure_url} sx={{ width:"112px", height:"112px" }}/>
 
           <Box sx={{ display:"flex",flexDirection:"column",}}>
-            <Typography sx={{fontSize:"24px",fontWeight:"600", color:"#1F2937"}}>Freya Browning</Typography>
-            <Typography  sx={{ fontSize:"14px",fontWeight:"400", color:"#6B7280"}}>SuperAdmin</Typography>
+            <Typography sx={{fontSize:"24px",fontWeight:"600", color:"#1F2937"}}>{userData?.userName}</Typography>
+            <Typography  sx={{ fontSize:"14px",fontWeight:"400", color:"#6B7280"}}>{userData?.role?.name}</Typography>
             <Button disableRipple variant='contained' sx={{ ":hover":{ boxShadow:"none"},boxShadow:"none", borderRadius:"8px", marginTop:"10px", width:"140px", height:"40px", backgroundColor:"#1A56DB", display:"flex", gap:"4px"}}>
               <img src={uploadIcon} alt="uploadIcon" style={{width:"12px", height:"12px"}}/>
               <Typography sx={{ fontSize:"12px", fontWeight:"600", color:"#fff", textWrap:"nowrap" }}>Change picture</Typography>

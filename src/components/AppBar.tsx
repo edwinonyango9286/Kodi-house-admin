@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import { AppBar as MuiAppBar, IconButton, Toolbar, Typography, TextField, Box, InputAdornment, Avatar, Menu, MenuItem} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
@@ -8,6 +8,9 @@ import userImage from "../assets/Avatars square-20230907T172556Z-001/Avatars squ
 import dropdownIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown icon small.svg"
 import Cookies from "js-cookie"
 import { useNavigate } from 'react-router-dom';
+import type { AxiosError } from 'axios';
+import { showErrorToast, showInfoToast } from '../utils/toast';
+import { logout } from './services/authServices';
 
 const drawerWidth = 232;
 
@@ -15,6 +18,7 @@ const AppBar = ({ open, toggleDrawer }) => {
   const navigate = useNavigate()
   const [anchorElement,setAnchorElement] = useState<null| HTMLElement>(null);
   const openUserProfile = Boolean(anchorElement)
+  const [userData,setUserData] = useState()
 
   const handleOpenUserProfile = (e: MouseEvent<HTMLDivElement>) => {
       setAnchorElement(e.currentTarget);
@@ -24,16 +28,30 @@ const AppBar = ({ open, toggleDrawer }) => {
     setAnchorElement(null);
     }
 
-    const handleLogout =() => {
-      localStorage.clear();
-      const allCookies = Cookies.get();
-      for( const cookieName in allCookies){
-        Cookies.remove(cookieName)
+    const handleLogout = async () => {
+      try {
+        const response = await logout();
+        if(response.status === 200){
+         localStorage.clear();
+         const allCookies = Cookies.get();
+         for( const cookieName in allCookies){
+            Cookies.remove(cookieName)
+          }
+        showInfoToast(response.data.message)
+        navigate("/")
+        }
+      } catch (err) {
+        const error = err as AxiosError<{ message:string}>
+        showErrorToast(error.response?.data.message || error.message)
       }
-      navigate("/")
-      // remove refresh token from cookies 
-      // Cookies.remove("refreshToken")
     }
+
+    useEffect(()=>{
+      const localStorageUserData = localStorage.getItem("userData");
+      const userData =  JSON.parse(localStorageUserData)
+      setUserData(userData)
+    },[])
+
 
   return (
     <MuiAppBar  position="fixed"  
@@ -73,8 +91,8 @@ const AppBar = ({ open, toggleDrawer }) => {
           </IconButton>
 
           <Box onClick={handleOpenUserProfile} sx={{ cursor:"pointer", display:"flex", alignItems:"center", gap:"4px" }}>
-              <Avatar src={userImage} alt='userImage' />
-              <Typography sx={{fontSize:"16px", fontWeight:"400", color:"#374151" }}>James Miano</Typography>
+              <Avatar src={userData?.avatar?.secure_url} alt='userImage' sx={{ width:"34px", height:"34px"}} />
+              <Typography sx={{fontSize:"16px", fontWeight:"400", color:"#374151" }}>{userData?.userName}</Typography>
               <img src={dropdownIcon} alt="dropdownIcon" />
           </Box>
 

@@ -1,28 +1,35 @@
 import { Box, Button, Checkbox, Divider, FormControl, FormControlLabel, FormLabel, IconButton, InputAdornment, MenuItem, Modal, Paper, Select, TextField, Typography, type SelectChangeEvent } from '@mui/material'
-import React, { useState, type FormEvent,} from 'react'
+import React, { useCallback, useEffect, useState, type FormEvent,} from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import {useTheme } from '@mui/material';
 import { getModalStyle } from '../theme';
 import cancelIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/cancel Icon.svg"
 import type {ICreateRolePayload ,ICreatePermissionPayload, ICreatePropertyTypePayload, ICreatePropertyCategoryPayload, ICreatePropertyTagPayload, ICreateSupportTicketPayload, ICreateCategoryPayload, ICreateTagPayload } from "../types/types"
-import { createRole } from '../components/services/roleService';
-import { createPermission } from '../components/services/permissionServices';
+import { createRole, listRoles } from '../components/services/roleService';
+import { createPermission, listPermissions } from '../components/services/permissionServices';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/filter icon.svg"
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
-import { createPropertyCategory, createPropertyTag, createPropertyType } from '../components/services/propertyTypeServices';
+import {createPropertyTag, createPropertyType, listPropertyTypes } from '../components/services/propertyServices';
 import { createSupportTicket } from '../components/services/supportTicketService';
 import { createCategory } from '../components/services/categoryService';
 import { createTag } from '../components/services/tagServices';
+import { showErrorToast, showInfoToast } from '../utils/toast';
+import type { AxiosError } from 'axios';
+import { dateFormatter } from '../utils/dateFormatter';
+import editIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/edit icon.svg"
+import deleteIconGrey from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/deleted Icon grey.svg"
+import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
+import { createPropertyCategory, listPropertyCategories } from '../components/services/propertyCategoryService';
 
 
 const Setups:React.FC = () => {
   const [formData,setFormData] = useState<ICreateRolePayload>({roleName:"",description:"", status:""})
   const [permissionFormData, setPermissionFormData] = useState<ICreatePermissionPayload>({ permissionName: "", status:"", description:"" });
-  const [propertyTypeData,setPropertyTypeData] = useState<ICreatePropertyTypePayload>({ propertyTypeName:"", status:"", description:"", })
+  const [propertyTypeData,setPropertyTypeData] = useState<ICreatePropertyTypePayload>({ name:"", status:"", description:"", })
   const [isSubmiting,setIsSubmitting] = useState<boolean>(false)
   const theme = useTheme()
   const modalStyles =  getModalStyle(theme.palette.mode)
@@ -78,33 +85,6 @@ const Setups:React.FC = () => {
    setSelectedRole(event.target.value as string);
   };
 
-  const roles = [
-    {id:1, name:"SuperAdmin"},
-    {id:2, name:"Admin"},
-    {id:3, name:"Landlord"},
-    {id:4, name:"Tenant"},
-    {id:5, name:"user"},
-  ]
-
-   const permissions = [
-    {id:1, name:"unfiltered_html"},
-    {id:2, name:"delete_others_posts"},
-    {id:3, name:"view_site_health_checks"},
-    {id:4, name:"manage_categories"},
-    {id:5, name:"edit_published_posts"},
-    {id:6, name:"create_posts"},
-    {id:7, name:"install_languages"},
-    {id:8, name:"delete_published_posts"},
-    {id:9, name:"unfiltered_upload"},
-    {id:10, name:"edit_posts"},
-    {id:11, name:"delete_private_posts"},
-    {id:12, name:" edit_others_posts"},
-    {id:13, name:" update_core"},
-    {id:14, name:" delete_posts"},
-    {id:15, name:"edit_dashboard"},
-    {id:16, name:" publish_posts"},
-  ]
-
     const handleChecked = ()=>{
   }
 
@@ -126,6 +106,8 @@ const Setups:React.FC = () => {
   {id:2,name:"Inactive"},
  ]
 
+//  role functionalities
+
  const handleCreateRole = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   setIsSubmitting(true)
@@ -141,22 +123,64 @@ const Setups:React.FC = () => {
     setIsSubmitting(false)
   }
  }
+ const [roles,setRoles] = useState([])
 
+ const listAllRoles  = useCallback(async ()=>{
+  try {
+    const response = await listRoles();
+    if(response.status === 200){
+      setRoles(response.data.data)
+    }
+  } catch (error) {
+    console.log(error)
+  }
+ },[])
+
+ useEffect(()=>{
+ listAllRoles()
+ },[listAllRoles])
+
+
+
+//  permission functionalities
   const handleCreatePermission = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   setCreatingPermission(true)
 
   try {
     const response = await createPermission(permissionFormData);
-    console.log(response)
-
-  } catch (error) {
-    console.log(error)
-
+    if(response.status === 201){
+      handleCloseAddPermissionModal()
+      showInfoToast(response.data.message)
+      listAllPermissions();
+    }
+  } catch (err) {
+    const error = err as AxiosError<{message?:string}>
+    showErrorToast(error.response?.data.message || error.message)
   } finally{
     setCreatingPermission(false)
   }
  }
+
+ const [permissionsList, setPermissionsList] = useState([])
+
+ const listAllPermissions = useCallback(async()=>{
+  try {
+    const response = await listPermissions()
+    if(response.status === 200){
+      setPermissionsList(response.data.data)
+    }
+  } catch (error) {
+    console.log(error)
+  }
+ },[])
+
+ useEffect(()=>{ 
+  listAllPermissions()
+ },[listAllPermissions])
+
+
+
 
 
  const handleStatusChange = (e:SelectChangeEvent) => {
@@ -174,7 +198,7 @@ const Setups:React.FC = () => {
   const handleOpenPropertyTypeModal = ()=> setOpenPropertyTypeModal(true)
   const handleClosePropertyTypeModal = ()=>{
     setOpenPropertyTypeModal(false)
-    setPropertyTypeData({ propertyTypeName:"",status:"",description:"" })
+    setPropertyTypeData({ name:"",status:"",description:"" })
   }
 
   const handlePropertyTypeChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
@@ -186,28 +210,113 @@ const Setups:React.FC = () => {
   setPropertyTypeData((prev)=>({...prev,status:e.target.value as string}))
  }
 
+ interface propertyType {
+  _id:string,
+  name:string,
+  slug:string,
+  createdAt:Date,
+  status:string,
+  createdBy:{
+    userName:string
+  }
+}
+
+  const [propertyTypes,setPropertyTypes] = useState<propertyType[]>([])
+  const [loadingPropertyTypes,setLoadingPropertyTypes] = useState<boolean>(false)
+
+  // list all property types 
+   const listAllPropertyTypes = useCallback(async () =>  {
+    setLoadingPropertyTypes(true);
+    try {
+      const response = await listPropertyTypes();
+      setPropertyTypes(response.data.data);
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setLoadingPropertyTypes(false)
+    }
+   },[])
+
+   useEffect(()=>{
+    listAllPropertyTypes()
+   },[listAllPropertyTypes])
+
    const handleCreatePropertyType = async (e:FormEvent<HTMLFormElement>) =>{
     e.preventDefault();
     setCreatingPropertyType(true)
     try {
       const response = await createPropertyType(propertyTypeData)
-      return response 
-    } catch (error) {
-      console.log(error)
+       if(response.status === 201){
+          listAllPropertyTypes()
+        showInfoToast(response.data.message)
+        handleClosePropertyTypeModal()
+       }
+    } catch (err) {
+      const error = err as AxiosError<{ message?:string}>
+      showErrorToast(error?.response?.data?.message || error.message)
     }finally{
       setCreatingPropertyType(false)
     }
    }
 
 
-  //  property category
-  const [propertyCategoryData,setPropertyCategoryData] = useState<ICreatePropertyCategoryPayload>({propertyCategoryName:"", status:"", description:"" })
+   const propertyTypeColumns: GridColDef[] = [
+    {field:"name", headerName: "Type Name" , flex:1},
+    {field:"slug", headerName: "Slug" , flex:1},
+    {field:"createdAt", headerName: "Date Added" , flex:1},
+    {field:"createdBy", headerName: "Added By" , flex:1},
+    {field:"status",headerName:"String", flex:1},
+    {field:"actions", headerName: "Actions" , flex:1 , renderCell:((params)=>(
+      <Box sx={{display:"flex", gap:"10px", alignItems:"center"}}>
+        <IconButton>
+          <img src={editIcon} style={{ width:"24px", height:"24px"}} alt="editIcon" />
+        </IconButton>
+         <IconButton >
+          <img src={deleteIconGrey} style={{ width:"24px", height:"24px"}} alt="deleteIcon" />
+        </IconButton>
+         <IconButton >
+          <img src={dotsVertical} style={{ width:"24px", height:"24px"}} alt="dotsVertical" />
+        </IconButton>
+      </Box>
+     ))},
+   ]  
+
+   const  propertyTypeRows =  propertyTypes.map((propertyType)=>({
+    id:propertyType?._id,
+    name:propertyType?.name,
+    slug:propertyType?.slug,
+    createdAt: dateFormatter(propertyType?.createdAt),
+    createdBy:propertyType.createdBy?.userName,
+    status:propertyType?.status
+   }))
+
+  //  property 
+  
+  interface propertyCategory {
+    _id:string,
+    createdBy:{
+      userName:string,
+    }
+    name:string,
+    status:string,
+    description:string,
+    slug:string,
+    createdAt:Date,
+  }
+
+
+
+  const [propertyCategoryData,setPropertyCategoryData] = useState<ICreatePropertyCategoryPayload>({name:"", status:"", description:"" })
   const [creatingPropertyCategory, setCreatingPropertyCategory] = useState<boolean>(false)
   const [openPropertyCategoryModal,setOpenPropertyCategoryModal] = useState<boolean>(false);
+  const [propertyCategories,setPropertyCategories]  = useState<propertyCategory[]>([])
+  const [loadingPropertyCategories,setLoadingPropertyCategories] = useState<boolean>(false)
+   
+
   const handleOpenPropertyCategoryModal = ()=> setOpenPropertyCategoryModal(true)
   const handleClosePropertyCategoryModal = ()=>{
     setOpenPropertyCategoryModal(false)
-    setPropertyCategoryData({ propertyCategoryName:"",status:"",description:"" })
+    setPropertyCategoryData({ name:"",status:"",description:"" })
   }
 
   const handlePropertyCategoryChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
@@ -224,13 +333,65 @@ const Setups:React.FC = () => {
     setCreatingPropertyCategory(true)
     try {
       const response = await createPropertyCategory(propertyCategoryData)
-      return response 
-    } catch (error) {
+      if(response.status === 201) {
+        showInfoToast(response.data.message)
+        handleClosePropertyCategoryModal();
+      }
+    } catch (err) {
+      const error = err as AxiosError<{message?:string}>
+      showErrorToast(error.response?.data.message || error.message)
       console.log(error)
     }finally{
       setCreatingPropertyCategory(false)
     }
    }
+
+
+   const listAllPropertyCategories = async () =>{
+    try {
+      setLoadingPropertyCategories(true)
+      const response = await listPropertyCategories();
+      if(response.status === 200){
+        setPropertyCategories(response.data.data);
+      }
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setLoadingPropertyCategories(false)
+    }
+   }
+
+   useEffect(()=>{
+   listAllPropertyCategories()
+   },[])
+
+   const propertyCategoryColumns:GridColDef[] = [
+    {field:"name", headerName:"Category Name", flex:1},
+    {field:"description", headerName:"Description", flex:1},
+    {field:"slug", headerName:"Slug", flex:1},
+    {field:"createdAt", headerName:"CreatedAt", flex:1},
+    {field:"createdBy", headerName:"Created By", flex:1},
+    {field:"status", headerName:"Status", flex:1},
+    {field:"action",headerName:"Action", flex:1, renderCell:(()=>(
+      <Box sx={{ display:"flex", gap:"10px"}}>
+        <IconButton><img src={editIcon} alt="editIcon"/></IconButton>
+        <IconButton><img src={deleteIconGrey} alt="editIcon"/></IconButton>
+        <IconButton><img src={dotsVertical} alt="editIcon"/></IconButton>
+      </Box>
+    ))}
+   ] 
+
+   const propertyCategoryRows = propertyCategories.map((propertyCategory)=>({
+    id:propertyCategory?._id,
+    name:propertyCategory?.name,
+    description:propertyCategory?.description,
+    slug:propertyCategory?.slug,
+    createdAt:dateFormatter(propertyCategory?.createdAt),
+    status:propertyCategory?.status,
+    createdBy:propertyCategory?.createdBy.userName
+   }))
+
+
 
    // support Ticket
   const [supportTicketData,setSupportTicketData] = useState<ICreateSupportTicketPayload>({supportTicketName:"", status:"", description:"" })
@@ -402,7 +563,7 @@ const Setups:React.FC = () => {
         <Box sx={{width:"24%",}}>
         <FormControl fullWidth>
           <Select id="role-select" value={selectedRole} onChange={handleSelectRole} sx={{ height:"48px", width:"100%"}} >
-            {roles.map((role)=>(<MenuItem key={role.id} value={role.id}>{role.name}</MenuItem>))}
+            {roles?.map((role)=>(<MenuItem key={role?._id} value={role?._id}>{role?.name}</MenuItem>))}
          </Select>
         </FormControl>
         </Box>
@@ -430,7 +591,7 @@ const Setups:React.FC = () => {
                 <Box sx={{ width:"40%",}}>
                  <FormControl fullWidth>
                      <Select id="permission-select" value={permission} onChange={handleChange} sx={{ height:"40px", width:"100%"}} >
-                       {permissions.map((permission)=>(<MenuItem key={permission.id} value={permission.id}>{permission.name}</MenuItem>))}
+                       {permissionsList?.map((permission)=>(<MenuItem key={permission?._id} value={permission?._id}>{permission.permissionName}</MenuItem>))}
                      </Select>
                 </FormControl>
                 </Box> 
@@ -453,7 +614,7 @@ const Setups:React.FC = () => {
             <Box sx={{display:"flex", flexDirection:"column", gap:"10px", paddingX:"24px"}}>
               <Box sx={{marginLeft:"10px",display:"flex", flexDirection:"column", gap:"10px"}}>
                  <Box sx={{display:"flex",flexDirection:"column",}}>
-                   {permissions.map((permission)=>(<FormControlLabel key={permission.id} label={permission.name} sx={{ "& .MuiFormControlLabel-label":{
+                   {permissionsList?.map((permission)=>(<FormControlLabel key={permission?._id} label={permission?.permissionName} sx={{ "& .MuiFormControlLabel-label":{
                       fontSize:"14px", color:"#4B5563", fontWeight:"400"
                      }}}  control={<Checkbox size='small' key={permission.id} onChange={handleChecked}/>}/> )) }
                   </Box>
@@ -591,7 +752,7 @@ const Setups:React.FC = () => {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid sx={{ width:"100%"}} loading={loadingPropertyTypes} columns={propertyTypeColumns} rows={propertyTypeRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add property modal */}
@@ -606,8 +767,8 @@ const Setups:React.FC = () => {
          <form  onSubmit={handleCreatePropertyType} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
             <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
-                     <FormLabel  htmlFor="propertyTypeName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Property Type Name</FormLabel>
-                     <TextField type="text"  name="propertyTypeName" value={propertyTypeData.propertyTypeName} onChange={handlePropertyTypeChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                     <FormLabel  htmlFor="name" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Property Type Name</FormLabel>
+                     <TextField type="text"  name="name" value={propertyTypeData.name} onChange={handlePropertyTypeChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
                   </FormControl>
              </Box>
 
@@ -627,7 +788,7 @@ const Setups:React.FC = () => {
                   </FormControl>
               </Box>
 
-              <Button type='submit' loading={creatingPropertyType} variant='contained' disabled={!propertyTypeData.propertyTypeName || !propertyTypeData.status || !propertyTypeData.description || creatingPropertyType} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+              <Button type='submit' loading={creatingPropertyType} variant='contained' disabled={!propertyTypeData.name || !propertyTypeData.status || !propertyTypeData.description || creatingPropertyType} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
          </form>
 
         </Box>
@@ -635,6 +796,7 @@ const Setups:React.FC = () => {
       </Paper>
     }
 
+   {/* Property category */}
     { selectedItem === 3 &&
      <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
         <Button onClick={handleOpenPropertyCategoryModal} variant='contained' sx={{ alignSelf:"start", backgroundColor:"#2563EB", fontSize:"14px", fontWeight:"500", borderRadius:"4px", height:"40px", textAlign:"start"}}>+ New property categories</Button>
@@ -664,7 +826,7 @@ const Setups:React.FC = () => {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid loading={loadingPropertyCategories} sx={{ width:"100%"}} columns={propertyCategoryColumns} rows={propertyCategoryRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add property category modal */}
@@ -679,8 +841,8 @@ const Setups:React.FC = () => {
          <form  onSubmit={handleCreatePropertyCategory} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
             <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
-                     <FormLabel  htmlFor="propertyCategoryName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Property Category Name</FormLabel>
-                     <TextField type="text"  name="propertyCategoryName" value={propertyCategoryData.propertyCategoryName} onChange={handlePropertyCategoryChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                     <FormLabel  htmlFor="name" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Property Category Name</FormLabel>
+                     <TextField type="text"  name="name" value={propertyCategoryData.name} onChange={handlePropertyCategoryChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
                   </FormControl>
              </Box>
 
@@ -700,7 +862,7 @@ const Setups:React.FC = () => {
                   </FormControl>
               </Box>
 
-              <Button type='submit' loading={creatingPropertyCategory} variant='contained' disabled={!propertyCategoryData.propertyCategoryName || !propertyCategoryData.status || !propertyCategoryData.description || creatingPropertyCategory} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+              <Button type='submit' loading={creatingPropertyCategory} variant='contained' disabled={!propertyCategoryData.name || !propertyCategoryData.status || !propertyCategoryData.description || creatingPropertyCategory} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
          </form>
 
         </Box>

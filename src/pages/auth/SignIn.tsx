@@ -22,7 +22,7 @@ const SignIn : React.FC = () => {
   const [formData,setFormData]  = useState<ISignInPayload>({email:"",password:""})
   const [showPassword,setShowPassword] = useState<boolean>(false);
   const [storeAccessTokenInCookies,setStoreAccessTokenInCookies] = useState<boolean>(false)
-  const [isSubmiting,setIsSubmitting] = useState<boolean>(false)
+  const [isSubmitting,setIsSubmitting] = useState<boolean>(false)
   
 
   const handleChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
@@ -39,6 +39,7 @@ const SignIn : React.FC = () => {
       if(response?.status === 200){
         setFormData({ email:"", password:""})
         navigate("/dashboard")
+        localStorage.setItem("userData", JSON.stringify(response.data.data) )
         
          Cookies.set("accessToken", response.data.accessToken)
 
@@ -94,7 +95,7 @@ const SignIn : React.FC = () => {
                     <Link to={"/forgot-password"} style={{ fontSize:"12px", fontWeight:"500", textAlign:"end", color:"#2563EB", textDecoration:"none",}}>Forgot your password?</Link>
                 </Box>
 
-                <Button loading={isSubmiting} type="submit" variant="contained" disabled={!formData.email || !formData.password} sx={{ marginTop:"10px", width:"100%", height:"50px",backgroundColor:"#1A56DB" , color:"#fff", borderRadius:"12px", fontWeight:"600", fontSize:"16px", textAlign:"center" }}>Sign In</Button>
+                <Button loading={isSubmitting} type="submit" variant="contained" disabled={!formData.email || !formData.password} sx={{ marginTop:"10px", width:"100%", height:"50px",backgroundColor:"#1A56DB" , color:"#fff", borderRadius:"12px", fontWeight:"600", fontSize:"16px", textAlign:"center" }}>Sign In</Button>
 
                 <Box sx={{ marginY:"10px", width:"100%", alignItems:"center", alignContent:"center", display:"flex", gap:"14px"}}>
                   <Divider sx={{ borderWidth:"1px", width:"45%"}}/>
