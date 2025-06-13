@@ -13,8 +13,8 @@ import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
-import {createPropertyTag, createPropertyType, listPropertyTypes } from '../components/services/propertyServices';
-import { createSupportTicket } from '../components/services/supportTicketService';
+import {createPropertyType, listPropertyTypes } from '../components/services/propertyTypesServices';
+import { createSupportTicket, listSupportTickets } from '../components/services/supportTicketService';
 import { createCategory } from '../components/services/categoryService';
 import { createTag } from '../components/services/tagServices';
 import { showErrorToast, showInfoToast } from '../utils/toast';
@@ -24,10 +24,12 @@ import editIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and I
 import deleteIconGrey from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/deleted Icon grey.svg"
 import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
 import { createPropertyCategory, listPropertyCategories } from '../components/services/propertyCategoryService';
+import { createPropertyTag, listPropertyTags } from '../components/services/propertyTagService';
+
 
 
 const Setups:React.FC = () => {
-  const [formData,setFormData] = useState<ICreateRolePayload>({roleName:"",description:"", status:""})
+  const [formData,setFormData] = useState<ICreateRolePayload>({name:"",description:"", status:""})
   const [permissionFormData, setPermissionFormData] = useState<ICreatePermissionPayload>({ permissionName: "", status:"", description:"" });
   const [propertyTypeData,setPropertyTypeData] = useState<ICreatePropertyTypePayload>({ name:"", status:"", description:"", })
   const [isSubmiting,setIsSubmitting] = useState<boolean>(false)
@@ -38,7 +40,7 @@ const Setups:React.FC = () => {
   const handleOpenAddRoleModal = () => setOpenAddRoleModal(true);
   const handleCloseAddRoleModal = () =>{
     setOpenAddRoleModal(false);
-    setFormData({ roleName:"", description:"",status:""})
+    setFormData({ name:"", description:"",status:""})
   };
 
   const [openAddPermissionModal, setOpenAddPermissionModal] = useState<boolean>(false);
@@ -99,31 +101,21 @@ const Setups:React.FC = () => {
   setPermissionFormData((prev)=>({ ...prev,[name]:value}))
  }
 
- 
 
- const roleStatus = [
+ const statuses = [
   {id:1,name:"Active"},
-  {id:2,name:"Inactive"},
+  {id:2,name:"Disabled"},
  ]
 
 //  role functionalities
 
- const handleCreateRole = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setIsSubmitting(true)
+interface role {
+  _id:string,
+  name:string,
+  status:string,
+}
 
-  try {
-    const response = await createRole(formData);
-    console.log(response)
-
-  } catch (error) {
-    console.log(error)
-
-  } finally{
-    setIsSubmitting(false)
-  }
- }
- const [roles,setRoles] = useState([])
+ const [roles,setRoles] = useState<role[]>([])
 
  const listAllRoles  = useCallback(async ()=>{
   try {
@@ -140,9 +132,33 @@ const Setups:React.FC = () => {
  listAllRoles()
  },[listAllRoles])
 
-
+  const handleCreateRole = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setIsSubmitting(true)
+  try {
+    const response = await createRole(formData);
+    if(response.status === 201){
+      showInfoToast(response.data.message);
+      listAllRoles()
+      handleCloseAddRoleModal()
+    }
+  } catch (err) {
+    const error = err as AxiosError<{message?:string}>
+    showErrorToast(error?.response?.data?.message || error.message)
+  } finally{
+    setIsSubmitting(false)
+  }
+ }
 
 //  permission functionalities
+
+ interface permission {
+  _id:string,
+  permissionName:string,
+  status:string,
+ }
+
+
   const handleCreatePermission = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   setCreatingPermission(true)
@@ -162,7 +178,7 @@ const Setups:React.FC = () => {
   }
  }
 
- const [permissionsList, setPermissionsList] = useState([])
+ const [permissionsList, setPermissionsList] = useState<permission[]>([])
 
  const listAllPermissions = useCallback(async()=>{
   try {
@@ -178,9 +194,6 @@ const Setups:React.FC = () => {
  useEffect(()=>{ 
   listAllPermissions()
  },[listAllPermissions])
-
-
-
 
 
  const handleStatusChange = (e:SelectChangeEvent) => {
@@ -265,7 +278,7 @@ const Setups:React.FC = () => {
     {field:"slug", headerName: "Slug" , flex:1},
     {field:"createdAt", headerName: "Date Added" , flex:1},
     {field:"createdBy", headerName: "Added By" , flex:1},
-    {field:"status",headerName:"String", flex:1},
+    {field:"status",headerName:"Status", flex:1},
     {field:"actions", headerName: "Actions" , flex:1 , renderCell:((params)=>(
       <Box sx={{display:"flex", gap:"10px", alignItems:"center"}}>
         <IconButton>
@@ -290,8 +303,7 @@ const Setups:React.FC = () => {
     status:propertyType?.status
    }))
 
-  //  property 
-  
+  //  property category
   interface propertyCategory {
     _id:string,
     createdBy:{
@@ -303,8 +315,6 @@ const Setups:React.FC = () => {
     slug:string,
     createdAt:Date,
   }
-
-
 
   const [propertyCategoryData,setPropertyCategoryData] = useState<ICreatePropertyCategoryPayload>({name:"", status:"", description:"" })
   const [creatingPropertyCategory, setCreatingPropertyCategory] = useState<boolean>(false)
@@ -335,6 +345,7 @@ const Setups:React.FC = () => {
       const response = await createPropertyCategory(propertyCategoryData)
       if(response.status === 201) {
         showInfoToast(response.data.message)
+        listAllPropertyCategories();
         handleClosePropertyCategoryModal();
       }
     } catch (err) {
@@ -369,7 +380,7 @@ const Setups:React.FC = () => {
     {field:"name", headerName:"Category Name", flex:1},
     {field:"description", headerName:"Description", flex:1},
     {field:"slug", headerName:"Slug", flex:1},
-    {field:"createdAt", headerName:"CreatedAt", flex:1},
+    {field:"createdAt", headerName:"Date Added", flex:1},
     {field:"createdBy", headerName:"Created By", flex:1},
     {field:"status", headerName:"Status", flex:1},
     {field:"action",headerName:"Action", flex:1, renderCell:(()=>(
@@ -391,17 +402,28 @@ const Setups:React.FC = () => {
     createdBy:propertyCategory?.createdBy.userName
    }))
 
+   // support Ticket type
 
+   interface SupportTicketType {
+    _id:string,
+    name:string,
+    description:string,
+    status:string,
+    createdBy:{
+      userName:string,
+    }
+    createdAt:Date
+   }
 
-   // support Ticket
-  const [supportTicketData,setSupportTicketData] = useState<ICreateSupportTicketPayload>({supportTicketName:"", status:"", description:"" })
+  const [supportTicketData,setSupportTicketData] = useState<ICreateSupportTicketPayload>({name:"", status:"", description:"" })
   const [creatingSupportTicket, setCreatingSupportTicket] = useState<boolean>(false)
   const [openSupportTicketModal,setOpenSupportTicketModal] = useState<boolean>(false);
+  const [loadingSupportTickets,setLoadingSupportTickets] = useState<boolean>(false)
 
   const handleOpenSupportTicketModal = ()=> setOpenSupportTicketModal(true)
   const handleCloseSupportTicketModal = ()=>{
     setOpenSupportTicketModal(false)
-    setSupportTicketData({ supportTicketName:"",status:"",description:"" })
+    setSupportTicketData({ name:"",status:"",description:"" })
   }
 
   const handleSupportTicketChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
@@ -412,28 +434,92 @@ const Setups:React.FC = () => {
  const handleSupportTicketStatusChange = (e:SelectChangeEvent) =>{
   setSupportTicketData((prev)=>({...prev,status:e.target.value as string}))
  }
+ const [supportTicketList,setSupportTicketList] = useState<SupportTicketType[]>();
+
+
+ const listAllSupportTickets = async ()=>{
+  setLoadingSupportTickets(true)
+  try {
+    const response = await listSupportTickets()
+    if(response.status === 200){
+      setSupportTicketList(response.data.data)
+    }
+  } catch (error) {
+    console.log(error)
+  }finally{
+    setLoadingSupportTickets(false)
+  }
+ }
+
+ useEffect(()=>{
+  listAllSupportTickets()
+ },[])
+
 
    const handleCreateSupportTicket = async (e:FormEvent<HTMLFormElement>) =>{
     e.preventDefault();
     setCreatingSupportTicket(true)
     try {
       const response = await createSupportTicket(supportTicketData)
-      return response 
-    } catch (error) {
+      if(response.status === 201){
+        showInfoToast(response.data.message)
+        handleCloseSupportTicketModal();
+        listAllSupportTickets();
+      }
+    } catch (err) {
+      const error = err as AxiosError<{message?:string}> 
+      showErrorToast(error?.response?.data.message || error?.message)
       console.log(error)
     }finally{
       setCreatingSupportTicket(false)
     }
    }
 
-    // property tag
-  const [propertyTagData,setPropertyTagData] = useState<ICreatePropertyTagPayload>({propertyTagName:"", status:"", description:"" })
+   const supportTicketColumns:GridColDef[] = [
+    {field:"name",headerName:"Name", flex:1},
+    {field:"description", headerName:"Description" , flex:1},
+    {field:"createdAt", headerName:"Date Added", flex:1},
+    {field:"createdBy", headerName:"Added By", flex:1},
+    {field:"status", headerName:"Status", flex:1},
+    {field:"action",headerName:"Action", flex:1, renderCell:(()=>(
+      <Box sx={{ display:"flex", gap:"10px"}}>
+        <IconButton><img src={editIcon} alt="editIcon"/></IconButton>
+        <IconButton><img src={deleteIconGrey} alt="editIcon"/></IconButton>
+        <IconButton><img src={dotsVertical} alt="editIcon"/></IconButton>
+      </Box>
+    ))}
+   ]
+
+   const supportTicketRows = supportTicketList?.map((supportTicket)=>({
+    id:supportTicket?._id,
+    name:supportTicket?.name,
+    description:supportTicket?.description,
+    createdAt:dateFormatter(supportTicket?.createdAt),
+    createdBy:supportTicket?.createdBy.userName,
+    status:supportTicket?.status
+   }))
+
+
+    // property type tag
+   interface propertyTypeTag {
+    _id:string,
+    createdBy:{
+      userName:string,
+    }
+    name:string,
+    status:string,
+    description:string,
+    slug:string,
+    createdAt:Date,
+  }
+  const [propertyTagData,setPropertyTagData] = useState<ICreatePropertyTagPayload>({name:"", status:"", description:"" })
   const [creatingPropertyTag, setCreatingPropertyTag] = useState<boolean>(false)
   const [openPropertyTagModal,setOpenPropertyTagModal] = useState<boolean>(false);
   const handleOpenPropertyTagModal = ()=> setOpenPropertyTagModal(true)
+
   const handleClosePropertyTagModal = ()=>{
     setOpenPropertyTagModal(false)
-    setPropertyTagData({ propertyTagName:"",status:"",description:"" })
+    setPropertyTagData({ name:"",status:"",description:"" })
   }
 
   const handlePropertyTagChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
@@ -445,18 +531,73 @@ const Setups:React.FC = () => {
   setPropertyTagData((prev)=>({...prev,status:e.target.value as string}))
  }
 
-   const handleCreatePropertyTag = async (e:FormEvent<HTMLFormElement>) =>{
+ const [propertyTagsList,setPropertyTagList] = useState<propertyTypeTag[]>([])
+ const [loadingPropertyTags,setLoadingPropertyTags] = useState<boolean>(false)
+
+
+ const listAllPropertyTags = async ()=>{
+  try {
+    setLoadingPropertyTags(true)
+    const response = await listPropertyTags()
+    if(response.status === 200){
+      setPropertyTagList(response.data.data)
+    }
+  } catch (error) {
+    console.log(error)
+  }finally{
+    setLoadingPropertyTags(false)
+  }
+ }
+
+ useEffect(()=>{
+  listAllPropertyTags();
+ },[])
+
+    const handleCreatePropertyTag = async (e:FormEvent<HTMLFormElement>) =>{
     e.preventDefault();
     setCreatingPropertyTag(true)
     try {
       const response = await createPropertyTag(propertyTagData)
-      return response 
-    } catch (error) {
+      if(response.status === 201){
+        showInfoToast(response.data.message)
+        handleClosePropertyTagModal()
+        listAllPropertyTags()
+      }
+    } catch (err) {
+      const error = err as AxiosError<{message?:string}>
+      showErrorToast(error.response?.data.message || error.message)
       console.log(error)
     }finally{
       setCreatingPropertyTag(false)
     }
    }
+
+ const propertyTagColumns:GridColDef[] = [
+    {field:"name", headerName:"Property Tag Name", flex:1},
+    {field:"description", headerName:"Description", flex:1},
+    {field:"slug", headerName:"Slug", flex:1},
+    {field:"createdAt", headerName:"CreatedAt", flex:1},
+    {field:"createdBy", headerName:"Created By", flex:1},
+    {field:"status", headerName:"Status", flex:1},
+    {field:"action",headerName:"Action", flex:1, renderCell:(()=>(
+      <Box sx={{ display:"flex", gap:"10px"}}>
+        <IconButton><img src={editIcon} alt="editIcon"/></IconButton>
+        <IconButton><img src={deleteIconGrey} alt="editIcon"/></IconButton>
+        <IconButton><img src={dotsVertical} alt="editIcon"/></IconButton>
+      </Box>
+    ))}
+   ] 
+
+   const propertyTagRows = propertyTagsList.map((propertyTag)=>({
+    id:propertyTag?._id,
+    name:propertyTag?.name,
+    description:propertyTag?.description,
+    slug:propertyTag?.slug,
+    createdAt:dateFormatter(propertyTag?.createdAt),
+    status:propertyTag?.status,
+    createdBy:propertyTag?.createdBy.userName
+   }))
+
 
    // category
   const [categoryData,setCategoryData] = useState<ICreateCategoryPayload>({categoryName:"", parentCategory:"", options:"", status:"", description:"" })
@@ -554,7 +695,6 @@ const Setups:React.FC = () => {
       </Paper>
 
       { selectedItem === 1 && 
-
       <Paper elevation={0} sx={{ borderRadius:'8px', display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
         <Typography sx={{color:"#1F2937", fontSize:"20px", fontWeight:"700", textAlign:"start"}}>User Role and  Permission Editor</Typography>
         <Divider sx={{borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1",}}/>
@@ -616,7 +756,7 @@ const Setups:React.FC = () => {
                  <Box sx={{display:"flex",flexDirection:"column",}}>
                    {permissionsList?.map((permission)=>(<FormControlLabel key={permission?._id} label={permission?.permissionName} sx={{ "& .MuiFormControlLabel-label":{
                       fontSize:"14px", color:"#4B5563", fontWeight:"400"
-                     }}}  control={<Checkbox size='small' key={permission.id} onChange={handleChecked}/>}/> )) }
+                     }}}  control={<Checkbox size='small' key={permission._id} onChange={handleChecked}/>}/> )) }
                   </Box>
               </Box>
             </Box>
@@ -653,8 +793,8 @@ const Setups:React.FC = () => {
          <form onSubmit={handleCreateRole} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
             <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
-                     <FormLabel  htmlFor="roleName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Role Name</FormLabel>
-                     <TextField type="text"  name="roleName" value={formData.roleName} onChange={handleInputChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                     <FormLabel  htmlFor="name" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Role Name</FormLabel>
+                     <TextField type="text"  name="name" value={formData.name} onChange={handleInputChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
                   </FormControl>
              </Box>
 
@@ -662,7 +802,7 @@ const Setups:React.FC = () => {
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
                      <Select id='status-select'  value={formData.status} onChange={handleStatusChange} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
                 </Box> 
@@ -674,7 +814,7 @@ const Setups:React.FC = () => {
                   </FormControl>
               </Box>
 
-              <Button type='submit' loading={isSubmiting} variant='contained' disabled={!formData.roleName || !formData.status || !formData.description || isSubmiting} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+              <Button type='submit' loading={isSubmiting} variant='contained' disabled={!formData.name || !formData.status || !formData.description || isSubmiting} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
          </form>
 
         </Box>
@@ -701,7 +841,7 @@ const Setups:React.FC = () => {
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
                      <Select  value={permissionFormData.status} onChange={handleStatusChangeForPermission} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
                 </Box> 
@@ -776,7 +916,7 @@ const Setups:React.FC = () => {
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
                      <Select id='status-select'  value={propertyTypeData.status} onChange={handlePropertyTypeStatusChange} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
                 </Box> 
@@ -850,7 +990,7 @@ const Setups:React.FC = () => {
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
                      <Select id='status-select'  value={propertyCategoryData.status} onChange={handlePropertyCategoryStatusChange} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
                 </Box> 
@@ -870,7 +1010,7 @@ const Setups:React.FC = () => {
      </Paper>
     }
 
-
+    {/* Property tags */}
       { selectedItem === 4 &&
      <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
         <Button onClick={handleOpenPropertyTagModal} variant='contained' sx={{ alignSelf:"start", backgroundColor:"#2563EB", fontSize:"14px", fontWeight:"500", borderRadius:"4px", height:"40px", textAlign:"start"}}>+ New property tag</Button>
@@ -900,7 +1040,7 @@ const Setups:React.FC = () => {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid loading={loadingPropertyTags} sx={{ width:"100%"}} columns={propertyTagColumns} rows={propertyTagRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add property tag */}
@@ -915,8 +1055,8 @@ const Setups:React.FC = () => {
          <form  onSubmit={handleCreatePropertyTag} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
             <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
-                     <FormLabel  htmlFor="propertyTagName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Property Tag Name</FormLabel>
-                     <TextField type="text"  name="propertyTagName" value={propertyTagData.propertyTagName} onChange={handlePropertyTagChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                     <FormLabel  htmlFor="name" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Property Tag Name</FormLabel>
+                     <TextField type="text"  name="name" value={propertyTagData.name} onChange={handlePropertyTagChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
                   </FormControl>
              </Box>
 
@@ -924,7 +1064,7 @@ const Setups:React.FC = () => {
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
                      <Select id='status-select'  value={propertyTagData.status} onChange={handlePropertyTagStatusChange} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
                 </Box> 
@@ -936,7 +1076,7 @@ const Setups:React.FC = () => {
                   </FormControl>
               </Box>
 
-              <Button type='submit' loading={creatingPropertyTag} variant='contained' disabled={!propertyTagData.propertyTagName || !propertyTagData.status || !propertyTagData.description || creatingPropertyTag} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+              <Button type='submit' loading={creatingPropertyTag} variant='contained' disabled={!propertyTagData.name || !propertyTagData.status || !propertyTagData.description || creatingPropertyTag} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
          </form>
 
         </Box>
@@ -944,6 +1084,7 @@ const Setups:React.FC = () => {
      </Paper>
       }
 
+    {/* support ticket types */}
     { selectedItem === 5 &&
      <Paper elevation={0} sx={{ borderRadius:"8px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",width:"76%", height:"auto", backgroundColor:"#fff" }}>
         <Button onClick={handleOpenSupportTicketModal} variant='contained' sx={{ alignSelf:"start", backgroundColor:"#2563EB", fontSize:"14px", fontWeight:"500", borderRadius:"4px", height:"40px", textAlign:"start"}}>+ New Support ticket type</Button>
@@ -973,7 +1114,7 @@ const Setups:React.FC = () => {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid loading={loadingSupportTickets} sx={{ width:"100%"}} columns={supportTicketColumns} rows={supportTicketRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add support ticket modal */}
@@ -988,8 +1129,8 @@ const Setups:React.FC = () => {
          <form  onSubmit={handleCreateSupportTicket} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
             <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
-                     <FormLabel  htmlFor="supportTicketName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Support Ticket Type Name</FormLabel>
-                     <TextField type="text"  name="supportTicketName" value={supportTicketData.supportTicketName} onChange={handleSupportTicketChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                     <FormLabel  htmlFor="name" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Support Ticket Type Name</FormLabel>
+                     <TextField type="text"  name="name" value={supportTicketData.name} onChange={handleSupportTicketChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
                   </FormControl>
              </Box>
 
@@ -997,7 +1138,7 @@ const Setups:React.FC = () => {
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
                      <Select id='status-select'  value={supportTicketData.status} onChange={handleSupportTicketStatusChange} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
                 </Box> 
@@ -1009,7 +1150,7 @@ const Setups:React.FC = () => {
                   </FormControl>
               </Box>
 
-              <Button type='submit' loading={creatingSupportTicket} variant='contained' disabled={!supportTicketData.supportTicketName || !supportTicketData.status || !supportTicketData.description || creatingSupportTicket} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+              <Button type='submit' loading={creatingSupportTicket} variant='contained' disabled={!supportTicketData.name || !supportTicketData.status || !supportTicketData.description || creatingSupportTicket} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
          </form>
 
         </Box>
@@ -1197,14 +1338,14 @@ const Setups:React.FC = () => {
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="parentCategory" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Parent Category</FormLabel>
                      <Select id='parent-category-select'  value={categoryData.parentCategory} onChange={handleParentCategoryChange} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
 
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="options" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Options</FormLabel>
                      <Select id='options-select'  value={categoryData.options} onChange={handleCategoryOptionChange} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
 
@@ -1214,7 +1355,7 @@ const Setups:React.FC = () => {
                     <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
                      <Select id='status-select'  value={supportTicketData.status} onChange={handleCategoryStatusChange} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
                 </Box>
@@ -1288,14 +1429,14 @@ const Setups:React.FC = () => {
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="parentTag" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Parent Tag</FormLabel>
                      <Select id='parent-tag-select'  value={tagData.parentTag} onChange={handleParentTagChange} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
 
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="options" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Options</FormLabel>
                      <Select id='options-select' value={tagData.options} onChange={handleTagOptionsChange} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
 
@@ -1305,7 +1446,7 @@ const Setups:React.FC = () => {
                     <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
                      <Select id='status-select'  value={tagData.status} onChange={handleTagStatusChange} sx={{width:"100%"}} >
-                       {roleStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
                 </Box>

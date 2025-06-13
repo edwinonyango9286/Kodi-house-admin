@@ -1,23 +1,45 @@
 import { Box, Button, Divider, FormControl, FormLabel, IconButton, InputAdornment, MenuItem, Modal, Paper, Select, TextField, Typography, useTheme, type SelectChangeEvent } from '@mui/material'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/filter icon.svg"
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
-import { DataGrid } from '@mui/x-data-grid'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import type { IAddUserPayload } from '../types/types'
 import { getModalStyle } from '../theme'
 import cancelIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/cancel Icon.svg"
-import { addUser } from '../components/services/userServices'
+import { addUser, listSystemUsers } from '../components/services/userServices'
+import deleteIconSmall from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon small.svg"
+import editIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/edit icon.svg"
+import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
+import { showErrorToast, showInfoToast } from '../utils/toast'
+import { listRoles } from '../components/services/roleService'
+import { dateFormatter } from '../utils/dateFormatter'
+import type { AxiosError } from 'axios'
 
 const Users = () => {
+  interface User {
+    _id:string
+    firstName:string,
+    lastName:string,
+    email:string,
+    role:{
+      name:string,
+    },
+    description:string,
+    createdAt:Date,
+    createdBy:{
+      userName:string
+    }
+  }
+
   const [userFormData,setUserFormData] = useState<IAddUserPayload>({firstName:"", lastName:"", status:"", role:"",email:"",phoneNumber:"",description:"" })
   const [isSubmiting,setIsSubmitting] = React.useState<boolean>(false)
+  const [usersList,setUsersList] = useState<User[]>([]);
+  const [fetchingUsers,setFetchingUser] = useState<boolean>(false)
 
-  const columns =[] 
-  const rows = []
 
   const theme = useTheme();
   const modalStyles = getModalStyle(theme.palette.mode);
@@ -25,29 +47,42 @@ const Users = () => {
   const [openAddUserModal,setOpenAddUserModal] = React.useState(false);
 
   const handleOpenAddUserModal =()=> setOpenAddUserModal(true);
-  const handleCloseAddUserModel = () => {
+  const handleCloseAddUserModal = () => {
     setOpenAddUserModal(false);
     setUserFormData({ firstName:"", lastName:"", status:"", role:"", email:"", description:"", phoneNumber:""}) 
   }
 
+  const listAllUser = async () => { 
+    setFetchingUser(true)
+    try {
+      const response =  await listSystemUsers()
+      if(response.status === 200){
+        setUsersList(response.data.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setFetchingUser(false)
+    }
+  }
+
+  useEffect(()=>{
+  listAllUser()
+  },[])
+
   const handleCreateUser = async (e:React.FormEvent<HTMLFormElement>) =>{
     e.preventDefault();
     setIsSubmitting(true);
-
-    const userData = {
-      firstName:userFormData.firstName,
-      lastName:userFormData.lastName,
-      status:userFormData.status, 
-      role:userFormData.role,
-      email:userFormData.email, 
-      description:userFormData.description, 
-      phoneNumber:userFormData.phoneNumber
-    }
     try {
-      const response = await addUser(userData)
-      console.log(response)
-    } catch (error) {
-      console.log(error)
+      const response = await addUser(userFormData)
+      if(response.status === 201){
+        showInfoToast(response.data.message)
+        handleCloseAddUserModal()
+        listAllUser()
+      }
+    } catch (err) {
+      const error = err as AxiosError<{message?:string}>
+      showErrorToast(error?.response?.data?.message || error.message)
     }finally{
       setIsSubmitting(false)
     }
@@ -55,7 +90,7 @@ const Users = () => {
 
   const userStatus = [
     {id:1,name:"Active"},
-    {id:1, name:"Inactive"}
+    {id:2, name:"Disabled"}
   ]
 
   const handleSelectUserStatus = (e:SelectChangeEvent) => {
@@ -69,17 +104,65 @@ const Users = () => {
 
   const handleSelectRole = (e:SelectChangeEvent) => {
     setUserFormData((prev)=>({...prev, role:e.target.value as string}))
+    console.log(userFormData.role,"userRole")
   }
 
-  const roles = [
-    {id:1, name:"SuperAdmin"},
-    {id:2, name:"Admin"},
-    {id:3, name:"landlord"},
-    {id:4, name:"Tenant"},
-    {id:5, name:"User"}
+  
+
+  const usersColumns:GridColDef[] = [
+    {field:"name",headerName:"Name", flex:1},
+    {field:"email", headerName:"Email", flex:1},
+    {field:"role", headerName:"Role", flex:1},
+    {field:"description", headerName:"Description",flex:1},
+    {field:"createdAt", headerName:"Date Added", flex:1},
+    {field:"createdBy",headerName:"Added By", flex:1},
+    {field:"action", headerName:"Action",flex:1, renderCell:(()=>(
+      <Box sx={{ display:"flex",gap:"10px"}}>
+        <IconButton> <img src={editIcon} alt="editIcon" style={{ width:"24px", height:"24px"}}/></IconButton>
+        <IconButton> <img src={deleteIconSmall} alt="deleteIconSmall" style={{ width:"24px", height:"24px"}} /></IconButton>
+        <IconButton> <img src={dotsVertical} alt="deleteIconSmall" style={{ width:"24px", height:"24px"}} /></IconButton>
+      </Box>
+    ))}
   ]
 
+  const usersRows = usersList.map((user)=>({
+    id:user?._id,
+    name:`${user?.firstName}  ${user?.lastName}`,
+    email:user?.email,
+    role:user?.role?.name,
+    description:user.description,
+    createdAt:dateFormatter(user?.createdAt),
+    createdBy:user?.createdBy?.userName
+  }))
+
+
+  // list user roles 
+  interface Role{
+    _id:string,
+    name:string,
+    status:string,
+  }
+
+  const [assignableRoles,setAssignableRoles] = useState<Role[]>([])
   
+  const listAllRoles = async ()=>{
+    try {
+      const response = await listRoles();
+      if(response.status === 200){
+        const roles = response.data.data;
+        const filteredRoles = roles.filter((role:Role)=>role.name !=="Admin")
+        setAssignableRoles(filteredRoles)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+useEffect(()=>{
+listAllRoles()
+},[])
+
+
   return (
      <Box sx={{width:"100%",}}>
       <Paper elevation={0} sx={{ borderRadius:"4px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", width:"100#", backgroundColor:"#fff", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)"}}>
@@ -111,15 +194,15 @@ const Users = () => {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid sx={{ width:"100%"}} loading={fetchingUsers} columns={usersColumns} rows={usersRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
        {/* add user modal */}
-         <Modal open={openAddUserModal} onClose={handleCloseAddUserModel} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+         <Modal open={openAddUserModal} onClose={handleCloseAddUserModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
                 <Box style={{width:"600px" }} sx={modalStyles}>
                   <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
                      <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Add New User</Typography>
-                     <IconButton onClick={handleCloseAddUserModel}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+                     <IconButton onClick={handleCloseAddUserModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
                   </Box>
         
                  <form onSubmit={handleCreateUser} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
@@ -128,7 +211,7 @@ const Users = () => {
                           <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
                              <FormLabel  htmlFor="role" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937"}}>Role</FormLabel>
                              <Select value={userFormData.role} onChange={handleSelectRole} sx={{width:'100%', borderRadius:"8px"}}>
-                              {roles.map((role)=>(<MenuItem key={role.id} value={role.name}>{role.name}</MenuItem>)) }
+                              {assignableRoles.map((role)=>(<MenuItem key={role._id} value={role._id}>{role.name}</MenuItem>)) }
                              </Select>
                           </FormControl>
                      </Box>

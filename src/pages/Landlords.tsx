@@ -1,16 +1,59 @@
-import { Box, Divider, InputAdornment, Paper, TextField, Typography } from '@mui/material'
-import React from 'react'
+import { Box, Divider, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material'
+import React, { useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/filter icon.svg"
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
-import { DataGrid } from '@mui/x-data-grid'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import { listLandlords } from '../components/services/userServices'
+import editIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/edit icon.svg"
+import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
 
 const Landlords = () => {
-  const columns =[] 
-  const rows = []
+  interface landlord {
+    _id:string,
+  }
+
+  const [landlords,setLandlords] = useState<landlord[]>([]);
+  const [loadingLandlords,setLoadingLandlords] = useState<boolean>(false)
+
+
+  const listAllLandlords =  async ()=>{
+    try {
+      setLoadingLandlords(true)
+      const response = await listLandlords("Landlord");
+      if(response.status === 200){
+        setLandlords(response.data.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setLoadingLandlords(false)
+    }
+  }
+
+  useEffect(()=>{
+   listAllLandlords()
+  },[])
+
+  const landlordColumns:GridColDef[] = [
+    {field:"name", headerName:"Name", flex:1},
+    {field:"email", headerName:"Email", flex:1},
+    {field:"phoneNumber", headerName:"Phone Number", flex:1},
+    {field:"action", headerName:"Action",flex:1, renderCell:(()=>(
+      <Box sx={{ display:"flex", gap:"10px"}}>
+        <IconButton><img src={editIcon} alt="" style={{ width:"24px", height:"24px"}} /></IconButton>
+        <IconButton><img src={deleteIcon} alt="" style={{ width:"24px", height:"24px"}} /></IconButton>
+        <IconButton><img src={dotsVertical} alt="" style={{ width:"24px", height:"24px"}} /></IconButton>
+      </Box>
+    ))}
+  ] 
+
+  const landlordRows = landlords.map((landlord)=>({
+    id:landlord._id
+  }))
 
   return (
      <Box sx={{width:"100%",}}>
@@ -42,7 +85,7 @@ const Landlords = () => {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid loading={loadingLandlords} sx={{ width:"100%"}} columns={landlordColumns} rows={landlordRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
       </Paper>

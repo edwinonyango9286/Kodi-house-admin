@@ -17,7 +17,7 @@ export interface ISignInPayload {
 
 // create role
 export interface ICreateRolePayload {
-  roleName:string,
+  name:string,
   status:string,
   description:string,
 }
@@ -98,7 +98,7 @@ export interface ICreatePropertyCategoryResponse {
 }
 
 export interface ICreatePropertyTagPayload {
-  propertyTagName:string,
+  name:string,
   description:string,
   status:string,
 }
@@ -109,7 +109,7 @@ export interface ICreatePropertyTagResponse {
 }
 
 export interface ICreateSupportTicketPayload {
-  supportTicketName:string,
+  name:string,
   status:string,
   description:string
 }

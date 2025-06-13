@@ -1,16 +1,25 @@
 import { Box, Divider, InputAdornment, Paper, TextField, Typography } from '@mui/material'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/filter icon.svg"
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
-import { DataGrid } from '@mui/x-data-grid'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import { listOccuppiedProperties, listProperties, listVacantProperties } from '../components/services/propertyService'
+import { listUnits } from '../components/services/unitsService'
 
 const Properties = () => {
+  interface property {
+    _id:string,
+  }
 
-  const columns = [
+  const [propertiesList,setPropertiesList] = useState<property[]>([])
+  const [loadingProperties,setLoadingProperties]  = useState<boolean>(false)
+  const [unitsCount,setUnitsCount] = useState<number>(0)
+
+  const propertyColumns: GridColDef[] = [
     {field:"propertyImage", headerName:"Property Image" , flex:1},
     {field:"propertyName", headerName:"Property Name" , flex:1},
     {field:"propertyType", headerName:"Property Type" , flex:1},
@@ -20,7 +29,76 @@ const Properties = () => {
     {field:"action", headerName:"Action" , flex:1},
   ]
 
-  const rows = []
+  const propertyRows = propertiesList.map((property)=>({
+    id:property?._id
+  }))
+
+  const listAllProperties = async() => {
+    try {
+      setLoadingProperties(true)
+      const response = await listProperties()
+      if(response.status === 200){
+        setPropertiesList(response.data.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setLoadingProperties(false)
+    }
+  }
+
+  useEffect(()=>{
+    listAllProperties()
+  },[])
+
+  const listAllUnits =  async ()=>{
+    try {
+      const response = await listUnits();
+      if(response.status === 200){
+        setUnitsCount(response?.data?.data?.unitsCount)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(()=>{
+   listAllUnits()
+  },[])
+  
+  const [occuppiedProperties,setOccuppiedProperties] = useState([]);
+
+  const listAllOccuppiedProperties = async() => {
+    try {
+      const response = await listOccuppiedProperties()
+      if(response.status === 200){
+        setOccuppiedProperties(response.data.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(()=>{
+    listAllOccuppiedProperties();
+  },[])
+
+  const [vaccantProperties,setVaccantProperties] = useState([])
+
+  const listAllVacantProperties = async ()=>{
+    try {
+      const response = await listVacantProperties();
+      if(response.status === 200 ){
+        setVaccantProperties(response.data.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(()=>{
+    listAllVacantProperties()
+  },[])
 
 
   return (
@@ -31,22 +109,22 @@ const Properties = () => {
 
           <Box sx={{ display:"flex", flexDirection:"column", gap:"6px",}}>
             <Typography variant='body2' sx={{color:"#4B5563", fontSize:"16px", fontWeight:"400" }}>Total Properties</Typography>
-            <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>500</Typography>
+            <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{propertiesList?.length}</Typography>
           </Box>
           <Divider orientation='vertical' sx={{ height:"80px", borderWidth:"1px", backgroundColor:"#9CA3AF"}} />
            <Box sx={{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"10px"}}>
             <Typography variant='body2' sx={{color:"#059669", fontSize:"16px", fontWeight:"400" }}>Occupied properties</Typography>
-            <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>187</Typography>
+            <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{occuppiedProperties.length}</Typography>
           </Box>
           <Divider orientation='vertical' sx={{ height:"80px", borderWidth:"1px", backgroundColor:"#9CA3AF"}} />
            <Box sx={{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"10px"}}>
             <Typography variant='body2' sx={{color:"#DC2626", fontSize:"16px", fontWeight:"400" }}>Vacant properties</Typography>
-            <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>121</Typography>
+            <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{vaccantProperties.length}</Typography>
           </Box>
             <Divider orientation='vertical' sx={{ height:"80px", borderWidth:"1px" , backgroundColor:"#9CA3AF"}} />
            <Box sx={{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"10px"}}>
             <Typography variant='body2' sx={{color:"#4B5563", fontSize:"16px", fontWeight:"400" }}>Total Units</Typography>
-            <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>5257</Typography>
+            <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{unitsCount || 0}</Typography>
           </Box>
 
         </Box>
@@ -77,7 +155,7 @@ const Properties = () => {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid sx={{ width:"100%"}} loading={loadingProperties} columns={propertyColumns} rows={propertyRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
       </Paper>

@@ -13,7 +13,7 @@ import dotVerticalIcon from "../assets/logos and Icons-20230907T172301Z-001/logo
 import {DataGrid} from "@mui/x-data-grid"
 import type {GridColDef,} from "@mui/x-data-grid"
 import { listLandlords, listTenants } from '../components/services/userServices';
-import { listProperties } from '../components/services/propertiesService';
+import { listProperties } from '../components/services/propertyService';
 import  { listUnits } from '../components/services/unitsService';
 
 

@@ -4,8 +4,8 @@ import { config } from "../../utils/config";
 
  export const createRole = async (roleData:ICreateRolePayload ) =>{
     try {
-        const response = await newRequest.post(`create-role`,roleData)
-        return response.data
+        const response = await newRequest.post(`roles/create`,roleData, config)
+        return response
     } catch (error) {
        console.log(error) 
        throw error
