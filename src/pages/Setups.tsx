@@ -12,11 +12,11 @@ import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos an
 import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/filter icon.svg"
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
-import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
+import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
 import {createPropertyType, listPropertyTypes } from '../components/services/propertyTypesServices';
 import { createSupportTicket, listSupportTickets } from '../components/services/supportTicketService';
-import { createCategory } from '../components/services/categoryService';
-import { createTag } from '../components/services/tagServices';
+import { createCategory, listCategories } from '../components/services/categoryService';
+import { createTag, listTags } from '../components/services/tagServices';
 import { showErrorToast, showInfoToast } from '../utils/toast';
 import type { AxiosError } from 'axios';
 import { dateFormatter } from '../utils/dateFormatter';
@@ -304,22 +304,22 @@ interface role {
    }))
 
   //  property category
-  interface propertyCategory {
-    _id:string,
+  interface PropertyCategory {
+    _id:string;
     createdBy:{
-      userName:string,
+      userName:string;
     }
-    name:string,
-    status:string,
-    description:string,
-    slug:string,
-    createdAt:Date,
+    name:string;
+    status:string;
+    description:string;
+    slug:string;
+    createdAt:Date;
   }
 
   const [propertyCategoryData,setPropertyCategoryData] = useState<ICreatePropertyCategoryPayload>({name:"", status:"", description:"" })
   const [creatingPropertyCategory, setCreatingPropertyCategory] = useState<boolean>(false)
   const [openPropertyCategoryModal,setOpenPropertyCategoryModal] = useState<boolean>(false);
-  const [propertyCategories,setPropertyCategories]  = useState<propertyCategory[]>([])
+  const [propertyCategories,setPropertyCategories]  = useState<PropertyCategory[]>([])
   const [loadingPropertyCategories,setLoadingPropertyCategories] = useState<boolean>(false)
    
 
@@ -600,9 +600,22 @@ interface role {
 
 
    // category
-  const [categoryData,setCategoryData] = useState<ICreateCategoryPayload>({categoryName:"", parentCategory:"", options:"", status:"", description:"" })
-  const [creatingCategory, setCreatingCategory] = useState<boolean>(false)
+ interface Category {
+    _id:string,
+    createdBy:{
+      userName:string,
+    }
+    categoryName:string,
+    status:string,
+    description:string,
+    parentCategory:string,
+    createdAt:Date,
+  }
+
+  const [categoryData,setCategoryData] = useState<ICreateCategoryPayload>({categoryName:"", parentCategory:"", options:"", status:"", description:"" });
+  const [creatingCategory, setCreatingCategory] = useState<boolean>(false);
   const [openCategoryModal,setOpenCategoryModal] = useState<boolean>(false);
+  const [categoriesList,setCategoriesList] = useState<Category[]>([])
 
   const handleOpenCategoryModal = ()=> setOpenCategoryModal(true)
   const handleCloseCategoryModal = ()=>{
@@ -624,16 +637,37 @@ interface role {
  }
  const handleCategoryOptionChange = (e:SelectChangeEvent)=>{
   setCategoryData((prev)=>({ ...prev,options:e.target.value}))
-
  }
+
+  const listAllCategories =  async () => {
+    try {
+      const response = await listCategories()
+      if(response.status === 200){
+        setCategoriesList(response.data.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(()=>{
+    listAllCategories();
+  },[])
+
 
    const handleCreateCategory = async (e:FormEvent<HTMLFormElement>) =>{
     e.preventDefault();
     setCreatingCategory(true)
     try {
       const response = await createCategory(categoryData)
-      return response 
-    } catch (error) {
+      if(response.status === 201){
+        showInfoToast(response.data.message);
+        handleCloseCategoryModal();
+        listAllCategories();
+      }
+    } catch (err) {
+      const error = err as AxiosError<{message?:string}>;
+      showErrorToast(error.response?.data.message || error.message)
       console.log(error)
     }finally{
       setCreatingCategory(false)
@@ -641,10 +675,50 @@ interface role {
    }
 
 
-   // category
-  const [tagData,setTagData] = useState<ICreateTagPayload>({tagName:"", parentTag:"", options:"", status:"", description:"" })
-  const [creatingTag, setCreatingTag] = useState<boolean>(false)
+const categoryColumns:GridColDef[] = [
+    {field:"categoryName", headerName:"Category Name", flex:1},
+    {field:"description", headerName:"Description", flex:1},
+    {field:"parentCategory", headerName:"Parent Category", flex:1},
+    {field:"createdAt", headerName:"Created At", flex:1},
+    {field:"createdBy", headerName:"Created By", flex:1},
+    {field:"status", headerName:"Status", flex:1},
+    {field:"action",headerName:"Action", flex:1, renderCell:(()=>(
+      <Box sx={{ display:"flex", gap:"10px"}}>
+        <IconButton><img src={editIcon} alt="editIcon"/></IconButton>
+        <IconButton><img src={deleteIconGrey} alt="editIcon"/></IconButton>
+        <IconButton><img src={dotsVertical} alt="editIcon"/></IconButton>
+      </Box>
+    ))}
+   ] 
+
+   const categoryRows = categoriesList.map((category)=>({
+    id:category?._id,
+    categoryName:category?.categoryName,
+    description:category?.description,
+    parentCategory:category?.parentCategory,
+    createdAt:dateFormatter(category?.createdAt),
+    status:category?.status,
+    createdBy:category?.createdBy?.userName
+   }))
+
+
+interface Tag {
+  _id:string;
+  createdBy:{
+    userName:string;
+  }
+   tagName:string;
+   description:string;
+   parentTag:string;
+   status:string;
+   createdAt:Date;
+}
+
+  const [tagData,setTagData] = useState<ICreateTagPayload>({tagName:"", parentTag:"", options:"", status:"", description:"" });
+  const [creatingTag, setCreatingTag] = useState<boolean>(false);
   const [openTagModal,setOpenTagModal] = useState<boolean>(false);
+  const [tagList,setTagList] = useState<Tag[]>([]);
+  const [fetchingTags,setFetchingTags] = useState<boolean>(false)
 
   const handleOpenTagModal = ()=> setOpenTagModal(true)
   const handleCloseTagModal = ()=>{
@@ -667,22 +741,69 @@ interface role {
   setTagData((prev)=>({ ...prev,options:e.target.value}))
  }
 
+  const listAllTags = async ()=>{
+    try {
+      setFetchingTags(true)
+      const response = await listTags();
+      if(response.status === 200){
+        setTagList(response.data.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setFetchingTags(false)
+    }
+   }
+
+   useEffect(()=>{
+    listAllTags();
+   },[])
+
+
    const handleCreateTag = async (e:FormEvent<HTMLFormElement>) =>{
     e.preventDefault();
     setCreatingTag(true)
     try {
       const response = await createTag(tagData)
-      return response 
-    } catch (error) {
-      console.log(error)
+      if(response.status === 201){
+        showInfoToast(response.data.message)
+        handleCloseTagModal();
+        listAllTags();
+      }
+    } catch (err) {
+      const error = err as AxiosError<{message?:string}>
+      showErrorToast(error?.response?.data?.message || error?.message)
     }finally{
       setCreatingTag(false)
     }
    }
 
+  
+    const tagColumns:GridColDef[] = [
+    {field:"tagName", headerName:"Tag Name", flex:1},
+    {field:"description", headerName:"Description", flex:1},
+    {field:"parentTag", headerName:"Parent Tag", flex:1},
+    {field:"createdAt", headerName:"CreatedAt", flex:1},
+    {field:"createdBy", headerName:"Created By", flex:1},
+    {field:"status", headerName:"Status", flex:1},
+    {field:"action",headerName:"Action", flex:1, renderCell:(()=>(
+      <Box sx={{ display:"flex", gap:"10px"}}>
+        <IconButton><img src={editIcon} alt="editIcon"/></IconButton>
+        <IconButton><img src={deleteIconGrey} alt="editIcon"/></IconButton>
+        <IconButton><img src={dotsVertical} alt="editIcon"/></IconButton>
+      </Box>
+    ))}
+   ] 
 
- const columns:GridColDef[] = []
- const rows:[] = []
+   const tagRows = tagList.map((tag)=>({
+    id:tag?._id,
+    tagName:tag?.tagName,
+    description:tag?.description,
+    parentTag:tag?.parentTag,
+    createdAt:dateFormatter(tag?.createdAt),
+    status:tag?.status,
+    createdBy:tag?.createdBy.userName
+   }))
 
 
   return (
@@ -1314,7 +1435,7 @@ interface role {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid sx={{ width:"100%"}} columns={categoryColumns} rows={categoryRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add support ticket modal */}
@@ -1338,7 +1459,7 @@ interface role {
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="parentCategory" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Parent Category</FormLabel>
                      <Select id='parent-category-select'  value={categoryData.parentCategory} onChange={handleParentCategoryChange} sx={{width:"100%"}} >
-                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {propertyCategories.map((category)=>(<MenuItem key={category._id} value={category.name}>{category.name}</MenuItem>))}
                      </Select>
                 </FormControl>
 
@@ -1354,7 +1475,7 @@ interface role {
                 <Box sx={{ width:"100%" }}>
                     <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
-                     <Select id='status-select'  value={supportTicketData.status} onChange={handleCategoryStatusChange} sx={{width:"100%"}} >
+                     <Select id='status-select'  value={categoryData.status} onChange={handleCategoryStatusChange} sx={{width:"100%"}} >
                        {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
                      </Select>
                 </FormControl>
@@ -1404,7 +1525,7 @@ interface role {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid loading={fetchingTags} sx={{ width:"100%"}} columns={tagColumns} rows={tagRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add support ticket modal */}
@@ -1429,7 +1550,7 @@ interface role {
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
                      <FormLabel  htmlFor="parentTag" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Parent Tag</FormLabel>
                      <Select id='parent-tag-select'  value={tagData.parentTag} onChange={handleParentTagChange} sx={{width:"100%"}} >
-                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                       {propertyTagsList.map((tag)=>(<MenuItem key={tag._id} value={tag.name}>{tag.name}</MenuItem>))}
                      </Select>
                 </FormControl>
 

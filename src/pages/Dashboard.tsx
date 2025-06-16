@@ -15,40 +15,73 @@ import type {GridColDef,} from "@mui/x-data-grid"
 import { listLandlords, listTenants } from '../components/services/userServices';
 import { listProperties } from '../components/services/propertyService';
 import  { listUnits } from '../components/services/unitsService';
+import { dateFormatter } from '../utils/dateFormatter';
+import { listTransactions } from '../components/services/transactionServices';
 
 
 
 const Dashboard = () => {
-  const data:[] =[]
   const [selectedTimePeriod, setSelectedTimePeriod] = useState<string>("Weekly")
-  const [landlords,setLandlords] = useState(null)
-  const [tenants,setTenants] = useState(null);
-  const [properties,setProperties] = useState(null)
-  const [units,setUnits] = useState(null)
+  const [landlordsCount,setLandlordsCount] = useState<number>(0)
+  const [tenantsCount,setTenantsCount] = useState<number>(0);
+  const [propertiesCount,setPropertiesCount] = useState<number>(0)
+  const [unitsCount,setUnitsCount] = useState<number>(0)
 
+  // transactions
 interface Transaction {
-  id:number;
-  date: Date;
-  transaction:string;
-  amount: string; 
+  _id:string;
+  transactionDate: Date;
+  transactionName:string;
+  amount: string;
   status: 'pending' | 'completed' | 'failed' | 'refunded'; 
-  transactionId: string; 
-  currency?: string; 
+  transactionId: string;
+  currency?: string;
   description?: string;
+  transactionBy:{
+    userName:string;
+  }
 }
 
-const transactionsRows:Transaction[] = [
-  { id: 1, transaction: 'Payment from Bonnie Green', transactionId: '70AB09NS4QUP', date: new Date('2020-01-15'), amount:"Ksh 75,736", status:"completed"},
-]
+const [transactionsList,setTransactionsList] = useState<Transaction[]>([]);
+const [loadingTransactions,setLoadingTransactions] = useState<boolean>(false)
+
+const listAllTransactions = async ()=>{
+  setLoadingTransactions(true);
+  try {
+    const response = await listTransactions()
+    if(response.status === 200){
+      setTransactionsList(response.data.data)
+    }
+  } catch (error) {
+    console.log(error)
+  }finally{
+    setLoadingTransactions(false)
+  }
+}
+
+useEffect(()=>{
+  listAllTransactions();
+},[])
+
+
+const transactionsRows = transactionsList.map((transaction)=>({
+  id:transaction?._id,
+  transactionName: transaction?.transactionName,
+  transactionId:transaction?.transactionId,
+  transactionDate:dateFormatter(transaction?.transactionDate),
+  amount:transaction?.amount,
+  status:transaction?.status,
+  transactionBy:transaction?.transactionBy?.userName
+}))
 
   const transactionsColumns: GridColDef<Transaction>[] =[
-    { field: 'transaction', headerName: 'Transaction', flex:1 },
+    { field: 'transactionName', headerName: 'Transaction Name', flex:1 },
     { field: 'transactionId', headerName: 'Transaction Id', flex:1 },
-    { field: 'date',headerName: 'Date',type: 'date', flex:1,},
+    { field: 'transactionDate',headerName: 'Date', flex:1,},
     { field: 'amount', headerName: 'Amount', flex:1 },
+    { field: 'transactionBy', headerName: 'Transaction By', flex:1 },
     { field: 'status', headerName: 'Status', flex:1 , renderCell:(params) =>(<Typography sx={{ paddingY:"4px", display:"flex",alignItems:"center", justifyContent:"center", borderRadius:"16px", marginTop:"10px", width:"100px", color: params.value === "completed" ? "#027A48" : params.value === "pending" ? "#2563EB" : params.value === "failed" ? "#B42318": params.value === "refunded" ? "#344054" : "", textAlign:"center",  backgroundColor: params.value === "completed" ? "#ECFDF3": params.value ==="pending" ? "#EFF6FF" : params.value === "failed" ? "#FEF3F2" : params.value === "refunded" ? "#F2F4F7" :"" }}>{params.value}</Typography>) },
   ]  
-
 
     const salesData = [
     { month: 'Jan', sales: 4000 },
@@ -80,7 +113,7 @@ const listAllLandlords = useCallback(async () => {
   try {
   const response = await listLandlords("Landlord")
   if(response.status === 200 ){
-    setLandlords(response.data.data)
+    setLandlordsCount(response.data.data.length)
   }
   } catch (error) {
    console.log(error);
@@ -97,7 +130,7 @@ const listAllTenants = useCallback( async() => {
   try {
     const response = await listTenants("Tenant");
     if(response.status === 200){
-      setTenants(response.data.data)
+      setTenantsCount(response.data.data.length)
     }
   } catch (error) {
     console.log(error)
@@ -114,7 +147,7 @@ const listAllProperties = useCallback (async()=>{
   try {
     const response = await listProperties();
     if(response.status === 200){
-      setProperties(response.data.data)
+      setPropertiesCount(response.data.data.length)
     }
   } catch (error) {
     console.log(error)
@@ -129,7 +162,7 @@ const listAllUnits = useCallback(async ()=>{
   try {
     const response = await listUnits()
     if(response.status === 200){
-      setUnits(response.data.data)
+      setUnitsCount(response.data.data.length)
     }
   } catch (error) {
     console.log(error)
@@ -139,9 +172,6 @@ const listAllUnits = useCallback(async ()=>{
 useEffect(()=>{
 listAllUnits()
 },[listAllUnits])
-
-
-
 
 
   return (
@@ -157,7 +187,7 @@ listAllUnits()
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
-             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{landlords?.length}</Typography>
+             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{landlordsCount}</Typography>
              <Box sx={{display:"flex", gap:"4px", alignItems:"center", justifyContent:"start"}}>
                 <img src={arrowUpIcon} alt="arrowUpIcon"/>
                 <Typography sx={{ color:"#667085", fontSize:"14px", fontWeight:"400"}}><span style={{color:"#027A48", fontSize:"14px", fontWeight:"500"}}>40%</span> vs last month </Typography>
@@ -177,7 +207,7 @@ listAllUnits()
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
-             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{tenants?.length}</Typography>
+             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{tenantsCount}</Typography>
              <Box sx={{display:"flex", gap:"4px", alignItems:"center", justifyContent:"start"}}>
                 <img src={arrowDownRedIcon} alt="arrowUpIcon"/>
                 <Typography sx={{ color:"#667085", fontSize:"14px", fontWeight:"400"}}><span style={{color:"#B42318", fontSize:"14px", fontWeight:"500"}}>40%</span> vs last month </Typography>
@@ -196,7 +226,7 @@ listAllUnits()
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
-             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{properties?.length}</Typography>
+             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{propertiesCount}</Typography>
              <Box sx={{display:"flex", gap:"4px", alignItems:"center", justifyContent:"start"}}>
                 <img src={arrowUpIcon} alt="arrowUpIcon"/>
                 <Typography sx={{ color:"#667085", fontSize:"14px", fontWeight:"400"}}><span style={{color:"#027A48", fontSize:"14px", fontWeight:"500"}}>40%</span> vs last month </Typography>
@@ -215,7 +245,7 @@ listAllUnits()
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
-             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{units?.length}</Typography>
+             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{unitsCount}</Typography>
              <Box sx={{display:"flex", gap:"4px", alignItems:"center", justifyContent:"start"}}>
                 <img src={arrowUpIcon} alt="arrowUpIcon"/>
                 <Typography sx={{ color:"#667085", fontSize:"14px", fontWeight:"400"}}><span style={{color:"#027A48", fontSize:"14px", fontWeight:"500"}}>40%</span> vs last month </Typography>
@@ -328,7 +358,7 @@ listAllUnits()
           <Typography sx={{fontWeight:"600", fontSize:"20px", color:"#111827", textAlign:"start"}}>Transactions</Typography>
           <Typography sx={{fontWeight:"400", fontSize:"14px", color:"##6B7280", textAlign:"start"}}>This is a list of latest transactions.</Typography>
           <Box sx={{ width:"100%", marginTop:"20px"}}>
-             <DataGrid sx={{ width:"100%", height:"476px"}} rows={transactionsRows} columns={transactionsColumns} pageSizeOptions={[10,20,50,100]} />
+             <DataGrid sx={{ width:"100%", height:"476px"}} loading={loadingTransactions}  columns={transactionsColumns} rows={transactionsRows} pageSizeOptions={[10,20,50,100]} />
           </Box>
         </Box>
       </Paper>

@@ -4,7 +4,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import mailIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/mail icon small.svg"
 import bellIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/bell icon.svg"
-import userImage from "../assets/Avatars square-20230907T172556Z-001/Avatars square/WebP/Adil Floyd.webp"
 import dropdownIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown icon small.svg"
 import Cookies from "js-cookie"
 import { useNavigate } from 'react-router-dom';
@@ -15,10 +14,20 @@ import { logout } from './services/authServices';
 const drawerWidth = 232;
 
 const AppBar = ({ open, toggleDrawer }) => {
+
+  interface User {
+    _id:string,
+    userName:string,
+    avatar:{
+      secure_url:string
+    }
+  }
+
+
   const navigate = useNavigate()
   const [anchorElement,setAnchorElement] = useState<null| HTMLElement>(null);
   const openUserProfile = Boolean(anchorElement)
-  const [userData,setUserData] = useState()
+  const [userData,setUserData] = useState<User | null>(null)
 
   const handleOpenUserProfile = (e: MouseEvent<HTMLDivElement>) => {
       setAnchorElement(e.currentTarget);
@@ -48,8 +57,10 @@ const AppBar = ({ open, toggleDrawer }) => {
 
     useEffect(()=>{
       const localStorageUserData = localStorage.getItem("userData");
-      const userData =  JSON.parse(localStorageUserData)
-      setUserData(userData)
+      if(localStorageUserData){ 
+        const userData:User =  JSON.parse(localStorageUserData)
+        setUserData(userData)
+      }
     },[])
 
 
@@ -97,8 +108,8 @@ const AppBar = ({ open, toggleDrawer }) => {
           </Box>
 
           <Menu id="basic-menu" sx={{ '& .MuiPaper-root': { width: '168px', maxWidth: 'none'}}} anchorEl={anchorElement} open={openUserProfile} onClose={handleCloseUserProfile} MenuListProps={{'aria-labelledby': 'basic-button',}}>
-            <MenuItem onClick={()=>{navigate("user-profile"); handleCloseUserProfile()}}>Profile</MenuItem>
-            <MenuItem onClick={()=>{navigate("user-profile"); handleCloseUserProfile()}}>My account</MenuItem>
+            <MenuItem onClick={()=>{navigate("user-profile"); handleCloseUserProfile()}}>My Profile</MenuItem>
+            <MenuItem onClick={()=>{navigate("user-profile"); handleCloseUserProfile()}}>Edit Profile</MenuItem>
             <MenuItem onClick={ ()=>{ handleLogout(); handleCloseUserProfile();} }>Logout</MenuItem>
           </Menu>
 

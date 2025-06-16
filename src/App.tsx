@@ -17,6 +17,7 @@ import Users from './pages/Users'
 import Landlords from './pages/Landlords'
 import Properties from './pages/Properties'
 import {ToastContainer} from  "react-toastify"
+import { PrivateRoutes } from './utils/PrivateRoutes'
 
 
 
@@ -35,7 +36,7 @@ function App() {
         <Route path='/email-verification' element={<EmailVerification/>}/>
         <Route path='/code-verification' element={<CodeVerification/>}/>
 
-        <Route path='/dashboard' element={<DashboardLayout/>}>
+        <Route path='/dashboard' element={<PrivateRoutes><DashboardLayout/></PrivateRoutes> }>
         <Route index element={<Dashboard/>}/> 
         <Route path='user-profile' element={<Profile/>}/>
         <Route path='payments' element={<Payments/>} />
