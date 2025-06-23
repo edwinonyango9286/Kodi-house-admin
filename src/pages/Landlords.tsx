@@ -10,20 +10,25 @@ import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import { listLandlords } from '../components/services/userServices'
 import editIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/edit icon.svg"
 import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
+import deleteIconGrey from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon small.svg"
 
 const Landlords = () => {
-  interface landlord {
-    _id:string,
+  interface ILandlord {
+    _id:string;
+    userName:string;
+    email:string;
+    status:string;
+    phoneNumber?:string;
   }
 
-  const [landlords,setLandlords] = useState<landlord[]>([]);
+  const [landlords,setLandlords] = useState<ILandlord[]>([]);
   const [loadingLandlords,setLoadingLandlords] = useState<boolean>(false)
 
 
   const listAllLandlords =  async ()=>{
     try {
       setLoadingLandlords(true)
-      const response = await listLandlords("Landlord");
+      const response = await listLandlords();
       if(response.status === 200){
         setLandlords(response.data.data)
       }
@@ -38,21 +43,27 @@ const Landlords = () => {
    listAllLandlords()
   },[])
 
+
   const landlordColumns:GridColDef[] = [
     {field:"name", headerName:"Name", flex:1},
     {field:"email", headerName:"Email", flex:1},
     {field:"phoneNumber", headerName:"Phone Number", flex:1},
+    {field:"status", headerName:"Status", flex:1},
     {field:"action", headerName:"Action",flex:1, renderCell:(()=>(
       <Box sx={{ display:"flex", gap:"10px"}}>
         <IconButton><img src={editIcon} alt="" style={{ width:"24px", height:"24px"}} /></IconButton>
-        <IconButton><img src={deleteIcon} alt="" style={{ width:"24px", height:"24px"}} /></IconButton>
+        <IconButton><img src={deleteIconGrey} alt="" style={{ width:"24px", height:"24px"}} /></IconButton>
         <IconButton><img src={dotsVertical} alt="" style={{ width:"24px", height:"24px"}} /></IconButton>
       </Box>
     ))}
   ] 
 
   const landlordRows = landlords.map((landlord)=>({
-    id:landlord._id
+    id:landlord?._id,
+    name:landlord?.userName,
+    email:landlord?.email,
+    phoneNumber:landlord?.phoneNumber || "N/A",
+    status:landlord.status
   }))
 
   return (

@@ -1,4 +1,4 @@
-import { Box, Button, Divider, FormControl, FormLabel, IconButton, InputAdornment, MenuItem, Modal, Paper, Select, TextField, Typography, useTheme, type SelectChangeEvent } from '@mui/material'
+import { Box, Button, colors, Divider, FormControl, FormLabel, IconButton, InputAdornment, MenuItem, Modal, Paper, Select, TextField, Typography, useTheme, type SelectChangeEvent } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
@@ -30,6 +30,7 @@ const Users = () => {
     },
     description:string,
     createdAt:Date,
+    status:string,
     createdBy:{
       userName:string
     }
@@ -116,6 +117,10 @@ const Users = () => {
     {field:"description", headerName:"Description",flex:1},
     {field:"createdAt", headerName:"Date Added", flex:1},
     {field:"createdBy",headerName:"Added By", flex:1},
+    {field:"status",headerName:"Status", flex:1 , renderCell:(params)=>(
+      <Typography sx={{ borderRadius:"16px", width: params.value === "Active" ? "62px" :"80px", padding:"2px 8px", backgroundColor: params.value === "Active" ? "#ECFDF3" :"#F2F4F7", marginTop:"10px", color: params.value === "Active" ? "#027A48" : "#344054" }}>{params.value}</Typography>
+  )},
+
     {field:"action", headerName:"Action",flex:1, renderCell:(()=>(
       <Box sx={{ display:"flex",gap:"10px"}}>
         <IconButton> <img src={editIcon} alt="editIcon" style={{ width:"24px", height:"24px"}}/></IconButton>
@@ -132,8 +137,10 @@ const Users = () => {
     role:user?.role?.name,
     description:user.description,
     createdAt:dateFormatter(user?.createdAt),
+    status:user?.status,
     createdBy:user?.createdBy?.userName
   }))
+
 
 
   // list user roles 
@@ -150,7 +157,7 @@ const Users = () => {
       const response = await listRoles();
       if(response.status === 200){
         const roles = response.data.data;
-        const filteredRoles = roles.filter((role:Role)=>role.name !=="Admin")
+        const filteredRoles = roles.filter((role:Role)=>role.name !=="Admin" && role.name !== "Tenant" && role.name !=="User" && role.name !== "Landlord" );
         setAssignableRoles(filteredRoles)
       }
     } catch (error) {

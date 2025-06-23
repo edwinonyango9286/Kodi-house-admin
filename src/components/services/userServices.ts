@@ -45,9 +45,9 @@ export const getUserProfile =  async () =>{
 }
 
 // list users type landlord 
- export const listLandlords =  async(userType:string) => {
+ export const listLandlords =  async () => {
   try {
-    const response = await newRequest.get(`user/list-users/${userType}`,config)
+    const response = await newRequest.get(`user/list-users?role=Landlord`,config)
     return response;
   } catch (error) {
     console.log(error)
@@ -57,9 +57,9 @@ export const getUserProfile =  async () =>{
 
 // list tenants
 
-export const listTenants =  async (userType:string) =>{
+export const listTenants =  async () =>{
   try {
-    const response = await newRequest.get(`user/list-users/${userType}`, config);
+    const response = await newRequest.get(`user/list-users?role=Tenant`, config);
     return response
   } catch (error) {
     console.log(error)

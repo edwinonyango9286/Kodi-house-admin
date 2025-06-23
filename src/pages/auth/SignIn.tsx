@@ -37,8 +37,8 @@ const SignIn : React.FC = () => {
     try {
       const response = await signIn(formData)
       if(response?.status === 200){
-        setFormData({ email:"", password:""})
         navigate("/dashboard")
+        setFormData({ email:"", password:""})
         localStorage.setItem("userData", JSON.stringify(response.data.data) )
         
          Cookies.set("accessToken", response.data.accessToken)

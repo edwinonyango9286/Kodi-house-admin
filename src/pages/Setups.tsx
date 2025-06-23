@@ -25,6 +25,7 @@ import deleteIconGrey from "../assets/logos and Icons-20230907T172301Z-001/logos
 import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
 import { createPropertyCategory, listPropertyCategories } from '../components/services/propertyCategoryService';
 import { createPropertyTag, listPropertyTags } from '../components/services/propertyTagService';
+import NoRowsOverlay from '../components/common/NoRowsOverlay';
 
 
 
@@ -275,7 +276,7 @@ interface role {
 
    const propertyTypeColumns: GridColDef[] = [
     {field:"name", headerName: "Type Name" , flex:1},
-    {field:"slug", headerName: "Slug" , flex:1},
+    {field:"slug", headerName: "Slug" , flex:1,},
     {field:"createdAt", headerName: "Date Added" , flex:1},
     {field:"createdBy", headerName: "Added By" , flex:1},
     {field:"status",headerName:"Status", flex:1},
@@ -1013,7 +1014,7 @@ interface Tag {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} loading={loadingPropertyTypes} columns={propertyTypeColumns} rows={propertyTypeRows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid slots={{noRowsOverlay:NoRowsOverlay}} sx={{ width:"100%"}} loading={loadingPropertyTypes} columns={propertyTypeColumns} rows={propertyTypeRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add property modal */}
@@ -1087,7 +1088,7 @@ interface Tag {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid loading={loadingPropertyCategories} sx={{ width:"100%"}} columns={propertyCategoryColumns} rows={propertyCategoryRows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid slots={{noRowsOverlay:NoRowsOverlay}} loading={loadingPropertyCategories} sx={{ width:"100%"}} columns={propertyCategoryColumns} rows={propertyCategoryRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add property category modal */}
@@ -1161,7 +1162,7 @@ interface Tag {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid loading={loadingPropertyTags} sx={{ width:"100%"}} columns={propertyTagColumns} rows={propertyTagRows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid slots={{ noRowsOverlay:NoRowsOverlay }} loading={loadingPropertyTags} sx={{ width:"100%"}} columns={propertyTagColumns} rows={propertyTagRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add property tag */}
@@ -1235,7 +1236,7 @@ interface Tag {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid loading={loadingSupportTickets} sx={{ width:"100%"}} columns={supportTicketColumns} rows={supportTicketRows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid slots={{ noRowsOverlay:NoRowsOverlay }} loading={loadingSupportTickets} sx={{ width:"100%"}} columns={supportTicketColumns} rows={supportTicketRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add support ticket modal */}
@@ -1435,7 +1436,7 @@ interface Tag {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={categoryColumns} rows={categoryRows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid slots={{ noRowsOverlay:NoRowsOverlay }} sx={{ width:"100%"}} columns={categoryColumns} rows={categoryRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add support ticket modal */}
@@ -1525,7 +1526,7 @@ interface Tag {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid loading={fetchingTags} sx={{ width:"100%"}} columns={tagColumns} rows={tagRows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid slots={{ noRowsOverlay:NoRowsOverlay }} loading={fetchingTags} sx={{ width:"100%"}} columns={tagColumns} rows={tagRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
         {/* add support ticket modal */}

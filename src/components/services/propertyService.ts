@@ -1,16 +1,18 @@
 import { config } from "../../utils/config"
 import { newRequest } from "../../utils/newRequest"
 
-// list all properties 
- export  const listProperties =  async()=>{
-    try {
-     const response = await newRequest.get(`properties/properties`, config);
-     return response
-    } catch (error) {
-        console.log(error)
-        throw(error)
-    }
- }
+ // list all properties 
+export const listProperties = async (params?: { search?: string }) => {
+  try {
+    const requestConfig = { ...config,  params: params || {} };
+    const response = await newRequest.get(`properties/properties`, requestConfig);
+    return response;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 
 //  const list vacant properties
 

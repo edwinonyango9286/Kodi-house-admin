@@ -18,7 +18,6 @@ import Landlords from './pages/Landlords'
 import Properties from './pages/Properties'
 import {ToastContainer} from  "react-toastify"
 import { PrivateRoutes } from './utils/PrivateRoutes'
-import { PublicRoutes } from './utils/PublicRoutes'
 
 
 
@@ -31,12 +30,12 @@ function App() {
         toastStyle={{ textAlign:"left", fontWeight:"500", fontSize:"14px", width:"600px", height:'auto'}}/>    
         <Routes>
           
-        <Route path='/' element={ <PublicRoutes><SignIn/></PublicRoutes> } /> 
-        <Route path='/create-account' element={<PublicRoutes><CreateAccount/></PublicRoutes> }/>
-        <Route path='/forgot-password' element={<PublicRoutes><ForgotPassword/></PublicRoutes> }/>
-        <Route path='/reset-password/:token' element={<PublicRoutes><ResetPassword/></PublicRoutes> }/>
-        <Route path='/email-verification' element={<PublicRoutes><EmailVerification/></PublicRoutes> }/>
-        <Route path='/code-verification' element={<PublicRoutes><CodeVerification/></PublicRoutes> }/>
+        <Route path='/' element={ <SignIn/>  } /> 
+        <Route path='/create-account' element={<CreateAccount/>}/>
+        <Route path='/forgot-password' element={<ForgotPassword/> }/>
+        <Route path='/reset-password/:token' element={<ResetPassword/>}/>
+        <Route path='/email-verification' element={<EmailVerification/> }/>
+        <Route path='/code-verification' element={<CodeVerification/>}/>
 
         <Route path='/dashboard' element={<PrivateRoutes><DashboardLayout/></PrivateRoutes> }>
         <Route index element={<Dashboard/>}/> 

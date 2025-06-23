@@ -111,7 +111,7 @@ const transactionsRows = transactionsList.map((transaction)=>({
 
 const listAllLandlords = useCallback(async () => {
   try {
-  const response = await listLandlords("Landlord")
+  const response = await listLandlords()
   if(response.status === 200 ){
     setLandlordsCount(response.data.data.length)
   }
@@ -128,7 +128,7 @@ listAllLandlords()
 
 const listAllTenants = useCallback( async() => {
   try {
-    const response = await listTenants("Tenant");
+    const response = await listTenants();
     if(response.status === 200){
       setTenantsCount(response.data.data.length)
     }
