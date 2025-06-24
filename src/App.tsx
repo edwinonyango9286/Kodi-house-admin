@@ -27,7 +27,7 @@ function App() {
     <>
     <Router>
         <ToastContainer position="top-right" autoClose={5000} hideProgressBar={true} newestOnTop={false} closeOnClick  rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored"
-        toastStyle={{ textAlign:"left", fontWeight:"500", fontSize:"14px", width:"600px", height:'auto'}}/>    
+         toastStyle={{ textAlign:"left", fontWeight:"500", fontSize:"14px", width:"auto", height:'auto'}}/>    
         <Routes>
           
         <Route path='/' element={ <SignIn/>  } /> 

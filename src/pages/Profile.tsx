@@ -8,6 +8,9 @@ import { showErrorToast, showInfoToast } from '../utils/toast'
 import type { AxiosError } from 'axios'
 import Cookies from 'js-cookie'
 import { useNavigate } from 'react-router-dom'
+import PhoneInput from "react-phone-input-2";
+import 'react-phone-input-2/lib/style.css'
+
 
 const Profile = () => {
   const navigate = useNavigate()
@@ -16,10 +19,22 @@ const Profile = () => {
   const [showConfirmNewPassword,setShowConfirmNewPassword] = useState<boolean>(false)
   const [passwordData,setPasswordData] = useState<IUpdatePasswordPayload>({ currentPassword:"",newPassword:"", confirmNewPassword:""})
   const [isSubmitting,setIsSubmitting] = useState<boolean>(false)
-  const [userInfoData,setUserInfoData] = useState<IUpdateUserInfoPayload>({ email:"",phoneNumber:"", firstName:"", secondName:"", lastName:"", nationalId:"", address:"" })
+  const [userInfoData,setUserInfoData] = useState<IUpdateUserInfoPayload>({ email:"",phoneNumber:"", firstName:"", secondName:"", lastName:"", idNumber:"", address:"" })
   const [updatingUserInfo,setUpdatingUserInfo] = useState<boolean>(false)
   const [securityAandNotificationsData,setSecurityAndNotificationsData] =  useState({twoFa:false, accountActivity:false, newMessages:false})
-  const [userData,setUserData] = useState(null)
+  
+interface IUser {
+  userName:string,
+  email:string,
+  role:{
+    name:string,
+  }
+  avatar:{
+    secure_url:string,
+  }
+}
+const [userData,setUserData] = useState<IUser | null >(null)
+
 
   const handleChangePasswordInput =  (e:React.ChangeEvent<HTMLInputElement>)=>{
     const {name, value} = e.target
@@ -62,18 +77,7 @@ const Profile = () => {
     setUserInfoData((prev)=>({...prev, [name]:value}))
   }
 
-  const handleUpdateUserInfo = async (e:React.FormEvent<HTMLFormElement>) =>{
-    e.preventDefault();
-    setUpdatingUserInfo(true);
-    try {
-      const response = await updateUserInfo(userInfoData)
-      return response
-    } catch (error) {
-      console.log(error)
-    }finally{
-      setUpdatingUserInfo(false)
-    }
-  }
+
 
   const handleSwitchChange = (e:React.ChangeEvent<HTMLInputElement>)=>{
     const {name, checked} = e.target
@@ -87,6 +91,15 @@ const Profile = () => {
       if(response.status === 200){
         console.log(response.data,"=>userData")
         setUserData(response.data.data)
+        setUserInfoData({
+          email:response.data.data.email || "",
+          phoneNumber:response.data.data.phoneNumber,
+          firstName:response.data.data.firstName || "",
+          secondName:response.data.data.secondName || "",
+          lastName :response.data.data.lastName|| "",
+          idNumber :response.data.data.idNumber || "",
+          address:response.data.data.address || ""
+        })
       }
     } catch (error) {
       console.log(error)
@@ -96,6 +109,30 @@ const Profile = () => {
   useEffect(()=>{
   getCurrentUserProfile()
   },[])
+
+  const handlePhoneChange = (value: string) => {
+    const formatedPhoneNumber = `+${value}`
+    setUserInfoData((prev) => ({ ...prev, phoneNumber: formatedPhoneNumber }));
+};
+
+
+  const handleUpdateUserInfo = async (e:React.FormEvent<HTMLFormElement>) =>{
+    e.preventDefault();
+    setUpdatingUserInfo(true);
+    try {
+      const response = await updateUserInfo(userInfoData)
+      if(response.status === 200){
+        showInfoToast(response.data.message)
+        getCurrentUserProfile()
+      }
+      return response
+    } catch (err) {
+      const error = err as AxiosError<{message?:string}>
+      showErrorToast(error.response?.data.message || error.message)
+    }finally{
+      setUpdatingUserInfo(false)
+    }
+  }
 
   return (
     <Box sx={{ width:"100%", display:"flex",gap:"20px",}}>
@@ -177,7 +214,7 @@ const Profile = () => {
           <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                 <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
                    <FormLabel  htmlFor="phoneNumber" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Phone Number</FormLabel>
-                   <TextField type="text" name="phoneNumber" value={userInfoData.phoneNumber} onChange={handleUserInfoChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                   <PhoneInput  containerStyle={{ backgroundColor:"#fff" }} buttonStyle={{ borderRight:"none", width:"48px", backgroundColor:"#fff" }}  inputProps={{name: 'phone', required: true, autoFocus: true }} country={"ke"} inputStyle={{ backgroundColor:"#fff", height:"52px", width:"100%", }}   enableSearch={true}  value={userInfoData.phoneNumber} onChange={handlePhoneChange}/>
                 </FormControl>
           </Box>
 
@@ -212,8 +249,8 @@ const Profile = () => {
 
           <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                 <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
-                   <FormLabel  htmlFor="nationalId" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>National Id Number</FormLabel>
-                   <TextField type="number"  name="nationalId" value={userInfoData.nationalId} onChange={handleUserInfoChange} placeholder="" fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                   <FormLabel  htmlFor="idNumber" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>National Id Number</FormLabel>
+                   <TextField type="number"  name="idNumber" value={userInfoData.idNumber} onChange={handleUserInfoChange} placeholder="" fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
                 </FormControl>
           </Box>
         </Box>
@@ -227,7 +264,7 @@ const Profile = () => {
           </Box>
         </Box>
 
-        <Button variant='contained' type='submit' loading={updatingUserInfo} disabled={!userInfoData.firstName || !userInfoData.lastName || !userInfoData.nationalId || !userInfoData.phoneNumber || !userInfoData.email }  sx={{borderRadius:"8px", marginTop:"20px", backgroundColor:"#2563EB", alignSelf:"start", width:"120px", height:"40px"}}>Update</Button>
+        <Button variant='contained' type='submit' loading={updatingUserInfo} disabled={!userInfoData.firstName || !userInfoData.lastName || !userInfoData.idNumber || !userInfoData.phoneNumber || !userInfoData.email }  sx={{borderRadius:"8px", marginTop:"20px", backgroundColor:"#2563EB", alignSelf:"start", width:"120px", height:"40px"}}>Update</Button>
 
         </form>
 

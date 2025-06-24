@@ -1,12 +1,15 @@
 import { Box, Divider, FormControl, FormLabel, InputAdornment, Paper, TextField, Typography, type SelectChangeEvent, Select, MenuItem } from '@mui/material'
-import React from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/filter icon.svg"
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
-import { DataGrid } from '@mui/x-data-grid'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import type { IPayments } from '../types/types'
+import { listPayments } from '../components/services/paymentsService'
+import NoRowsOverlay from '../components/common/NoRowsOverlay'
 
 const Payments = () => {
   const columns = [] 
@@ -24,6 +27,40 @@ const Payments = () => {
   const handleSelectStatus = (e:SelectChangeEvent) =>{
     setSelectedStatus(e.target.value as string)
   }
+
+  const [paymentsList,setPaymentsList] = useState<IPayments[]>([])
+
+  const listAllPayments = useCallback( async()=>{
+    try {
+      const response = await listPayments()
+      if(response.status === 200){
+        setPaymentsList(response.data.data)
+      }
+      
+    } catch (error) {
+      console.log(error)
+    }
+  },
+
+  [])
+
+ useEffect(()=>{
+  listAllPayments()
+ },[listAllPayments])
+
+ const paymentColumns:GridColDef[] = [
+  {field:"#", headerName:"#",flex:0.5,},
+  {field:"date",headerName:"Date", flex:1},
+  {field:"invoiceNumber", headerName:"Invoice #", flex:1},
+  {field:"tenant", headerName:"Tenant", flex:1 },
+  {field:"property", headerName:"Property", flex:1},
+  {field:"paymentMode", headerName:"Payment Mode", flex:1},
+  {field:"amount", headerName:"Amount", flex:1},
+  {field:"transactionId", headerName:"Transaction Id", flex:1},
+  {field:"status", headerName:"Status", flex:1}
+ ]
+
+
 
   return (
      <Box sx={{width:"100%",}}>
@@ -71,7 +108,7 @@ const Payments = () => {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid sx={{ width:"100%"}} slots={{ noRowsOverlay:NoRowsOverlay }} columns={paymentColumns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
       </Paper>

@@ -17,6 +17,7 @@ import { listProperties } from '../components/services/propertyService';
 import  { listUnits } from '../components/services/unitsService';
 import { dateFormatter } from '../utils/dateFormatter';
 import { listTransactions } from '../components/services/transactionServices';
+import  CircularProgress from "@mui/material/CircularProgress";
 
 
 
@@ -108,32 +109,41 @@ const transactionsRows = transactionsList.map((transaction)=>({
   { day: 'Sun', sales: 1700 },
 ];
 
+const [fetchingLandlords,setFetchingLandlords] = useState<boolean>(false)
 
 const listAllLandlords = useCallback(async () => {
   try {
+    setFetchingLandlords(true)
   const response = await listLandlords()
   if(response.status === 200 ){
     setLandlordsCount(response.data.data.length)
   }
   } catch (error) {
    console.log(error);
+  }finally{
+    setFetchingLandlords(false)
   }
 },[])
+
 
 useEffect(()=>{
 listAllLandlords()
 },[listAllLandlords])
 
 
+const [fetchingTenants,setFetchingTenants] = useState<boolean>(false)
 
 const listAllTenants = useCallback( async() => {
   try {
+    setFetchingTenants(true)
     const response = await listTenants();
     if(response.status === 200){
       setTenantsCount(response.data.data.length)
     }
   } catch (error) {
     console.log(error)
+  }finally{
+    setFetchingTenants(false)
   }
 },[])
 
@@ -141,16 +151,20 @@ useEffect(()=>{
   listAllTenants()
 },[listAllTenants])
 
-// list all properties 
+// list all properties  
+   const  [fetchingProperties,setFetchingProperties] = useState<boolean>(false)
 
 const listAllProperties = useCallback (async()=>{
   try {
+    setFetchingProperties(true)
     const response = await listProperties();
     if(response.status === 200){
       setPropertiesCount(response.data.data.length)
     }
   } catch (error) {
     console.log(error)
+  }finally{
+    setFetchingProperties(false)
   }
 },[])
 
@@ -158,14 +172,19 @@ useEffect(()=>{
  listAllProperties()
 },[listAllProperties])
 
+const [fetchingUnits,setFetchingUnits] = useState<boolean>(false);
+
 const listAllUnits = useCallback(async ()=>{
   try {
+    setFetchingUnits(true)
     const response = await listUnits()
     if(response.status === 200){
       setUnitsCount(response.data.data.length)
     }
   } catch (error) {
     console.log(error)
+  }finally{
+    setFetchingUnits(false)
   }
 },[])
 
@@ -187,7 +206,7 @@ listAllUnits()
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
-             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{landlordsCount}</Typography>
+            { fetchingLandlords ?  <CircularProgress thickness={5} size={24} sx={{ color:"#1F2937"}}/> : <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{landlordsCount}</Typography>}
              <Box sx={{display:"flex", gap:"4px", alignItems:"center", justifyContent:"start"}}>
                 <img src={arrowUpIcon} alt="arrowUpIcon"/>
                 <Typography sx={{ color:"#667085", fontSize:"14px", fontWeight:"400"}}><span style={{color:"#027A48", fontSize:"14px", fontWeight:"500"}}>40%</span> vs last month </Typography>
@@ -207,7 +226,7 @@ listAllUnits()
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
-             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{tenantsCount}</Typography>
+             {fetchingTenants ? <CircularProgress thickness={5} size={24} sx={{ color:"#1F2937"}}/> : <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{tenantsCount}</Typography> }
              <Box sx={{display:"flex", gap:"4px", alignItems:"center", justifyContent:"start"}}>
                 <img src={arrowDownRedIcon} alt="arrowUpIcon"/>
                 <Typography sx={{ color:"#667085", fontSize:"14px", fontWeight:"400"}}><span style={{color:"#B42318", fontSize:"14px", fontWeight:"500"}}>40%</span> vs last month </Typography>
@@ -226,7 +245,7 @@ listAllUnits()
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
-             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{propertiesCount}</Typography>
+             { fetchingProperties ? <CircularProgress thickness={5} size={24} sx={{ color:"#1F2937"}}  /> : <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{propertiesCount}</Typography> }
              <Box sx={{display:"flex", gap:"4px", alignItems:"center", justifyContent:"start"}}>
                 <img src={arrowUpIcon} alt="arrowUpIcon"/>
                 <Typography sx={{ color:"#667085", fontSize:"14px", fontWeight:"400"}}><span style={{color:"#027A48", fontSize:"14px", fontWeight:"500"}}>40%</span> vs last month </Typography>
@@ -245,7 +264,7 @@ listAllUnits()
           </Box>
           <Box sx={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
           <Box sx={{display:"flex", flexDirection:"column", gap:"6px"}}>
-             <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{unitsCount}</Typography>
+            { fetchingUnits ? <CircularProgress size={24} thickness={5} sx={{ color:"#1F2937"}}/> : <Typography sx={{color:"#1F2937", fontSize:"28px", fontWeight:"600"}} variant="h4">{unitsCount}</Typography>}
              <Box sx={{display:"flex", gap:"4px", alignItems:"center", justifyContent:"start"}}>
                 <img src={arrowUpIcon} alt="arrowUpIcon"/>
                 <Typography sx={{ color:"#667085", fontSize:"14px", fontWeight:"400"}}><span style={{color:"#027A48", fontSize:"14px", fontWeight:"500"}}>40%</span> vs last month </Typography>

@@ -23,10 +23,10 @@ export const updatePassword =  async (passwordData:IUpdatePasswordPayload) =>{
   }
 }
 
-export const updateUserInfo = async ( userInfoData:IUpdateUserInfoPayload) : Promise<IUpdateUserInfoResponse> =>{
+export const updateUserInfo = async ( userInfoData:IUpdateUserInfoPayload)  =>{
   try {
-    const response = await newRequest.patch<IUpdateUserInfoResponse>(`update-user-info`,userInfoData)
-    return response.data
+    const response = await newRequest.patch(`user/update-user-profile`,userInfoData,config)
+    return response
   } catch (error) {
     console.log(error)
     throw error

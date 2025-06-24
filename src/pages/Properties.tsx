@@ -1,5 +1,5 @@
 import { Box, Divider, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
@@ -93,10 +93,9 @@ const Properties = () => {
 
 
 
-const listAllProperties = async (search = "") => {
+const listAllProperties = useCallback( async (search = "") => {
   try {
     setLoadingProperties(true);
-    // Pass the search parameter correctly
     const response = await listProperties(search ? { search } : undefined);
     if (response.status === 200) {
       setPropertiesList(response.data.data);
@@ -106,15 +105,13 @@ const listAllProperties = async (search = "") => {
   } finally {
     setLoadingProperties(false);
   }
-};
+},[]);
 
  const debouncedSearch = useMemo(
   () =>
     debounce((value: string) => {
       listAllProperties(value);
-    }, 500),
-  []
-);
+    },500),[listAllProperties]);
 
   const handleSearch = (e:React.ChangeEvent<HTMLInputElement>) =>{
     const value = e.target.value;
@@ -131,7 +128,8 @@ useEffect(() => {
 
   useEffect(()=>{
     listAllProperties()
-  },[])
+  },[listAllProperties])
+  
 
   const listAllUnits =  async ()=>{
     try {

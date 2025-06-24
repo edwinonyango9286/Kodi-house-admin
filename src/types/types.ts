@@ -65,7 +65,7 @@ export interface IUpdateUserInfoPayload {
   firstName: string;
   secondName: string;
   lastName: string;
-  nationalId: string;
+  idNumber: string;
   address: string;
 }
 
@@ -144,4 +144,9 @@ export interface IResetPasswordPayload {
   password: string;
   confirmPassword: string;
   token?: string;
+}
+
+export interface IPayments {
+  _id:string;
+
 }
