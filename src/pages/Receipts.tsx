@@ -1,16 +1,16 @@
 import { Box, Divider, FormControl, FormLabel, InputAdornment, MenuItem, Paper, Select, TextField, Typography, type SelectChangeEvent } from '@mui/material'
-import React from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/filter icon.svg"
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
-import { DataGrid } from '@mui/x-data-grid'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import type { IReceipts } from '../types/types'
+import { listReceipts } from '../components/services/receiptServices'
 
 const Receipts = () => {
-  const columns =[] 
-  const rows = []
 
   const [seletedReceiptCategory,setSelectedReceiptCategory]  = React.useState("All");
   const handleSelectReceiptChange = (e:SelectChangeEvent) => {
@@ -23,6 +23,45 @@ const Receipts = () => {
     {id:2 , name:"Overdue"},
     {id:2 , name:"Partially paid"}
   ]
+
+  const receiptColums:GridColDef[]  = [
+    {field:"#" , headerName:"#", flex:0.5},
+    {field:"invoiceNumber", headerName:"Invoice", flex:1},
+    {field:"tenant",headerName:"Tenant", flex:1 },
+    {field:"property", headerName:"Property", flex:1},
+    {field:"attachment", headerName:"Attachment", flex:1},
+    {field:"amount", headerName:"Amount", flex:1},
+    {field:"dueDate", headerName:"Due Date", flex:1},
+    {field:"status", headerName:"Status", flex:1}
+  ]
+
+  const [receiptList,setReceiptList] = useState<IReceipts[]>([]);
+  const [loadingReceipts,setLoadingReceipts] = useState<boolean>(false)
+
+  const receiptRows = receiptList.map((receipt)=>({
+    id:receipt._id
+  }))
+
+
+  const listAllReceipts = useCallback(async()=>{
+    try {
+      setLoadingReceipts(true)
+      const response = await listReceipts();
+      if(response.status===200){
+        setReceiptList(response.data.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setLoadingReceipts(false)
+    }
+  },[])
+
+  useEffect(()=>{
+   listAllReceipts()
+  },[listAllReceipts])
+
+
 
   return (
      <Box sx={{width:"100%",}}>
@@ -69,7 +108,7 @@ const Receipts = () => {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} columns={columns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid  loading={loadingReceipts} sx={{ width:"100%"}} columns={receiptColums} rows={receiptRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
       </Paper>

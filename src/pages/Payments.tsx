@@ -12,7 +12,6 @@ import { listPayments } from '../components/services/paymentsService'
 import NoRowsOverlay from '../components/common/NoRowsOverlay'
 
 const Payments = () => {
-  const columns = [] 
   const rows = []
 
   const paymentStatuses = [
@@ -60,7 +59,9 @@ const Payments = () => {
   {field:"status", headerName:"Status", flex:1}
  ]
 
-
+ const paymentRows = paymentsList.map((payment)=>({
+  id:payment._id,
+ }))
 
   return (
      <Box sx={{width:"100%",}}>
@@ -108,7 +109,7 @@ const Payments = () => {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} slots={{ noRowsOverlay:NoRowsOverlay }} columns={paymentColumns} rows={rows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid sx={{ width:"100%"}} slots={{ noRowsOverlay:NoRowsOverlay }} columns={paymentColumns} rows={paymentRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
       </Paper>

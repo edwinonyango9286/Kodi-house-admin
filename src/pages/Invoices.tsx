@@ -84,7 +84,7 @@ const [rowCount, setRowCount] = useState(0);
 
   const [seletedInvoiceCategory,setSeletedInvoiceCategory] = React.useState("All");
 
-const handleSelectStatusCategory = async (e: SelectChangeEvent) => {
+const handleSelectStatusCategory = async (e:SelectChangeEvent) => {
   const status = e.target.value as string;
   setSeletedInvoiceCategory(status);
   setPage(0); // Reset to first page

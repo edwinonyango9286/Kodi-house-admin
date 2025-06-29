@@ -126,7 +126,6 @@ export interface ICreateCategoryPayload {
   description: string;
 }
 
-
 export interface ICreateTagPayload {
   tagName: string;
   parentTag: string;
@@ -134,7 +133,6 @@ export interface ICreateTagPayload {
   options: string;
   description: string;
 }
-
 
 export interface IRequestResetPasswordEmail {
   email: string;
@@ -147,6 +145,9 @@ export interface IResetPasswordPayload {
 }
 
 export interface IPayments {
-  _id:string;
+  _id: string;
+}
 
+export interface IReceipts {
+  _id: string;
 }
