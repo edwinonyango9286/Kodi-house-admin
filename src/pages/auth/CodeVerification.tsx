@@ -23,7 +23,7 @@ const CodeVerification = ({ length = 6, onComplete }: { length?: number; onCompl
     }
   }, [otp, onComplete]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
     const value = e.target.value;
     
     if (/^[0-9]$/.test(value)) {

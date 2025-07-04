@@ -9,14 +9,14 @@ import twitterIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos
 import facebookIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/facebook icon blue.svg"
 import eyeIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon eye.svg"
 import bgImage from "../../assets/images-20230907T172340Z-001/images/Sign up  Loading  1.jpg"
-import type { ICreateAccountPayload } from '../../types/types'
+import type { CreateAccountPayload } from '../../interfaces/interfaces'
 import { createAccount } from '../../components/services/authServices'
 import { showErrorToast, showInfoToast } from '../../utils/toast'
 import type { AxiosError } from 'axios'
 
 
 const CreateAccount:React.FC = () => {
- const [formData,setFormData]  = useState<ICreateAccountPayload>({userName:"", email:"",password:"",termsAndConditionsAccepted:false});
+ const [formData,setFormData]  = useState<CreateAccountPayload>({userName:"", email:"",password:"",termsAndConditionsAccepted:false});
  const [showPassword,setShowPassword]  = useState<boolean>(false)
  const [isSubmitting,setIsSubmitting]  = useState<boolean>(false)
  const navigate = useNavigate()

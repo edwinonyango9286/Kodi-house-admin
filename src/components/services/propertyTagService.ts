@@ -1,4 +1,4 @@
-import type { ICreatePropertyTagPayload } from "../../types/types";
+import type { ICreatePropertyTagPayload } from "../../interfaces";
 import { config } from "../../utils/config";
 import { newRequest } from "../../utils/newRequest";
 

@@ -9,6 +9,7 @@ import { SlBriefcase } from "react-icons/sl";
 import { HiAdjustments } from "react-icons/hi";
 import  logoWhite from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/Logo white.svg";
 import { ExpandLess,  ExpandMore,} from '@mui/icons-material';
+import type { User } from '../interfaces/interfaces';
 
 
 type DrawerItem = {
@@ -32,7 +33,7 @@ const Drawer = ({open,children}: DrawerProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
-  const [userData,setUserData] = useState(null)
+  const [userData,setUserData] = useState<User | null>(null)
 
   const navItems: DrawerItem[] = [
     { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Welcome {userData?.userName.split(" ")[0]}</Typography>, icon:<HiOutlineLightningBolt fontSize={20}/>, path:"user-profile" },
@@ -112,15 +113,13 @@ const isActive = (path?: string) => {
     );
   };
 
-
   useEffect(()=>{
-    const localStorageUserData = localStorage.getItem("userData");
-    const userData = JSON.parse(localStorageUserData)
-    setUserData(userData)
+    const localStorageUserData  = localStorage.getItem("userData");
+    if(localStorageUserData){
+      const userData  = JSON.parse(localStorageUserData)
+      setUserData(userData)
+    }
   },[])
-
-  
-
 
   return (
     <MuiDrawer  variant="persistent" open={open} sx={{width: drawerWidth, flexShrink: 0, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', overflowX: 'hidden', display: 'flex', flexDirection: 'column',borderRight:"1px solid #E5E7EB"}}}>

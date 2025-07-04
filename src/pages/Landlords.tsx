@@ -11,19 +11,11 @@ import { listLandlords } from '../components/services/userServices'
 import editIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/edit icon.svg"
 import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
 import deleteIconGrey from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon small.svg"
+import type { Landlord } from '../interfaces/interfaces'
 
 const Landlords = () => {
-  interface ILandlord {
-    _id:string;
-    userName:string;
-    email:string;
-    status:string;
-    phoneNumber?:string;
-  }
-
-  const [landlords,setLandlords] = useState<ILandlord[]>([]);
+  const [landlords,setLandlords] = useState<Landlord[]>([]);
   const [loadingLandlords,setLoadingLandlords] = useState<boolean>(false)
-
 
   const listAllLandlords =  async ()=>{
     try {

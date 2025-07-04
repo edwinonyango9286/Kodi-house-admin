@@ -4,7 +4,7 @@ import iconBlue from "../../assets/logos and Icons-20230907T172301Z-001/logos an
 import { Link, useNavigate } from 'react-router-dom'
 import logoWhite from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/Logo white.svg"
 import bgImage from "../../assets/images-20230907T172340Z-001/images/Sign up  Loading  1.jpg"
-import type { IRequestResetPasswordEmail } from '../../types/types'
+import type { RequestResetPasswordPayload } from '../../interfaces/interfaces'
 import type { AxiosError } from 'axios'
 import { showErrorToast, showInfoToast } from '../../utils/toast'
 import { requestResetPasswordEmail } from '../../components/services/authServices'
@@ -12,7 +12,7 @@ import { requestResetPasswordEmail } from '../../components/services/authService
 
 
 const ForgotPassword: React.FC =  () => {
-    const [formData,setFormData] = useState<IRequestResetPasswordEmail>({ email:""})
+    const [formData,setFormData] = useState<RequestResetPasswordPayload>({ email:""})
     const [isSubmiting,setIsSubmitting] = useState<boolean>(false)
     const navigate = useNavigate();
 

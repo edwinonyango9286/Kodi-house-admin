@@ -4,7 +4,7 @@ import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/log
 import {useTheme } from '@mui/material';
 import { getModalStyle } from '../theme';
 import cancelIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/cancel Icon.svg"
-import type {ICreateRolePayload ,ICreatePermissionPayload, ICreatePropertyTypePayload, ICreatePropertyCategoryPayload, ICreatePropertyTagPayload, ICreateSupportTicketPayload, ICreateCategoryPayload, ICreateTagPayload } from "../types/types"
+import type {CreateRolePayload ,CreatePermissionPayload, CreatePropertyTypePayload, CreatePropertyCategoryPayload, CreatePropertyTagPayload, CreateSupportTicketPayload, CreateCategoryPayload, CreateTagPayload } from "../interfaces/interfaces"
 import { createRole, listRoles } from '../components/services/roleService';
 import { createPermission, listPermissions } from '../components/services/permissionServices';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
@@ -30,9 +30,9 @@ import NoRowsOverlay from '../components/common/NoRowsOverlay';
 
 
 const Setups:React.FC = () => {
-  const [formData,setFormData] = useState<ICreateRolePayload>({name:"",description:"", status:""})
-  const [permissionFormData, setPermissionFormData] = useState<ICreatePermissionPayload>({ permissionName: "", status:"", description:"" });
-  const [propertyTypeData,setPropertyTypeData] = useState<ICreatePropertyTypePayload>({ name:"", status:"", description:"", })
+  const [formData,setFormData] = useState<CreateRolePayload>({name:"",description:"", status:""})
+  const [permissionFormData, setPermissionFormData] = useState<CreatePermissionPayload>({ permissionName: "", status:"", description:"" });
+  const [propertyTypeData,setPropertyTypeData] = useState<CreatePropertyTypePayload>({ name:"", status:"", description:"", })
   const [isSubmiting,setIsSubmitting] = useState<boolean>(false)
   const theme = useTheme()
   const modalStyles =  getModalStyle(theme.palette.mode)
@@ -280,7 +280,7 @@ interface role {
     {field:"createdAt", headerName: "Date Added" , flex:1},
     {field:"createdBy", headerName: "Added By" , flex:1},
     {field:"status",headerName:"Status", flex:1},
-    {field:"actions", headerName: "Actions" , flex:1 , renderCell:((params)=>(
+    {field:"actions", headerName: "Actions" , flex:1 , renderCell:(()=>(
       <Box sx={{display:"flex", gap:"10px", alignItems:"center"}}>
         <IconButton>
           <img src={editIcon} style={{ width:"24px", height:"24px"}} alt="editIcon" />
@@ -317,7 +317,7 @@ interface role {
     createdAt:Date;
   }
 
-  const [propertyCategoryData,setPropertyCategoryData] = useState<ICreatePropertyCategoryPayload>({name:"", status:"", description:"" })
+  const [propertyCategoryData,setPropertyCategoryData] = useState<CreatePropertyCategoryPayload>({name:"", status:"", description:"" })
   const [creatingPropertyCategory, setCreatingPropertyCategory] = useState<boolean>(false)
   const [openPropertyCategoryModal,setOpenPropertyCategoryModal] = useState<boolean>(false);
   const [propertyCategories,setPropertyCategories]  = useState<PropertyCategory[]>([])
@@ -416,7 +416,7 @@ interface role {
     createdAt:Date
    }
 
-  const [supportTicketData,setSupportTicketData] = useState<ICreateSupportTicketPayload>({name:"", status:"", description:"" })
+  const [supportTicketData,setSupportTicketData] = useState<CreateSupportTicketPayload>({name:"", status:"", description:"" })
   const [creatingSupportTicket, setCreatingSupportTicket] = useState<boolean>(false)
   const [openSupportTicketModal,setOpenSupportTicketModal] = useState<boolean>(false);
   const [loadingSupportTickets,setLoadingSupportTickets] = useState<boolean>(false)
@@ -513,7 +513,7 @@ interface role {
     slug:string,
     createdAt:Date,
   }
-  const [propertyTagData,setPropertyTagData] = useState<ICreatePropertyTagPayload>({name:"", status:"", description:"" })
+  const [propertyTagData,setPropertyTagData] = useState<CreatePropertyTagPayload>({name:"", status:"", description:"" })
   const [creatingPropertyTag, setCreatingPropertyTag] = useState<boolean>(false)
   const [openPropertyTagModal,setOpenPropertyTagModal] = useState<boolean>(false);
   const handleOpenPropertyTagModal = ()=> setOpenPropertyTagModal(true)
@@ -613,7 +613,7 @@ interface role {
     createdAt:Date,
   }
 
-  const [categoryData,setCategoryData] = useState<ICreateCategoryPayload>({categoryName:"", parentCategory:"", options:"", status:"", description:"" });
+  const [categoryData,setCategoryData] = useState<CreateCategoryPayload>({categoryName:"", parentCategory:"", options:"", status:"", description:"" });
   const [creatingCategory, setCreatingCategory] = useState<boolean>(false);
   const [openCategoryModal,setOpenCategoryModal] = useState<boolean>(false);
   const [categoriesList,setCategoriesList] = useState<Category[]>([])
@@ -715,7 +715,7 @@ interface Tag {
    createdAt:Date;
 }
 
-  const [tagData,setTagData] = useState<ICreateTagPayload>({tagName:"", parentTag:"", options:"", status:"", description:"" });
+  const [tagData,setTagData] = useState<CreateTagPayload>({tagName:"", parentTag:"", options:"", status:"", description:"" });
   const [creatingTag, setCreatingTag] = useState<boolean>(false);
   const [openTagModal,setOpenTagModal] = useState<boolean>(false);
   const [tagList,setTagList] = useState<Tag[]>([]);

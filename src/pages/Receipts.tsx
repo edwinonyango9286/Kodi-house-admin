@@ -7,7 +7,7 @@ import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
-import type { IReceipts } from '../types/types'
+import type { Receipts } from '../interfaces/interfaces'
 import { listReceipts } from '../components/services/receiptServices'
 
 const Receipts = () => {
@@ -35,7 +35,7 @@ const Receipts = () => {
     {field:"status", headerName:"Status", flex:1}
   ]
 
-  const [receiptList,setReceiptList] = useState<IReceipts[]>([]);
+  const [receiptList,setReceiptList] = useState<Receipts[]>([]);
   const [loadingReceipts,setLoadingReceipts] = useState<boolean>(false)
 
   const receiptRows = receiptList.map((receipt)=>({

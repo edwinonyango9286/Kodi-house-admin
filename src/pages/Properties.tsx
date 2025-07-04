@@ -14,28 +14,11 @@ import deleteIconGrey from "../assets/logos and Icons-20230907T172301Z-001/logos
 import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
 import { debounce } from 'lodash';
 import NoRowsOverlay from '../components/common/NoRowsOverlay'
+import type { Property } from '../interfaces/interfaces'
 
 const Properties = () => {
-  interface IProperty {
-    _id:string;
-    createdBy:{
-      userName:string;
-    }
-    name:string;
-    type:string;
-    numberOfUnits:number;
-    occupiedUnits:number;
-    currentStatus:string;
-    category:string;
-    images:Array<{
-      secure_url:string;
-      public_id:string;
-      _id:string;
-    }>
-  }
 
-
-  const [propertiesList,setPropertiesList] = useState<IProperty[]>([])
+  const [propertiesList,setPropertiesList] = useState<Property[]>([])
   const [loadingProperties,setLoadingProperties]  = useState<boolean>(false)
   const [unitsCount,setUnitsCount] = useState<number>(0);
   const [searchQuery,setSearchQuery] = useState<string>("")

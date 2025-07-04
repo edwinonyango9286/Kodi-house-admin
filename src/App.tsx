@@ -20,8 +20,6 @@ import {ToastContainer} from  "react-toastify"
 import { PrivateRoutes } from './utils/PrivateRoutes'
 
 
-
-
 function App() {
   return (
     <>

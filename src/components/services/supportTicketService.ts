@@ -1,4 +1,4 @@
-import type { ICreateSupportTicketPayload, } from "../../types/types"
+import type { ICreateSupportTicketPayload, } from "../../interfaces"
 import { config } from "../../utils/config"
 import { newRequest } from "../../utils/newRequest"
 

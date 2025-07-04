@@ -82,12 +82,12 @@ const [rowCount, setRowCount] = useState(0);
   ]
 
 
-  const [seletedInvoiceCategory,setSeletedInvoiceCategory] = React.useState("All");
+  const [seletedInvoiceCategory,setSeletedInvoiceCategory] = useState("All");
 
 const handleSelectStatusCategory = async (e:SelectChangeEvent) => {
   const status = e.target.value as string;
   setSeletedInvoiceCategory(status);
-  setPage(0); // Reset to first page
+  setPage(0); 
   setLoadingInvoices(true);
   try {
     await listAllInvoices(searchQuery, status, 0, pageSize);
@@ -103,10 +103,11 @@ const handleSelectStatusCategory = async (e:SelectChangeEvent) => {
   const listAllInvoices = useCallback(async (search = "", status = "", page = 0, pageSize = 10) => {
   try {
     setLoadingInvoices(true);
-const params: { search?: string; status?: string; limit: number; offset: number } = {
-  limit: pageSize,
-  offset: page * pageSize,
-};    if (search) params.search = search;
+    const params: { search?: string; status?: string; limit: number; offset: number } = {
+      limit: pageSize,
+      offset: page * pageSize,
+    };   
+    if (search) params.search = search;
     if (status && status !== "All") params.status = status;
 
     const response = await listInvoices(params);

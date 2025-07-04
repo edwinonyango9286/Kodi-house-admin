@@ -2,7 +2,7 @@ import { Avatar, Box, Button, FormControl, FormControlLabel, FormGroup, FormLabe
 import React, { useEffect, useState } from 'react'
 import uploadIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/upload icon.svg"
 import eyeIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon eye.svg"
-import type { IUpdatePasswordPayload, IUpdateUserInfoPayload } from '../types/types'
+import type { UpdatePasswordPayload, UpdateUserInfoPayload, User } from '../interfaces/interfaces'
 import { getUserProfile, updatePassword, updateUserInfo } from '../components/services/userServices'
 import { showErrorToast, showInfoToast } from '../utils/toast'
 import type { AxiosError } from 'axios'
@@ -17,23 +17,14 @@ const Profile = () => {
   const [showCurrentPassword,setShowCurrentPassword] = useState<boolean>(false)
   const [showNewPassword,setShowNewPassword]  = useState<boolean>(false)
   const [showConfirmNewPassword,setShowConfirmNewPassword] = useState<boolean>(false)
-  const [passwordData,setPasswordData] = useState<IUpdatePasswordPayload>({ currentPassword:"",newPassword:"", confirmNewPassword:""})
+  const [passwordData,setPasswordData] = useState<UpdatePasswordPayload>({ currentPassword:"",newPassword:"", confirmNewPassword:""})
   const [isSubmitting,setIsSubmitting] = useState<boolean>(false)
-  const [userInfoData,setUserInfoData] = useState<IUpdateUserInfoPayload>({ email:"",phoneNumber:"", firstName:"", secondName:"", lastName:"", idNumber:"", address:"" })
+  const [userInfoData,setUserInfoData] = useState<UpdateUserInfoPayload>({ email:"",phoneNumber:"", firstName:"", secondName:"", lastName:"", idNumber:"", address:"" })
   const [updatingUserInfo,setUpdatingUserInfo] = useState<boolean>(false)
   const [securityAandNotificationsData,setSecurityAndNotificationsData] =  useState({twoFa:false, accountActivity:false, newMessages:false})
   
-interface IUser {
-  userName:string,
-  email:string,
-  role:{
-    name:string,
-  }
-  avatar:{
-    secure_url:string,
-  }
-}
-const [userData,setUserData] = useState<IUser | null >(null)
+
+const [userData,setUserData] = useState<User | null >(null)
 
 
   const handleChangePasswordInput =  (e:React.ChangeEvent<HTMLInputElement>)=>{

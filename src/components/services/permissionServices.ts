@@ -1,5 +1,5 @@
 
-import type { ICreatePermissionPayload} from "../../types/types"
+import type { ICreatePermissionPayload} from "../../interfaces"
 import { config } from "../../utils/config";
 import { newRequest } from "../../utils/newRequest"
 

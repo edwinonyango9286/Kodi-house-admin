@@ -1,4 +1,4 @@
-import type { ICreatePropertyCategoryPayload } from "../../types/types";
+import type { ICreatePropertyCategoryPayload } from "../../interfaces";
 import { config } from "../../utils/config";
 import { newRequest } from "../../utils/newRequest";
 

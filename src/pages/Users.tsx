@@ -1,5 +1,5 @@
-import { Box, Button, colors, Divider, FormControl, FormLabel, IconButton, InputAdornment, MenuItem, Modal, Paper, Select, TextField, Typography, useTheme, type SelectChangeEvent } from '@mui/material'
-import React, { useEffect, useState } from 'react'
+import { Box, Button, Divider, FormControl, FormLabel, IconButton, InputAdornment, MenuItem, Modal, Paper, Select, TextField, Typography, useTheme, type SelectChangeEvent } from '@mui/material'
+import React, { useCallback, useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
@@ -7,7 +7,7 @@ import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
-import type { IAddUserPayload } from '../types/types'
+import type { AddUserPayload } from '../interfaces/interfaces'
 import { getModalStyle } from '../theme'
 import cancelIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/cancel Icon.svg"
 import { addUser, listSystemUsers } from '../components/services/userServices'
@@ -36,7 +36,7 @@ const Users = () => {
     }
   }
 
-  const [userFormData,setUserFormData] = useState<IAddUserPayload>({firstName:"", lastName:"", status:"", role:"",email:"",phoneNumber:"",description:"" })
+  const [userFormData,setUserFormData] = useState<AddUserPayload>({firstName:"", lastName:"", status:"", role:"",email:"",phoneNumber:"",description:"" })
   const [isSubmiting,setIsSubmitting] = React.useState<boolean>(false)
   const [usersList,setUsersList] = useState<User[]>([]);
   const [fetchingUsers,setFetchingUser] = useState<boolean>(false)
@@ -152,7 +152,7 @@ const Users = () => {
 
   const [assignableRoles,setAssignableRoles] = useState<Role[]>([])
   
-  const listAllRoles = async ()=>{
+  const listAllRoles = useCallback( async ()=>{
     try {
       const response = await listRoles();
       if(response.status === 200){
@@ -163,11 +163,11 @@ const Users = () => {
     } catch (error) {
       console.log(error)
     }
-  }
+  },[])
 
 useEffect(()=>{
 listAllRoles()
-},[])
+},[listAllRoles])
 
 
   return (

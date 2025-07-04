@@ -7,13 +7,11 @@ import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
-import type { IPayments } from '../types/types'
+import type { Payments } from '../interfaces/interfaces'
 import { listPayments } from '../components/services/paymentsService'
 import NoRowsOverlay from '../components/common/NoRowsOverlay'
 
 const Payments = () => {
-  const rows = []
-
   const paymentStatuses = [
     {id:1, name:"All"},
     {id:2, name:"Successful"},
@@ -27,7 +25,7 @@ const Payments = () => {
     setSelectedStatus(e.target.value as string)
   }
 
-  const [paymentsList,setPaymentsList] = useState<IPayments[]>([])
+  const [paymentsList,setPaymentsList] = useState<Payments[]>([])
 
   const listAllPayments = useCallback( async()=>{
     try {
@@ -35,12 +33,10 @@ const Payments = () => {
       if(response.status === 200){
         setPaymentsList(response.data.data)
       }
-      
     } catch (error) {
       console.log(error)
     }
   },
-
   [])
 
  useEffect(()=>{

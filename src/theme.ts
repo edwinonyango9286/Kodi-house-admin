@@ -44,6 +44,7 @@ export const getDesignTokens = (mode: PaletteMode) =>
             },
           }),
     },
+    
     typography: {
       fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
       h1: {
@@ -62,7 +63,7 @@ export const getDesignTokens = (mode: PaletteMode) =>
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
-            borderRadius: "8px",
+            borderRadius: "4px",
             "&:hover .MuiOutlinedInput-notchedOutline": {
               borderColor: "#e6e6e6",
             },

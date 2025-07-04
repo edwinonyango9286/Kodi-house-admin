@@ -10,7 +10,7 @@ import facebookIcon from "../../assets/logos and Icons-20230907T172301Z-001/logo
 import logoWhite from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/Logo white.svg"
 import eyeIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon eye.svg"
 import bgImage from "../../assets/images-20230907T172340Z-001/images/Sign up  Loading  1.jpg"
-import type { ISignInPayload } from "../../types/types"
+import type { SignInPayload } from "../../interfaces/interfaces"
 import type { AxiosError } from "axios"
 import { showErrorToast } from "../../utils/toast"
 import { signIn } from "../../components/services/authServices"
@@ -19,7 +19,7 @@ import Cookies from "js-cookie"
 
 const SignIn : React.FC = () => {
   const navigate = useNavigate()
-  const [formData,setFormData]  = useState<ISignInPayload>({email:"",password:""})
+  const [formData,setFormData]  = useState<SignInPayload>({email:"",password:""})
   const [showPassword,setShowPassword] = useState<boolean>(false);
   const [storeAccessTokenInCookies,setStoreAccessTokenInCookies] = useState<boolean>(false)
   const [isSubmitting,setIsSubmitting] = useState<boolean>(false)

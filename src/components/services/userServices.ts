@@ -1,4 +1,4 @@
-import type { IAddUserPayload, IUpdatePasswordPayload, IUpdateUserInfoPayload, IUpdateUserInfoResponse } from "../../types/types"
+import type { IAddUserPayload, IUpdatePasswordPayload, IUpdateUserInfoPayload, IUpdateUserInfoResponse } from "../../interfaces"
 import { config } from "../../utils/config";
 import { newRequest } from "../../utils/newRequest"
 

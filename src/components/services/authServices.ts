@@ -1,5 +1,5 @@
 import { newRequest } from "../../utils/newRequest";
-import type {ICreateAccountPayload, IRequestResetPasswordEmail, IResetPasswordPayload, ISignInPayload, IVerifyCodePayload} from "../../types/types"
+import type {ICreateAccountPayload, IRequestResetPasswordEmail, IResetPasswordPayload, ISignInPayload, IVerifyCodePayload} from "../../interfaces"
 
 
 export const createAccount = async (accountData: ICreateAccountPayload) => {

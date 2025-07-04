@@ -1,5 +1,5 @@
 import { newRequest } from "../../utils/newRequest";
-import type {ICreateRolePayload} from "../../types/types"
+import type {ICreateRolePayload} from "../../interfaces"
 import { config } from "../../utils/config";
 
  export const createRole = async (roleData:ICreateRolePayload ) =>{

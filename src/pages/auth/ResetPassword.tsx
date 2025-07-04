@@ -7,13 +7,13 @@ import eyeIcon from "../../assets/logos and Icons-20230907T172301Z-001/logos and
 import bgImage from "../../assets/images-20230907T172340Z-001/images/Sign up  Loading  1.jpg"
 import { useNavigate, useParams } from 'react-router-dom'
 import { resetUserPassword } from '../../components/services/authServices'
-import type { IResetPasswordPayload } from '../../types/types'
+import type { ResetPasswordPayload } from '../../interfaces/interfaces'
 import type { AxiosError } from 'axios'
 import { showErrorToast, showInfoToast } from '../../utils/toast'
 
 
 const ResetPassword : React.FC =  () => {
-  const [formData,setFormData] = useState<IResetPasswordPayload>({ password:"", confirmPassword:"", token:"" })
+  const [formData,setFormData] = useState<ResetPasswordPayload>({ password:"", confirmPassword:"", token:"" })
   const [showNewPassword,setShowNewPassword]  = useState<boolean>(false);
   const [reenterNewPassword,setReenterNewPassword] = useState<boolean>(false)
   const [isSubmitting,setIsSubmitting]  = useState<boolean>(false)
