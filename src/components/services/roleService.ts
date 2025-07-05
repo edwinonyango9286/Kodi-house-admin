@@ -1,8 +1,8 @@
 import { newRequest } from "../../utils/newRequest";
-import type {ICreateRolePayload} from "../../interfaces"
+import type {CreateRolePayload, RenameRolePayload} from "../../interfaces/interfaces"
 import { config } from "../../utils/config";
 
- export const createRole = async (roleData:ICreateRolePayload ) =>{
+ export const createRole = async (roleData:CreateRolePayload ) =>{
     try {
         const response = await newRequest.post(`roles/create`,roleData, config)
         return response
@@ -16,6 +16,16 @@ import { config } from "../../utils/config";
    try {
       const response = await newRequest.get(`roles/all/roles`, config)
       return response
+   } catch (error) {
+      console.log(error)
+      throw error
+   }
+ }
+
+ export const renameRole = async ({roleId,name} : RenameRolePayload )=>{
+   try {
+      const response = await newRequest.patch(`roles/${roleId}/rename`, {name}, config);
+      return response;
    } catch (error) {
       console.log(error)
       throw error

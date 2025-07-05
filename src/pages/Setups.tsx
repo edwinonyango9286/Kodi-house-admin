@@ -4,16 +4,16 @@ import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/log
 import {useTheme } from '@mui/material';
 import { getModalStyle } from '../theme';
 import cancelIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/cancel Icon.svg"
-import type {CreateRolePayload ,CreatePermissionPayload, CreatePropertyTypePayload, CreatePropertyCategoryPayload, CreatePropertyTagPayload, CreateSupportTicketPayload, CreateCategoryPayload, CreateTagPayload } from "../interfaces/interfaces"
-import { createRole, listRoles } from '../components/services/roleService';
-import { createPermission, listPermissions } from '../components/services/permissionServices';
+import type {CreateRolePayload ,CreatePermissionPayload, CreatePropertyCategoryPayload, CreatePropertyTagPayload, CreateSupportTicketPayload, CreateCategoryPayload, CreateTagPayload, RenameRolePayload, Role, SupportTicketType, PropertyTypeTag, Category, Tag, PropertyCategory, Permission } from "../interfaces/interfaces"
+import { createRole, listRoles, renameRole } from '../components/services/roleService';
+import { createPermission, deleteAPermission, listPermissions } from '../components/services/permissionServices';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/filter icon.svg"
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
-import {createPropertyType, listPropertyTypes } from '../components/services/propertyTypesServices';
+import {createPropertyType, listPropertyTypes, updatePropertyType } from '../components/services/propertyTypesServices';
 import { createSupportTicket, listSupportTickets } from '../components/services/supportTicketService';
 import { createCategory, listCategories } from '../components/services/categoryService';
 import { createTag, listTags } from '../components/services/tagServices';
@@ -26,13 +26,13 @@ import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos a
 import { createPropertyCategory, listPropertyCategories } from '../components/services/propertyCategoryService';
 import { createPropertyTag, listPropertyTags } from '../components/services/propertyTagService';
 import NoRowsOverlay from '../components/common/NoRowsOverlay';
-
+import type { PropertyType, PropertyTypePayload } from '../interfaces/propertyType';
 
 
 const Setups:React.FC = () => {
   const [formData,setFormData] = useState<CreateRolePayload>({name:"",description:"", status:""})
   const [permissionFormData, setPermissionFormData] = useState<CreatePermissionPayload>({ permissionName: "", status:"", description:"" });
-  const [propertyTypeData,setPropertyTypeData] = useState<CreatePropertyTypePayload>({ name:"", status:"", description:"", })
+  const [propertyTypeData,setPropertyTypeData] = useState<PropertyTypePayload>({ name:"", status:"", description:"", })
   const [isSubmiting,setIsSubmitting] = useState<boolean>(false)
   const theme = useTheme()
   const modalStyles =  getModalStyle(theme.palette.mode)
@@ -43,6 +43,46 @@ const Setups:React.FC = () => {
     setOpenAddRoleModal(false);
     setFormData({ name:"", description:"",status:""})
   };
+
+  // rename role
+const [openRenameRoleModal,setOpenRenameRoleModal] = useState<boolean>(false);
+const [renameRoleFormData,setRenameRoleFormData] = useState<RenameRolePayload>({name:"" , roleId:""});
+const [renamingRole,setRenamingRole] = useState(false)
+const handleOpenRenameRoleModal = ()=>{
+  setOpenRenameRoleModal(true);
+}
+const handleCloseRenameRoleModal = ()=>{
+  setOpenRenameRoleModal(false);
+  setRenameRoleFormData({ name:"", roleId:"" })
+}
+
+const handleSelectRoleToRename = (e:SelectChangeEvent) => {
+  const value = e.target.value as string
+  setRenameRoleFormData((prev)=>({...prev, roleId:value }))
+}
+
+const handleInputChangeRenameRole = (e:React.ChangeEvent<HTMLInputElement>)=>{
+  const { name , value} = e.target;
+  setRenameRoleFormData((prev)=>({...prev,[name]:value as string}));
+  console.log(renameRoleFormData,"renameRoleFormdata")
+}
+
+const handleRenameRole = async (e:React.FormEvent<HTMLFormElement>)=>{
+  e.preventDefault();
+  try {
+    setRenamingRole(true)
+    const response = await renameRole(renameRoleFormData);
+    if(response.status === 200){
+    showInfoToast(response.data.message)
+    listAllRoles();
+    handleCloseRenameRoleModal()
+    }
+  } catch (error) {
+    console.log(error)
+  }finally{
+    setRenamingRole(false)
+  }
+}
 
   const [openAddPermissionModal, setOpenAddPermissionModal] = useState<boolean>(false);
   const handleOpenAddPermissionModal = () => setOpenAddPermissionModal(true);
@@ -78,11 +118,6 @@ const Setups:React.FC = () => {
     localStorage.setItem("selectedItem",id.toString())
   };
 
-  const [permission,setPermission] = React.useState('');
-  const handleChange = (event: SelectChangeEvent) => {
-   setPermission(event.target.value as string);
-  };
-
   const [selectedRole,setSelectedRole] = React.useState('');
   const handleSelectRole = (event: SelectChangeEvent) => {
    setSelectedRole(event.target.value as string);
@@ -109,20 +144,14 @@ const Setups:React.FC = () => {
  ]
 
 //  role functionalities
-
-interface role {
-  _id:string,
-  name:string,
-  status:string,
-}
-
- const [roles,setRoles] = useState<role[]>([])
-
+ const [roles,setRoles] = useState<Role[]>([])
  const listAllRoles  = useCallback(async ()=>{
   try {
     const response = await listRoles();
     if(response.status === 200){
-      setRoles(response.data.data)
+      const listOfRoles = response.data.data;
+      const filteredListOfRoles = listOfRoles.filter((role:Role)=>role.name !== "Admin");
+      setRoles(filteredListOfRoles)
     }
   } catch (error) {
     console.log(error)
@@ -152,14 +181,6 @@ interface role {
  }
 
 //  permission functionalities
-
- interface permission {
-  _id:string,
-  permissionName:string,
-  status:string,
- }
-
-
   const handleCreatePermission = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   setCreatingPermission(true)
@@ -179,7 +200,7 @@ interface role {
   }
  }
 
- const [permissionsList, setPermissionsList] = useState<permission[]>([])
+ const [permissionsList, setPermissionsList] = useState<Permission[]>([])
 
  const listAllPermissions = useCallback(async()=>{
   try {
@@ -224,18 +245,7 @@ interface role {
   setPropertyTypeData((prev)=>({...prev,status:e.target.value as string}))
  }
 
- interface propertyType {
-  _id:string,
-  name:string,
-  slug:string,
-  createdAt:Date,
-  status:string,
-  createdBy:{
-    userName:string
-  }
-}
-
-  const [propertyTypes,setPropertyTypes] = useState<propertyType[]>([])
+  const [propertyTypes,setPropertyTypes] = useState<PropertyType[]>([])
   const [loadingPropertyTypes,setLoadingPropertyTypes] = useState<boolean>(false)
 
   // list all property types 
@@ -280,10 +290,10 @@ interface role {
     {field:"createdAt", headerName: "Date Added" , flex:1},
     {field:"createdBy", headerName: "Added By" , flex:1},
     {field:"status",headerName:"Status", flex:1},
-    {field:"actions", headerName: "Actions" , flex:1 , renderCell:(()=>(
+    {field:"actions", headerName: "Actions" , flex:1 , renderCell:((params)=>(
       <Box sx={{display:"flex", gap:"10px", alignItems:"center"}}>
         <IconButton>
-          <img src={editIcon} style={{ width:"24px", height:"24px"}} alt="editIcon" />
+          <img onClick={()=>(handleOpenUpdatePropertyTypeModal(params.row))} src={editIcon} style={{ width:"24px", height:"24px"}} alt="editIcon" />
         </IconButton>
          <IconButton >
           <img src={deleteIconGrey} style={{ width:"24px", height:"24px"}} alt="deleteIcon" />
@@ -295,28 +305,19 @@ interface role {
      ))},
    ]  
 
+
    const  propertyTypeRows =  propertyTypes.map((propertyType)=>({
     id:propertyType?._id,
     name:propertyType?.name,
     slug:propertyType?.slug,
     createdAt: dateFormatter(propertyType?.createdAt),
     createdBy:propertyType.createdBy?.userName,
-    status:propertyType?.status
+    status:propertyType?.status,
+    description:propertyType?.description
    }))
 
-  //  property category
-  interface PropertyCategory {
-    _id:string;
-    createdBy:{
-      userName:string;
-    }
-    name:string;
-    status:string;
-    description:string;
-    slug:string;
-    createdAt:Date;
-  }
 
+  //  property category
   const [propertyCategoryData,setPropertyCategoryData] = useState<CreatePropertyCategoryPayload>({name:"", status:"", description:"" })
   const [creatingPropertyCategory, setCreatingPropertyCategory] = useState<boolean>(false)
   const [openPropertyCategoryModal,setOpenPropertyCategoryModal] = useState<boolean>(false);
@@ -404,18 +405,6 @@ interface role {
    }))
 
    // support Ticket type
-
-   interface SupportTicketType {
-    _id:string,
-    name:string,
-    description:string,
-    status:string,
-    createdBy:{
-      userName:string,
-    }
-    createdAt:Date
-   }
-
   const [supportTicketData,setSupportTicketData] = useState<CreateSupportTicketPayload>({name:"", status:"", description:"" })
   const [creatingSupportTicket, setCreatingSupportTicket] = useState<boolean>(false)
   const [openSupportTicketModal,setOpenSupportTicketModal] = useState<boolean>(false);
@@ -502,17 +491,7 @@ interface role {
 
 
     // property type tag
-   interface propertyTypeTag {
-    _id:string,
-    createdBy:{
-      userName:string,
-    }
-    name:string,
-    status:string,
-    description:string,
-    slug:string,
-    createdAt:Date,
-  }
+  
   const [propertyTagData,setPropertyTagData] = useState<CreatePropertyTagPayload>({name:"", status:"", description:"" })
   const [creatingPropertyTag, setCreatingPropertyTag] = useState<boolean>(false)
   const [openPropertyTagModal,setOpenPropertyTagModal] = useState<boolean>(false);
@@ -532,7 +511,7 @@ interface role {
   setPropertyTagData((prev)=>({...prev,status:e.target.value as string}))
  }
 
- const [propertyTagsList,setPropertyTagList] = useState<propertyTypeTag[]>([])
+ const [propertyTagsList,setPropertyTagList] = useState<PropertyTypeTag[]>([])
  const [loadingPropertyTags,setLoadingPropertyTags] = useState<boolean>(false)
 
 
@@ -601,18 +580,6 @@ interface role {
 
 
    // category
- interface Category {
-    _id:string,
-    createdBy:{
-      userName:string,
-    }
-    categoryName:string,
-    status:string,
-    description:string,
-    parentCategory:string,
-    createdAt:Date,
-  }
-
   const [categoryData,setCategoryData] = useState<CreateCategoryPayload>({categoryName:"", parentCategory:"", options:"", status:"", description:"" });
   const [creatingCategory, setCreatingCategory] = useState<boolean>(false);
   const [openCategoryModal,setOpenCategoryModal] = useState<boolean>(false);
@@ -702,18 +669,6 @@ const categoryColumns:GridColDef[] = [
     createdBy:category?.createdBy?.userName
    }))
 
-
-interface Tag {
-  _id:string;
-  createdBy:{
-    userName:string;
-  }
-   tagName:string;
-   description:string;
-   parentTag:string;
-   status:string;
-   createdAt:Date;
-}
 
   const [tagData,setTagData] = useState<CreateTagPayload>({tagName:"", parentTag:"", options:"", status:"", description:"" });
   const [creatingTag, setCreatingTag] = useState<boolean>(false);
@@ -807,6 +762,92 @@ interface Tag {
    }))
 
 
+
+
+  //  delete permission logic 
+  const [openDeletePermissionModal,setOpenDeletePermissionModal] = useState<boolean>(false);
+  const [permissionToDeleteId,setPermissionToDeleteId] = useState<string>("")
+  const [deletingPermission,setDeletingPermission] = useState<boolean>(false)
+
+
+  const handleOpenDeletePermissionModal = () =>{
+    setOpenDeletePermissionModal(true)
+  }
+
+  const handleCloseDeletePermissionModal = () =>{
+    setOpenDeletePermissionModal(false)
+    setPermissionToDeleteId("");
+  }
+
+  const handleSelectPermissionToDelete = (e:SelectChangeEvent)=>{
+    setPermissionToDeleteId(e.target.value)
+  }
+
+
+  const handleDeletePermission = async (e:React.FormEvent<HTMLFormElement>)=>{
+    e.preventDefault();
+    setDeletingPermission(true)
+    try {
+      const response = await deleteAPermission(permissionToDeleteId)
+      if(response?.status === 200){
+        handleCloseDeletePermissionModal();
+        showInfoToast(response.data.message);
+        listAllPermissions()
+      }
+    } catch (err) {
+      const error = err as AxiosError<{message?:string}>;
+      showErrorToast(error.response?.data.message || error.message)
+    }finally{
+      setDeletingPermission(false)
+    }
+  }
+
+  const [filterValue,setFilterValue] = useState<string>("");
+
+  // update Property type functionality
+  const [updatePropertyTypeFormData,setUpdatePropertyTypeFormData] = useState<PropertyTypePayload>({ _id:"", name:"", status:"", description:"" });
+  const [updatingPropertyType,setUpdatingPropertyType] = useState<boolean>(false)
+
+  const handleUpdatePropertyType = async (e:React.FormEvent<HTMLFormElement>)=>{
+    e.preventDefault()
+    try {
+      setUpdatingPropertyType(true)
+      const response = await updatePropertyType({_id:updatePropertyTypeFormData._id, name:updatePropertyTypeFormData.name, status:updatePropertyTypeFormData.status, description:updatePropertyTypeFormData.description });
+      if(response.status === 200){
+        showInfoToast(response.data.message);
+        listAllPropertyTypes();
+        handleCloseUpdatePropertyTypeModal()
+      }
+    } catch (error) {
+      const err = error as AxiosError<{message?:string}>
+      showErrorToast(err.response?.data.message || err.message)
+    }finally{
+      setUpdatingPropertyType(false)
+    }
+  }
+
+  const [openUpdatePropertyType,setOpenUpdatePropertyType] = useState<boolean>(false);
+
+  const handleOpenUpdatePropertyTypeModal = (propertyType:PropertyType)=>{
+    setUpdatePropertyTypeFormData({_id:propertyType.id, name:propertyType.name, description:propertyType.description, status:propertyType.status })
+    setOpenUpdatePropertyType(true)
+  }
+
+  const handleCloseUpdatePropertyTypeModal = ()=>{
+    setOpenUpdatePropertyType(false);
+    setUpdatePropertyTypeFormData({ _id:"", name:"", description:"", status:""});
+  }
+
+  const handleUpdatePropertyTypeStatusChange = (e:SelectChangeEvent)=>{
+    setUpdatePropertyTypeFormData((prev)=>({...prev,status:e.target.value as string}))
+  }
+
+  const handleUpdatePropertyTypeChange = (e:React.ChangeEvent<HTMLInputElement>)=>{
+    const {name,value} = e.target
+    setUpdatePropertyTypeFormData((prev)=>({...prev,[name]:value}))
+  }
+
+
   return (
     <Box sx={{ width:"100%" }}>
       <Box sx={{ display:"flex", justifyContent:"space-between",gap:"20px"}}>
@@ -824,7 +865,7 @@ interface Tag {
           <Typography variant='body2' sx={{ fontSize:"18px", fontWeight:"500",color:"#374151"}}>Select Role and change its Permissions</Typography>
         <Box sx={{width:"24%",}}>
         <FormControl fullWidth>
-          <Select id="role-select" value={selectedRole} onChange={handleSelectRole} sx={{ height:"48px", width:"100%"}} >
+          <Select id="role-select" value={selectedRole} onChange={handleSelectRole} sx={{ height:"44px", width:"100%"}} >
             {roles?.map((role)=>(<MenuItem key={role?._id} value={role?._id}>{role?.name}</MenuItem>))}
          </Select>
         </FormControl>
@@ -850,12 +891,10 @@ interface Tag {
              <Box sx={{marginTop:"-13px", width:"100%", paddingX:"24px", display:"flex", alignItems:"center",gap:"20px"}}>
               <Box sx={{ alignItems:"center", gap:"10px", width:"100%", display:"flex"}}>
                 <Typography sx={{color:"#4B5563" , fontSize:"14px", fontWeight:"400", textAlign:"start" }}>Quick filter:</Typography>
-                <Box sx={{ width:"40%",}}>
-                 <FormControl fullWidth>
-                     <Select id="permission-select" value={permission} onChange={handleChange} sx={{ height:"40px", width:"100%"}} >
-                       {permissionsList?.map((permission)=>(<MenuItem key={permission?._id} value={permission?._id}>{permission.permissionName}</MenuItem>))}
-                     </Select>
-                </FormControl>
+                <Box sx={{ width:"40%"}}>
+                 <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                     <TextField type="text"  name="name"  value={filterValue} onChange={(e)=>setFilterValue(e.target.value)} fullWidth variant="outlined"  sx={{ height:"32px", "& .MuiOutlinedInput-root":{height:"44px"}, width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
                 </Box> 
 
                  <Box sx={{ marginLeft:"20px" }}>
@@ -863,7 +902,8 @@ interface Tag {
                       fontSize:"14px", color:"#4B5563", fontWeight:"400"
                      }}}  control={<Checkbox size='small' onChange={handleChecked}/>}/> 
                   </Box>
-                  <Box sx={{ justifyContent:"center", border: "1px solid  #D1D5DB", width:"84px",height:"40px", borderRadius:"8px", display:"flex", alignItems:"center"}}>
+
+                  <Box sx={{ cursor:"pointer", justifyContent:"center", border: "1px solid  #D1D5DB", width:"84px",height:"40px", borderRadius:"8px", display:"flex", alignItems:"center"}}>
                     <Typography sx={{color:"#6B7280", fontSize:"16px", fontWeight:"400", paddingX:"10px" }}>10</Typography>
                     <img src={dropdownGreyIcon} alt={dropdownGreyIcon} style={{width:"24px", height:"24px"}} />
                   </Box>
@@ -893,9 +933,9 @@ interface Tag {
               <Box sx={{height:"auto",backgroundColor:"#F5F5F5", padding:"24px", display:"flex", flexDirection:"column", gap:"10px",borderRadius:"4px", width:"80%"}}>
                 <Button variant='contained' sx={{height:"48px" , backgroundColor:"#2563EB", color:"#fff", borderRadius:"8px", fontSize:"14px", fontWeight:"500" , boxShadow:"none",":hover":{ boxShadow:"none"}}}>Update</Button>
                 <Button onClick={handleOpenAddRoleModal} variant='contained' sx={{height:"48px" , backgroundColor:"#FFF", color:"#344054", borderRadius:"8px", fontSize:"14px", fontWeight:"500" , boxShadow:"none", ":hover":{boxShadow:"none"}}}>Add role</Button>
-                <Button variant='contained' sx={{height:"48px" , backgroundColor:"#FFF", color:"#344054", borderRadius:"8px", fontSize:"14px", fontWeight:"500" ,boxShadow:"none", ":hover":{boxShadow:"none"} }}>Rename Role</Button>
+                <Button onClick={handleOpenRenameRoleModal} variant='contained' sx={{height:"48px" , backgroundColor:"#FFF", color:"#344054", borderRadius:"8px", fontSize:"14px", fontWeight:"500" ,boxShadow:"none", ":hover":{boxShadow:"none"} }}>Rename Role</Button>
                 <Button onClick={handleOpenAddPermissionModal} variant='contained' sx={{height:"48px" , backgroundColor:"#FFF", color:"#344054", borderRadius:"8px", fontSize:"14px", fontWeight:"500" , boxShadow:"none" ,":hover":{boxShadow:"none"} }}>Add permission</Button>
-                <Button variant='contained' sx={{height:"48px" , backgroundColor:"#FFF", color:"#344054", borderRadius:"8px", fontSize:"14px", fontWeight:"500" , boxShadow:"none", ":hover":{ boxShadow:"none"} }}>Delete permission</Button>
+                <Button onClick={handleOpenDeletePermissionModal} variant='contained' sx={{height:"48px" , backgroundColor:"#FFF", color:"#344054", borderRadius:"8px", fontSize:"14px", fontWeight:"500" , boxShadow:"none", ":hover":{ boxShadow:"none"} }}>Delete permission</Button>
               </Box>
             </Box>
           </Box>
@@ -904,7 +944,6 @@ interface Tag {
         <Divider sx={{ marginBottom:"30px", borderWidth:"1px", backgroundColor:"#F6F7F7"}}/>
 
         {/* add role modal */}
-        
         <Modal open={openAddRoleModal} onClose={handleCloseAddRoleModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
         <Box sx={modalStyles}>
           <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
@@ -937,6 +976,39 @@ interface Tag {
               </Box>
 
               <Button type='submit' loading={isSubmiting} variant='contained' disabled={!formData.name || !formData.status || !formData.description || isSubmiting} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+         </form>
+
+        </Box>
+      </Modal>
+
+          {/* rename role modal */}
+       <Modal open={openRenameRoleModal} onClose={handleCloseRenameRoleModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <Box sx={modalStyles}>
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
+             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Select role to rename</Typography>
+             <IconButton onClick={handleCloseRenameRoleModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+          </Box>
+
+         <form onSubmit={handleRenameRole} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
+
+           <Box sx={{ width:"100%",}}>
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Select Role </FormLabel>
+                     <Select id='status-select'  value={renameRoleFormData.roleId} onChange={handleSelectRoleToRename} sx={{width:"100%"}} >
+                       {roles.map((role)=>(<MenuItem key={role._id} value={role._id}>{role.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+                </Box> 
+
+                 <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                     <FormLabel  htmlFor="name" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}> New Role Name</FormLabel>
+                     <TextField type="text"  name="name" value={renameRoleFormData.name} onChange={handleInputChangeRenameRole} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+             </Box>
+              
+
+              <Button type='submit' loading={renamingRole} variant='contained' disabled={!renameRoleFormData.name  || renamingRole} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
          </form>
 
         </Box>
@@ -981,7 +1053,39 @@ interface Tag {
         </Box>
       </Modal>
 
-      </Paper>}
+        {/* delete permission modal */}
+       <Modal open={openDeletePermissionModal} onClose={handleCloseDeletePermissionModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <Box sx={modalStyles}>
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
+             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Delete permission</Typography>
+             <IconButton onClick={handleCloseDeletePermissionModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+          </Box>
+
+         <form onSubmit={handleDeletePermission} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
+
+                <Box sx={{ width:"100%",}}>
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="deletePermission" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Select Permission </FormLabel>
+                     <Select  value={permissionToDeleteId} onChange={handleSelectPermissionToDelete} sx={{width:"100%"}} >
+                       {permissionsList.map((permission)=>(<MenuItem key={permission._id} value={permission._id}>{permission.permissionName}</MenuItem>))}
+                     </Select>
+                </FormControl>
+                </Box> 
+
+               { permissionToDeleteId && <Box sx={{ width:"100%", display:"flex", flexDirection:"column",}}>
+                  <Typography  sx={{ fontSize:"14px", fontWeight:"600"}}>Deleting this permission will:</Typography>
+                  <Box sx={{ width:"100%", display:"flex", flexDirection:"column", gap:"10px"}}>
+                    <Typography sx={{ fontSize:"12" , fontWeight:"", color:" #666"}}>🚫 Immediately revoke access for all users and roles assigned to it. </Typography>
+                    <Typography sx={{ fontSize:"12" , fontWeight:"", color:" #666"}}>🚫 Require manual reconfiguration to restore access. </Typography>
+                  </Box>
+                </Box>}
+
+              <Button type='submit' loading={deletingPermission} variant='contained' disabled={!permissionToDeleteId || deletingPermission } sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Confirm</Button>
+         </form>
+
+        </Box>
+      </Modal>
+    </Paper>}
 
 
 
@@ -992,12 +1096,13 @@ interface Tag {
         <Divider sx={{ borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1"}}/>
         <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
 
-          <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
+          <Box sx={{  cursor:"pointer", height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
             <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>
             <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
             <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
-            <img src={refreshIcon} alt="refreshIcon" />
+            <img onClick={()=>{listAllPropertyTypes()}} src={refreshIcon} alt="refreshIcon" />
           </Box>
+
           <Box sx={{ display:"flex", gap:"20px"}}>
             <TextField placeholder='Search' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
              <Box sx={{ height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
@@ -1013,12 +1118,13 @@ interface Tag {
           </Box>
         </Box>
 
+
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
           <DataGrid slots={{noRowsOverlay:NoRowsOverlay}} sx={{ width:"100%"}} loading={loadingPropertyTypes} columns={propertyTypeColumns} rows={propertyTypeRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
-        {/* add property modal */}
 
+        {/* add property type modal */}
       <Modal open={openPropertyTypeModal} onClose={handleClosePropertyTypeModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
         <Box sx={modalStyles}>
           <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
@@ -1051,6 +1157,43 @@ interface Tag {
               </Box>
 
               <Button type='submit' loading={creatingPropertyType} variant='contained' disabled={!propertyTypeData.name || !propertyTypeData.status || !propertyTypeData.description || creatingPropertyType} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
+         </form>
+
+        </Box>
+      </Modal>
+       {/*update property type  */}
+      <Modal open={openUpdatePropertyType} onClose={handleCloseUpdatePropertyTypeModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <Box sx={modalStyles}>
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
+             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Update property type</Typography>
+             <IconButton onClick={handleCloseUpdatePropertyTypeModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+          </Box>
+
+         <form  onSubmit={handleUpdatePropertyType} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
+            <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                     <FormLabel  htmlFor="name" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Property Type Name</FormLabel>
+                     <TextField type="text"  name="name" value={updatePropertyTypeFormData.name} onChange={handleUpdatePropertyTypeChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+             </Box>
+
+                <Box sx={{ width:"100%",}}>
+                 <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
+                     <FormLabel  htmlFor="status" sx={{fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
+                     <Select id='status-select'  value={updatePropertyTypeFormData.status} onChange={handleUpdatePropertyTypeStatusChange} sx={{width:"100%"}} >
+                       {statuses.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     </Select>
+                </FormControl>
+                </Box> 
+
+                <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
+                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
+                    <FormLabel  htmlFor="description" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Description</FormLabel>
+                    <TextField type="text"  multiline rows={4} maxRows={4} name="description" value={updatePropertyTypeFormData.description} onChange={handleUpdatePropertyTypeChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
+                  </FormControl>
+              </Box>
+
+              <Button type='submit' loading={updatingPropertyType} variant='contained' disabled={!updatePropertyTypeFormData.name || !updatePropertyTypeFormData.status || !updatePropertyTypeFormData.description || updatingPropertyType} sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Update</Button>
          </form>
 
         </Box>

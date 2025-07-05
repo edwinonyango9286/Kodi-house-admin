@@ -36,7 +36,7 @@ const Drawer = ({open,children}: DrawerProps) => {
   const [userData,setUserData] = useState<User | null>(null)
 
   const navItems: DrawerItem[] = [
-    { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Welcome {userData?.userName.split(" ")[0]}</Typography>, icon:<HiOutlineLightningBolt fontSize={20}/>, path:"user-profile" },
+    { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Welcome {userData?.userName.split(" ")[0]}</Typography>, icon:<HiOutlineLightningBolt fontSize={20}/>},
     { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Dashboard</Typography>, icon: <IoHomeOutline fontSize={20} />, path: 'dashboard' },
     { text: <Typography sx={{ fontSize:"16px", fontWeight:"700" ,textAlign:"start"}}>Properties</Typography>, icon: <PiBuildingOffice  fontSize={20} />, path:"properties"},
     { text: <Typography sx={{ fontSize:"16px", fontWeight:"700", textAlign:"start"}}>Landlords</Typography>, icon: <FiUsers fontSize={20} />, path:"landlords",},

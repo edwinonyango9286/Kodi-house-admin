@@ -59,16 +59,6 @@ export interface UpdateUserInfoPayload {
   address: string;
 }
 
-export interface CreatePropertyTypePayload {
-  name: string;
-  status: string;
-  description: string;
-}
-
-export interface CreatePropertyTypeResponse {
-  status: string;
-  message: string;
-}
 
 export interface CreatePropertyCategoryPayload {
   name: string;
@@ -168,3 +158,106 @@ export interface Property {
     _id: string;
   }>;
 }
+
+export interface Invoice {
+  _id: string;
+  createdBy: {
+    userName: string;
+  };
+  invoiceNumber: string;
+  description: string;
+  allowedMethodOfPayment: string;
+  recurringStatus: string;
+  invoiceCategory: string;
+  amount: number;
+  tenant: {
+    userName: string;
+  };
+  property: {
+    name: string;
+  };
+  unit: {
+    unitNumber?: string;
+  };
+  invoiceDate: Date;
+  dueDate: Date;
+  status: string;
+}
+
+export interface RenameRolePayload {
+   roleId:string
+   name: string;
+}
+
+export interface Role {
+  _id: string;
+  name: string;
+  status: string;
+}
+
+export interface SupportTicketType {
+  _id: string;
+  name: string;
+  description: string;
+  status: string;
+  createdBy: {
+    userName: string;
+  };
+  createdAt: Date;
+}
+
+export interface PropertyTypeTag {
+  _id: string;
+  createdBy: {
+    userName: string;
+  };
+  name: string;
+  status: string;
+  description: string;
+  slug: string;
+  createdAt: Date;
+}
+
+export interface Category {
+  _id: string;
+  createdBy: {
+    userName: string;
+  };
+  categoryName: string;
+  status: string;
+  description: string;
+  parentCategory: string;
+  createdAt: Date;
+}
+
+export interface Tag {
+  _id: string;
+  createdBy: {
+    userName: string;
+  };
+  tagName: string;
+  description: string;
+  parentTag: string;
+  status: string;
+  createdAt: Date;
+}
+
+export interface PropertyCategory {
+  _id: string;
+  createdBy: {
+    userName: string;
+  };
+  name: string;
+  status: string;
+  description: string;
+  slug: string;
+  createdAt: Date;
+}
+
+
+
+export interface Permission {
+  _id:string,
+  permissionName:string,
+  status:string,
+ }

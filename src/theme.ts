@@ -102,7 +102,7 @@ export const getModalStyle = (mode: PaletteMode) => ({
   left: "50%",
   transform: "translate(-50%, -50%)",
   width: { xs: "90%", sm: 400, md: 500 },
-  bgColor: mode === "dark" ? "#1e1e1e" : "#fff",
+  bgcolor: mode === "dark" ? "#1e1e1e" : "#fff",
   border: "none",
   borderRadius: "12px",
   boxShadow:"0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)",

@@ -1,4 +1,4 @@
-import { Box, Divider, FormControl, FormLabel, InputAdornment, MenuItem, Paper, Select, TextField, Typography, type SelectChangeEvent } from '@mui/material'
+import { Box, Divider, FormControl, FormLabel, InputAdornment, Menu, MenuItem, Paper, Select, TextField, Typography, type SelectChangeEvent } from '@mui/material'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
@@ -11,6 +11,7 @@ import NoRowsOverlay from '../components/common/NoRowsOverlay'
 import { listInvoices } from '../components/services/InvoiceService'
 import { dateFormatter } from '../utils/dateFormatter'
 import { debounce } from 'lodash'
+import type { Invoice } from '../interfaces/interfaces'
 
 const Invoices = () => {
 const [page, setPage] = useState(0); 
@@ -23,33 +24,7 @@ const [rowCount, setRowCount] = useState(0);
     {id:3, name: "Overdue"},
     {id:4, name: "Partially paid"},
   ]
-
-  interface IInvoice {
-    _id:string;
-     createdBy:{
-      userName:string;
-    }
-    invoiceNumber:string;
-    description:string;
-    allowedMethodOfPayment:string;
-    recurringStatus:string;
-    invoiceCategory:string;
-    amount:number;
-    tenant:{
-      userName:string;
-    };
-    property:{
-      name:string;
-    }
-    unit:{
-      unitNumber?:string
-    }
-    invoiceDate:Date,
-    dueDate:Date,
-    status:string
-  }
-
-  const [invoiceList,setInvoiceList] = useState<IInvoice[]>([])
+  const [invoiceList,setInvoiceList] = useState<Invoice[]>([])
   const [loadingInvoices,setLoadingInvoices]  = useState<boolean>(false)
 
 
@@ -122,7 +97,6 @@ const handleSelectStatusCategory = async (e:SelectChangeEvent) => {
   }
 }, []);
 
-
   const debouncedSearch = useMemo(
     () =>
       debounce((value: string) => {
@@ -150,6 +124,18 @@ const handleSelectStatusCategory = async (e:SelectChangeEvent) => {
 
 
 
+  //  menu for exports 
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+
+
   return (
      <Box sx={{width:"100%",}}>
       <Paper elevation={0} sx={{ borderRadius:"4px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", width:"100#", backgroundColor:"#fff", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)"}}>
@@ -174,21 +160,29 @@ const handleSelectStatusCategory = async (e:SelectChangeEvent) => {
             <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
             <img onClick={()=>{ listAllInvoices(searchQuery, seletedInvoiceCategory, page, pageSize)}}  style={{ cursor:"pointer",}} src={refreshIcon} alt="refreshIcon" />
           </Box>
-          <Box sx={{cursor:"pointer", padding:"10px" ,border:"1px solid #D1D5DB", width:"100px", height:"42px", borderRadius:"8px"}}>
+
+          <Box sx={{ display:"flex", flexDirection:'column'}}>     
+          <Box component={"button"} onClick={handleClick} sx={{ backgroundColor:"#fff", cursor:"pointer", padding:"10px" ,border:"1px solid #D1D5DB", width:"142px", height:"42px", borderRadius:"8px"}}>
             <Typography variant='body2' sx={{fontSize:"14px",fontWeight:"500",textAlign:"center",color:"#4B5563"}}>Export</Typography>
           </Box>
-          </Box>
+            <Menu id="basic-menu" anchorEl={anchorEl}  open={open} onClose={handleClose} slotProps={{ list: { 'aria-labelledby': 'basic-button' }}}>
+                <MenuItem onClick={handleClose}>Export to CSV</MenuItem>
+                <MenuItem onClick={handleClose}>Export to Excel</MenuItem>
+                <MenuItem onClick={handleClose}>Export to PDF</MenuItem>
+          </Menu>
+         </Box>
+        </Box>
 
           <Box sx={{ display:"flex", gap:"20px"}}>
             <TextField placeholder='Search by invoice number, category or status' value={searchQuery} onChange={handleSearch} sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
              <Box sx={{ height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
-               <Typography sx={{ color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
+               <Typography sx={{ cursor:"pointer", color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
                <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
              </Box>
-             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+             <Box sx={{ cursor:"pointer", borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
               <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
              </Box>
-             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+             <Box sx={{ cursor:"pointer", borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
               <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
              </Box>
           </Box>

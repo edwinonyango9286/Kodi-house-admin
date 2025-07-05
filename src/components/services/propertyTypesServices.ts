@@ -1,15 +1,27 @@
-import type {ICreatePropertyTypePayload,} from "../../interfaces"
+
+import type { PropertyTypePayload } from "../../interfaces/propertyType"
 import { config } from "../../utils/config"
 import { newRequest } from "../../utils/newRequest"
 
 
-export const createPropertyType = async (propertyTypeData:ICreatePropertyTypePayload)=>{
+export const createPropertyType = async (propertyTypeData:PropertyTypePayload)=>{
     try {
      const response = await newRequest.post(`property-types/create`, propertyTypeData, config)
      return response
     } catch (error) {
       console.log(error)  
       throw error
+    }
+}
+
+export const updatePropertyType = async ({name, description, status, _id}:PropertyTypePayload)=>{
+    try {
+        const newPropertTypeData = { name, status, description }
+        const response = await newRequest.patch(`property-types/${_id}/update`, newPropertTypeData,config);
+        return response
+    } catch (error) {
+      console.log(error)  
+      throw error;
     }
 }
 
