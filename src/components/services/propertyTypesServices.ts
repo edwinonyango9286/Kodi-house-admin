@@ -36,5 +36,16 @@ export  const listPropertyTypes =  async ()=>{
 }
 
 
+export const deletePropertyType = async (propertyTypeId:string)=>{
+    try {
+        const response = await newRequest.patch(`property-types/${propertyTypeId}/delete`,{},config);
+        return response
+    } catch (error) {
+      console.log(error);
+      throw error
+    }
+} 
+
+
 
 

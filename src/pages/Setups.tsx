@@ -13,7 +13,7 @@ import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
-import {createPropertyType, listPropertyTypes, updatePropertyType } from '../components/services/propertyTypesServices';
+import {createPropertyType, deletePropertyType, listPropertyTypes, updatePropertyType } from '../components/services/propertyTypesServices';
 import { createSupportTicket, listSupportTickets } from '../components/services/supportTicketService';
 import { createCategory, listCategories } from '../components/services/categoryService';
 import { createTag, listTags } from '../components/services/tagServices';
@@ -27,6 +27,7 @@ import { createPropertyCategory, listPropertyCategories } from '../components/se
 import { createPropertyTag, listPropertyTags } from '../components/services/propertyTagService';
 import NoRowsOverlay from '../components/common/NoRowsOverlay';
 import type { PropertyType, PropertyTypePayload } from '../interfaces/propertyType';
+import warningIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/warning icon.svg"
 
 
 const Setups:React.FC = () => {
@@ -296,7 +297,7 @@ const handleRenameRole = async (e:React.FormEvent<HTMLFormElement>)=>{
           <img onClick={()=>(handleOpenUpdatePropertyTypeModal(params.row))} src={editIcon} style={{ width:"24px", height:"24px"}} alt="editIcon" />
         </IconButton>
          <IconButton >
-          <img src={deleteIconGrey} style={{ width:"24px", height:"24px"}} alt="deleteIcon" />
+          <img onClick={()=>{handleOpenDeletePropertyTypeModal(params.row)}} src={deleteIconGrey} style={{ width:"24px", height:"24px"}} alt="deleteIcon" />
         </IconButton>
          <IconButton >
           <img src={dotsVertical} style={{ width:"24px", height:"24px"}} alt="dotsVertical" />
@@ -848,6 +849,40 @@ const categoryColumns:GridColDef[] = [
   }
 
 
+  const [deletingPropertyType,setDeletingPropertyType] = useState(false);
+  const [propertyTypeToDeleteId,setPropertyTypeToDeleteId] = useState<string>("")
+
+
+  const handleDeletePropertyType  = async ()=>{
+    try {
+      setDeletingPropertyType(true)
+      const response =  await deletePropertyType(propertyTypeToDeleteId);
+      if(response.status === 200){
+        showInfoToast(response.data.message)
+        listAllPropertyTypes();
+        handleCloseDeletePropertyTypeModal();
+      }
+    } catch (error) {
+      const err = error as AxiosError<{message?:string}>;
+      showErrorToast(err.response?.data.message || err.message)
+    }finally{
+      setDeletingPropertyType(false)
+    }
+  }
+
+
+  const [openDeletePropertyTypeModal,setOpenDeletePropertyTypeModal]  = useState<boolean>(false)
+  const handleOpenDeletePropertyTypeModal = (propertyType:PropertyType)=>{
+    setPropertyTypeToDeleteId(propertyType.id)
+    setOpenDeletePropertyTypeModal(true);
+  }
+
+  const handleCloseDeletePropertyTypeModal = ()=>{
+    setOpenDeletePropertyTypeModal(false);
+    setPropertyTypeToDeleteId("")
+  }
+
+
   return (
     <Box sx={{ width:"100%" }}>
       <Box sx={{ display:"flex", justifyContent:"space-between",gap:"20px"}}>
@@ -1056,12 +1091,18 @@ const categoryColumns:GridColDef[] = [
         {/* delete permission modal */}
        <Modal open={openDeletePermissionModal} onClose={handleCloseDeletePermissionModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
         <Box sx={modalStyles}>
-          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px"}}>
-             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Delete permission</Typography>
+
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"10px"}}>
+            <IconButton sx={{ cursor:"pointer", backgroundColor:"#fde8ee", width:"48px", height:"48px"}}>
+              <img style={{ width:"24px" , height:"24px"}} src={warningIcon} alt="warningIcon" />
+            </IconButton>
              <IconButton onClick={handleCloseDeletePermissionModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
           </Box>
+          <Box sx={{width:"100%"}}>
+             <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Delete permission?</Typography>
+          </Box>
 
-         <form onSubmit={handleDeletePermission} style={{ display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
+         <form onSubmit={handleDeletePermission} style={{ width:"100%", display:"flex", flexDirection:"column", gap:"20px", alignItems:"start" ,marginTop:"20px"}}>
 
                 <Box sx={{ width:"100%",}}>
                  <FormControl fullWidth sx={{display:"flex", flexDirection:"column", gap:"8px" , width:"100%"}}>
@@ -1079,8 +1120,11 @@ const categoryColumns:GridColDef[] = [
                     <Typography sx={{ fontSize:"12" , fontWeight:"", color:" #666"}}>🚫 Require manual reconfiguration to restore access. </Typography>
                   </Box>
                 </Box>}
+                <Box sx={{ justifyContent:"end", alignSelf:"end", width:"100%", display:"flex", gap:"20px" }}>
+                    <Button type='button' onClick={()=>{handleCloseDeletePermissionModal()}} variant='contained'  sx={{  boxShadow:"none", ":hover":{boxShadow:"none"}, border:"solid 1px #ee1d52",  width:"156px", backgroundColor:"#fff",fontSize:"16px", fontWeight:"500", color:"#ee1d52"}}>Cancel</Button>
+                    <Button type='submit' loading={deletingPermission} variant='contained' disabled={!permissionToDeleteId || deletingPermission } sx={{ boxShadow:"none", ":hover":{boxShadow:"none"}, backgroundColor:"#111",fontSize:"16px", width:"156px" ,fontWeight:"500", color:"#fff"}}>Delete</Button>
+                </Box>
 
-              <Button type='submit' loading={deletingPermission} variant='contained' disabled={!permissionToDeleteId || deletingPermission } sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Confirm</Button>
          </form>
 
         </Box>
@@ -1198,7 +1242,44 @@ const categoryColumns:GridColDef[] = [
 
         </Box>
       </Modal>
-      </Paper>
+
+        {/* delete property type modal */}
+        <Modal open={openDeletePropertyTypeModal} onClose={handleCloseDeletePropertyTypeModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <Box sx={modalStyles}>
+          <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"10px"}}>
+            <IconButton sx={{ backgroundColor:"#fde8ee", width:"48px", height:"48px"}}>
+              <img src={warningIcon} alt="warningIcon" style={{ width:"24px", height:"24px"}} />
+            </IconButton>
+             <IconButton onClick={handleCloseDeletePropertyTypeModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
+          </Box>
+          <Box sx={{marginBottom:"10px"}}>
+              <Typography id="modal-modal-title" sx={{fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Delete property type?</Typography>
+          </Box>
+
+         <Box style={{ width:"100%", display:"flex", flexDirection:"column", gap:"10px", alignItems:"start"}}>
+          <Typography style={{fontSize:"14px" , fontWeight:"700"}}>Deleting this  property type will:</Typography>
+          <Box sx={{ display:"flex", flexDirection:"column",}}>
+          <Typography style={{ fontSize:"14px", fontWeight:"400"}}>🚫 Permanently deleted the property type from the system.</Typography>
+          <Typography style={{ fontSize:"14px", fontWeight:"400"}}>🚫 This action cannot be undone.</Typography>
+          </Box>
+          <Box sx={{ justifyContent:"end", width:"100%", marginTop:"10px", display:"flex", gap:"20px"}}>
+               <Button type='button' onClick={handleCloseDeletePropertyTypeModal}  variant='contained'  sx={{ border:"solid 1px #ee1d52", ":hover":{boxShadow:"none"}, boxShadow:"none", width:"156px", backgroundColor:"#fff",fontSize:"16px", fontWeight:"500", color:"#ee1d52"}}>Cancel</Button>
+               <Button type='submit' onClick={handleDeletePropertyType} loading={deletingPropertyType} variant='contained' disabled={deletingPropertyType} sx={{ width:"156px",  backgroundColor:"#111",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Delete</Button>
+          </Box>
+         </Box>
+
+        </Box>
+      </Modal>
+
+    </Paper>
+
+   
+
+      
+
+      
+
+
     }
 
    {/* Property category */}

@@ -141,23 +141,7 @@ export interface User {
   };
 }
 
-export interface Property {
-  _id: string;
-  createdBy: {
-    userName: string;
-  };
-  name: string;
-  type: string;
-  numberOfUnits: number;
-  occupiedUnits: number;
-  currentStatus: string;
-  category: string;
-  images: Array<{
-    secure_url: string;
-    public_id: string;
-    _id: string;
-  }>;
-}
+
 
 export interface Invoice {
   _id: string;

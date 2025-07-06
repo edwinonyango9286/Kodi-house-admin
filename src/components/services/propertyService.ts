@@ -37,3 +37,14 @@ export const listOccuppiedProperties = async ()=>{
         throw error
     }
 }
+
+export const deleteProperty = async (propertyToDeleteId:string)=>{
+  try {
+    const response = await newRequest.patch(`properties/delete-a-property/${propertyToDeleteId}`, {}, config);
+    return response
+  } catch (error) {
+    console.log(error);
+    throw error
+
+  }
+}
