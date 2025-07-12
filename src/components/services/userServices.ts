@@ -1,9 +1,9 @@
-import type { IAddUserPayload, IUpdatePasswordPayload, IUpdateUserInfoPayload, IUpdateUserInfoResponse } from "../../interfaces"
+import type { AddUserPayload, UpdatePasswordPayload, UpdateUserInfoPayload, } from "../../interfaces/interfaces"
 import { config } from "../../utils/config";
 import { newRequest } from "../../utils/newRequest"
 
 
-export const addUser = async (userData:IAddUserPayload)  => {
+export const addUser = async (userData:AddUserPayload)  => {
     try {
       const response = await newRequest.post(`user/create`,userData, config);
       return response
@@ -13,7 +13,7 @@ export const addUser = async (userData:IAddUserPayload)  => {
     }
 }
 
-export const updatePassword =  async (passwordData:IUpdatePasswordPayload) =>{
+export const updatePassword =  async (passwordData:UpdatePasswordPayload) =>{
   try {
     const response = await  newRequest.put(`auth/update-password`, passwordData, config)
     return response
@@ -23,7 +23,7 @@ export const updatePassword =  async (passwordData:IUpdatePasswordPayload) =>{
   }
 }
 
-export const updateUserInfo = async ( userInfoData:IUpdateUserInfoPayload)  =>{
+export const updateUserInfo = async ( userInfoData:UpdateUserInfoPayload)  =>{
   try {
     const response = await newRequest.patch(`user/update-user-profile`,userInfoData,config)
     return response
