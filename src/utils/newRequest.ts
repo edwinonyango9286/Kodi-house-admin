@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { AxiosInstance, AxiosRequestConfig } from "axios";
 
-const base_url: string = "/api/v1";
+const base_url: string = "/api";
 
 interface CustomAxiosConfig extends AxiosRequestConfig {
   withCredentials: true;

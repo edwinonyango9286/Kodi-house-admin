@@ -4,7 +4,7 @@ import type {CreateAccountPayload, RequestResetPasswordPayload, ResetPasswordPay
 
 export const createAccount = async (accountData: CreateAccountPayload) => {
   try {
-    const response = await newRequest.post(`auth/register`,accountData);
+    const response = await newRequest.post(`v1/auth/register`,accountData);
     return response;
   } catch (error) {
     console.log(error)
@@ -14,7 +14,7 @@ export const createAccount = async (accountData: CreateAccountPayload) => {
 
 export const verifyCode = async (codeData: VerifyCodePayload) => {
   try {
-    const response = await newRequest.post(`auth/activate-admin`, codeData);
+    const response = await newRequest.post(`v1/auth/activate-admin`, codeData);
     return response;
   } catch (error) {
     console.log(error)
@@ -24,7 +24,7 @@ export const verifyCode = async (codeData: VerifyCodePayload) => {
 
 export const signIn = async (signInData:SignInPayload)=>{
   try {
-    const response = await newRequest.post(`auth/sign-in-admin`, signInData)
+    const response = await newRequest.post(`v1/auth/sign-in-admin`, signInData)
     return response     
   } catch (error) {
     console.log(error)
@@ -34,7 +34,7 @@ export const signIn = async (signInData:SignInPayload)=>{
 
 export const requestResetPasswordEmail = async (email: RequestResetPasswordPayload) =>{
   try {
-    const response = await newRequest.post(`auth/password-reset-token`,email)
+    const response = await newRequest.post(`v1/auth/password-reset-token`,email)
     return response
   } catch (error) {
     console.log(error);
@@ -45,7 +45,7 @@ export const requestResetPasswordEmail = async (email: RequestResetPasswordPaylo
 export const resetUserPassword = async (passwordData:ResetPasswordPayload) =>{
   try {
     const {token, ...restPasswordData} = passwordData
-    const response = await newRequest.put(`auth/reset-password/${token}`, restPasswordData);
+    const response = await newRequest.put(`v1/auth/reset-password/${token}`, restPasswordData);
     return response
   } catch (error) {
     console.log(error)
@@ -55,15 +55,10 @@ export const resetUserPassword = async (passwordData:ResetPasswordPayload) =>{
 
 export const logout =  async ()=>{
   try {
-    const response = await  newRequest.post(`auth/logout`, )
+    const response = await  newRequest.post(`v1/auth/logout`, )
     return response
   } catch (error) {
     console.log(error)
     throw error
   }
-
 }
-
-
-
-
