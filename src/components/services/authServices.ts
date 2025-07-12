@@ -1,8 +1,8 @@
 import { newRequest } from "../../utils/newRequest";
-import type {ICreateAccountPayload, IRequestResetPasswordEmail, IResetPasswordPayload, ISignInPayload, IVerifyCodePayload} from "../../interfaces"
+import type {CreateAccountPayload, RequestResetPasswordPayload, ResetPasswordPayload, SignInPayload, VerifyCodePayload} from "../../interfaces/interfaces"
 
 
-export const createAccount = async (accountData: ICreateAccountPayload) => {
+export const createAccount = async (accountData: CreateAccountPayload) => {
   try {
     const response = await newRequest.post(`auth/register`,accountData);
     return response;
@@ -12,7 +12,7 @@ export const createAccount = async (accountData: ICreateAccountPayload) => {
   }
 };
 
-export const verifyCode = async (codeData: IVerifyCodePayload) => {
+export const verifyCode = async (codeData: VerifyCodePayload) => {
   try {
     const response = await newRequest.post(`auth/activate-admin`, codeData);
     return response;
@@ -22,7 +22,7 @@ export const verifyCode = async (codeData: IVerifyCodePayload) => {
   }
 };
 
-export const signIn = async (signInData:ISignInPayload)=>{
+export const signIn = async (signInData:SignInPayload)=>{
   try {
     const response = await newRequest.post(`auth/sign-in-admin`, signInData)
     return response     
@@ -32,7 +32,7 @@ export const signIn = async (signInData:ISignInPayload)=>{
   }
 }
 
-export const requestResetPasswordEmail = async (email: IRequestResetPasswordEmail) =>{
+export const requestResetPasswordEmail = async (email: RequestResetPasswordPayload) =>{
   try {
     const response = await newRequest.post(`auth/password-reset-token`,email)
     return response
@@ -42,7 +42,7 @@ export const requestResetPasswordEmail = async (email: IRequestResetPasswordEmai
   }
 }
 
-export const resetUserPassword = async (passwordData:IResetPasswordPayload) =>{
+export const resetUserPassword = async (passwordData:ResetPasswordPayload) =>{
   try {
     const {token, ...restPasswordData} = passwordData
     const response = await newRequest.put(`auth/reset-password/${token}`, restPasswordData);
@@ -55,7 +55,7 @@ export const resetUserPassword = async (passwordData:IResetPasswordPayload) =>{
 
 export const logout =  async ()=>{
   try {
-    const response = await  newRequest.post(`auth/logout`)
+    const response = await  newRequest.post(`auth/logout`, )
     return response
   } catch (error) {
     console.log(error)

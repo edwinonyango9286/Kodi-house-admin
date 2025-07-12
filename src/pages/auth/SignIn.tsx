@@ -29,7 +29,6 @@ const SignIn : React.FC = () => {
     const {name,value} = e.target
     setFormData((prev)=>({ ...prev, [name]:value}))
   }
-  console.log(storeAccessTokenInCookies)
 
   const handleSignIn = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,9 +39,7 @@ const SignIn : React.FC = () => {
         navigate("/dashboard")
         setFormData({ email:"", password:""})
         localStorage.setItem("userData", JSON.stringify(response.data.data) )
-        
          Cookies.set("accessToken", response.data.accessToken)
-
         if(storeAccessTokenInCookies){
           Cookies.set("accessToken", response.data.accessToken,{expires:7})
         }

@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { AxiosInstance, AxiosRequestConfig } from "axios";
 
-const base_url: string = import.meta.env.VITE_BASE_URL ?? "";
+const base_url: string = "/api";
 
 interface CustomAxiosConfig extends AxiosRequestConfig {
   withCredentials: true;
