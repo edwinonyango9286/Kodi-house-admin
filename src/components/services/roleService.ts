@@ -32,4 +32,14 @@ import { config } from "../../utils/config";
    }
  }
 
+ export const getRoleByRoleId = async (roleId:string)=>{
+   try {
+      const response = await newRequest.get(`roles/${roleId}`, config);
+      return response
+   } catch (error) {
+      console.log(error);
+      throw error
+   }
+ }
+
  

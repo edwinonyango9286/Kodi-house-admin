@@ -5,7 +5,7 @@ import {useTheme } from '@mui/material';
 import { getModalStyle } from '../theme';
 import cancelIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/cancel Icon.svg"
 import type {CreateRolePayload ,CreatePermissionPayload, CreatePropertyCategoryPayload, CreatePropertyTagPayload, CreateSupportTicketPayload, CreateCategoryPayload, CreateTagPayload, RenameRolePayload, Role, SupportTicketType, PropertyTypeTag, Category, Tag, PropertyCategory, Permission } from "../interfaces/interfaces"
-import { createRole, listRoles, renameRole } from '../components/services/roleService';
+import { createRole, getRoleByRoleId, listRoles, renameRole } from '../components/services/roleService';
 import { createPermission, deleteAPermission, listPermissions } from '../components/services/permissionServices';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
@@ -120,9 +120,35 @@ const handleRenameRole = async (e:React.FormEvent<HTMLFormElement>)=>{
   };
 
   const [selectedRole,setSelectedRole] = React.useState('');
-  const handleSelectRole = (event: SelectChangeEvent) => {
+  const handleSelectRole = (event: SelectChangeEvent) => { 
    setSelectedRole(event.target.value as string);
   };
+
+  const [rolePermissions,setRolePermissions] = useState<Permission[]>([]);
+  const [fetchingRolePermission,setFetchingRolePermission] = useState(false)
+
+  const  fetchRoleByRoleId =  useCallback( async ()=>{
+    try {
+      setFetchingRolePermission(true);
+      if(selectedRole){
+          const response = await getRoleByRoleId(selectedRole);
+      if(response.status === 200){
+        setRolePermissions(response.data.data.permissions)
+      } 
+      }
+    } catch (error) {
+     console.log(error) 
+    }finally{
+      setFetchingRolePermission(false)
+    }
+  },[selectedRole])
+
+  useEffect(()=>{
+   fetchRoleByRoleId()
+  },[fetchRoleByRoleId])
+
+
+  console.log(selectedRole,"=>selectedRole.....")
 
     const handleChecked = ()=>{
   }
@@ -137,7 +163,6 @@ const handleRenameRole = async (e:React.FormEvent<HTMLFormElement>)=>{
   const {name,value} = e.target
   setPermissionFormData((prev)=>({ ...prev,[name]:value}))
  }
-
 
  const statuses = [
   {id:1,name:"Active"},
@@ -202,6 +227,7 @@ const handleRenameRole = async (e:React.FormEvent<HTMLFormElement>)=>{
  }
 
  const [permissionsList, setPermissionsList] = useState<Permission[]>([])
+ const [permissionSearchQuery,setPermissionSearchQuery] = useState<string>("")
 
  const listAllPermissions = useCallback(async()=>{
   try {
@@ -217,6 +243,11 @@ const handleRenameRole = async (e:React.FormEvent<HTMLFormElement>)=>{
  useEffect(()=>{ 
   listAllPermissions()
  },[listAllPermissions])
+
+ const handlePermissionsSearch =  (e:React.ChangeEvent<HTMLInputElement>)=>{
+  const value = e.target.value;
+  setPermissionSearchQuery(value);
+ }
 
 
  const handleStatusChange = (e:SelectChangeEvent) => {
@@ -762,9 +793,6 @@ const categoryColumns:GridColDef[] = [
     createdBy:tag?.createdBy.userName
    }))
 
-
-
-
   //  delete permission logic 
   const [openDeletePermissionModal,setOpenDeletePermissionModal] = useState<boolean>(false);
   const [permissionToDeleteId,setPermissionToDeleteId] = useState<string>("")
@@ -803,7 +831,6 @@ const categoryColumns:GridColDef[] = [
     }
   }
 
-  const [filterValue,setFilterValue] = useState<string>("");
 
   // update Property type functionality
   const [updatePropertyTypeFormData,setUpdatePropertyTypeFormData] = useState<PropertyTypePayload>({ _id:"", name:"", status:"", description:"" });
@@ -870,7 +897,6 @@ const categoryColumns:GridColDef[] = [
     }
   }
 
-
   const [openDeletePropertyTypeModal,setOpenDeletePropertyTypeModal]  = useState<boolean>(false)
   const handleOpenDeletePropertyTypeModal = (propertyType:PropertyType)=>{
     setPropertyTypeToDeleteId(propertyType.id)
@@ -881,6 +907,9 @@ const categoryColumns:GridColDef[] = [
     setOpenDeletePropertyTypeModal(false);
     setPropertyTypeToDeleteId("")
   }
+
+
+
 
 
   return (
@@ -928,7 +957,7 @@ const categoryColumns:GridColDef[] = [
                 <Typography sx={{color:"#4B5563" , fontSize:"14px", fontWeight:"400", textAlign:"start" }}>Quick filter:</Typography>
                 <Box sx={{ width:"40%"}}>
                  <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
-                     <TextField type="text"  name="name"  value={filterValue} onChange={(e)=>setFilterValue(e.target.value)} fullWidth variant="outlined"  sx={{ height:"32px", "& .MuiOutlinedInput-root":{height:"44px"}, width:"100%", borderRadius:"8px"}}/>
+                     <TextField type="text"  name="name"  value={permissionSearchQuery} onChange={handlePermissionsSearch} fullWidth variant="outlined"  sx={{ height:"32px", "& .MuiOutlinedInput-root":{height:"44px"}, width:"100%", borderRadius:"8px"}}/>
                   </FormControl>
                 </Box> 
 
@@ -949,13 +978,23 @@ const categoryColumns:GridColDef[] = [
             <Divider sx={{width:"100%", borderWidth:"1px", backgroundColor:"#EDF2F6)" }} />
 
             <Box sx={{display:"flex", flexDirection:"column", gap:"10px", paddingX:"24px"}}>
-              <Box sx={{marginLeft:"10px",display:"flex", flexDirection:"column", gap:"10px"}}>
+            { fetchingRolePermission ? 
+            <Box sx={{ width:"100%", marginTop:"10px", display:"flex", alignItems:"center", height:"auto", justifyContent:"center"}}>
+              <Typography sx={{ fontSize:"14px", fontWeight:"500", textAlign:"center", color:"#4B5563" }}>Fetching role permissions...</Typography>
+            </Box>
+            
+            : rolePermissions.length > 0 ? <Box sx={{marginLeft:"10px",display:"flex", flexDirection:"column", gap:"10px"}}>
                  <Box sx={{display:"flex",flexDirection:"column",}}>
-                   {permissionsList?.map((permission)=>(<FormControlLabel key={permission?._id} label={permission?.permissionName} sx={{ "& .MuiFormControlLabel-label":{
+                   {rolePermissions?.map((permission)=>(<FormControlLabel key={permission?._id} label={permission?.permissionName} sx={{ "& .MuiFormControlLabel-label":{
                       fontSize:"14px", color:"#4B5563", fontWeight:"400"
                      }}}  control={<Checkbox size='small' key={permission._id} onChange={handleChecked}/>}/> )) }
                   </Box>
-              </Box>
+              </Box> : selectedRole && rolePermissions.length === 0 ?
+                <Box sx={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"center",marginTop:"10px" }}>
+                  <Typography sx={{ fontWeight:"500", fontSize:"14px", textAlign:"center" ,color:"#4B5563" }}>No permissions assigned to the role yet.</Typography>
+                </Box>
+                :""
+              }
             </Box>
 
           </Box>
@@ -1272,14 +1311,6 @@ const categoryColumns:GridColDef[] = [
       </Modal>
 
     </Paper>
-
-   
-
-      
-
-      
-
-
     }
 
    {/* Property category */}
