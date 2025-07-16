@@ -18,13 +18,12 @@ import Landlords from './pages/Landlords'
 import Properties from './pages/Properties'
 import {ToastContainer} from  "react-toastify"
 import { PrivateRoutes } from './utils/PrivateRoutes'
+import ErrorBoundary from './components/common/ErrorBoundary'
 
-const base_url = import.meta.env.VITE_BASE_URL
-console.log(base_url,"=>baseUrl")
-if(base_url === "https://dev-kodihouse-server.onrender.com"){
+const nodeInvironment = import.meta.env.VITE_NODE_ENV 
+if(nodeInvironment === "production"){
   console.log = function () {}
 }
-
 
 function App() {
   return (
@@ -32,27 +31,28 @@ function App() {
     <Router>
         <ToastContainer position="top-right" autoClose={5000} hideProgressBar={true} newestOnTop={false} closeOnClick  rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored"
          toastStyle={{ textAlign:"left", fontWeight:"400", fontSize:"14px", width:"auto", height:'auto'}}/>    
-        <Routes>
-
-        <Route path="*" element={<PageNotFound/>}/>
-        <Route path='/' element={ <SignIn/>  } /> 
-        {/* <Route path='/create-account' element={<CreateAccount/>}/> */}
-        <Route path='/forgot-password' element={<ForgotPassword/> }/>
-        <Route path='/reset-password/:token' element={<ResetPassword/>}/>
-        <Route path='/email-verification' element={<EmailVerification/> }/>
-        <Route path='/code-verification' element={<CodeVerification/>}/>
-        <Route path='/dashboard' element={<PrivateRoutes><DashboardLayout/></PrivateRoutes> }>
-        <Route index element={<Dashboard/>}/> 
-        <Route path='user-profile' element={<Profile/>}/>
-        <Route path='payments' element={<Payments/>} />
-        <Route path="invoices" element={<Invoices/>}/>
-        <Route path="receipts" element={<Receipts/>}/>
-        <Route path="setups" element={<Setups/>}/>
-        <Route path="properties" element={<Properties/>}/>
-        <Route path="users" element={<Users/>}/>
-        <Route path='landlords' element={<Landlords/>}/>
-        </Route>
-      </Routes>
+        <ErrorBoundary>
+          <Routes>
+          <Route path="*" element={<PageNotFound/>}/>
+          <Route path='/' element={ <SignIn/>  } /> 
+          {/* <Route path='/create-account' element={<CreateAccount/>}/> */}
+          <Route path='/forgot-password' element={<ForgotPassword/> }/>
+          <Route path='/reset-password/:token' element={<ResetPassword/>}/>
+          <Route path='/email-verification' element={<EmailVerification/> }/>
+          <Route path='/code-verification' element={<CodeVerification/>}/>
+          <Route path='/dashboard' element={<PrivateRoutes><DashboardLayout/></PrivateRoutes> }>
+          <Route index element={<Dashboard/>}/> 
+          <Route path='user-profile' element={<Profile/>}/>
+          <Route path='payments' element={<Payments/>} />
+          <Route path="invoices" element={<Invoices/>}/>
+          <Route path="receipts" element={<Receipts/>}/>
+          <Route path="setups" element={<Setups/>}/>
+          <Route path="properties" element={<Properties/>}/>
+          <Route path="users" element={<Users/>}/>
+          <Route path='landlords' element={<Landlords/>}/>
+          </Route>
+        </Routes>
+        </ErrorBoundary>
     </Router>
     </>
   )
