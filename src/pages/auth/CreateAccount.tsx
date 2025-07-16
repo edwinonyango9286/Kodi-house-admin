@@ -81,7 +81,7 @@ const handleChecked = (e: React.ChangeEvent<HTMLInputElement>) => {
               <form onSubmit={handleCreateAccount} style={{ width:"100%", display:"flex", alignItems:"start", flexDirection:"column", gap:"10px" }}>
                 <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
-                    <FormLabel  htmlFor="userName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Name</FormLabel>
+                    <FormLabel  htmlFor="userName" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Username</FormLabel>
                     <TextField type="text"  name="userName" value={formData.userName} onChange={handleChange} placeholder="Name" fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
                   </FormControl>
                 </Box>

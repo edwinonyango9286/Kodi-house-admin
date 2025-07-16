@@ -2,7 +2,7 @@ import { config } from "../../utils/config"
 import { newRequest } from "../../utils/newRequest"
 
  // list all properties 
-export const listProperties = async (params?: { search?: string }) => {
+export const listProperties = async (params?: { search?: string, sort?: string }) => {
   try {
     const requestConfig = { ...config,  params: params || {} };
     const response = await newRequest.get(`properties/properties`, requestConfig);

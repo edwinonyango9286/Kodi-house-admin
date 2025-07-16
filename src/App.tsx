@@ -1,7 +1,7 @@
-import './App.css'
 import {BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import SignIn from './pages/auth/SignIn'
-import CreateAccount from './pages/auth/CreateAccount'
+// import CreateAccount from './pages/auth/CreateAccount'
+import PageNotFound from "./components/common/PageNotFound"
 import ForgotPassword from './pages/auth/ForgotPassword'
 import ResetPassword from './pages/auth/ResetPassword'
 import EmailVerification from './pages/auth/EmailVerification'
@@ -9,7 +9,7 @@ import CodeVerification from './pages/auth/CodeVerification'
 import DashboardLayout from './components/DashboardLayout'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
-import Payments from './pages/Payments'
+import Payments from "./pages/Payments"
 import Invoices from './pages/Invoices'
 import Receipts from './pages/Receipts'
 import Setups from './pages/Setups'
@@ -19,22 +19,28 @@ import Properties from './pages/Properties'
 import {ToastContainer} from  "react-toastify"
 import { PrivateRoutes } from './utils/PrivateRoutes'
 
+const base_url = import.meta.env.VITE_BASE_URL
+console.log(base_url,"=>baseUrl")
+if(base_url === "https://dev-kodihouse-server.onrender.com"){
+  console.log = function () {}
+}
+
 
 function App() {
   return (
     <>
     <Router>
         <ToastContainer position="top-right" autoClose={5000} hideProgressBar={true} newestOnTop={false} closeOnClick  rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored"
-         toastStyle={{ textAlign:"left", fontWeight:"500", fontSize:"14px", width:"auto", height:'auto'}}/>    
+         toastStyle={{ textAlign:"left", fontWeight:"400", fontSize:"14px", width:"auto", height:'auto'}}/>    
         <Routes>
-          
+
+        <Route path="*" element={<PageNotFound/>}/>
         <Route path='/' element={ <SignIn/>  } /> 
-        <Route path='/create-account' element={<CreateAccount/>}/>
+        {/* <Route path='/create-account' element={<CreateAccount/>}/> */}
         <Route path='/forgot-password' element={<ForgotPassword/> }/>
         <Route path='/reset-password/:token' element={<ResetPassword/>}/>
         <Route path='/email-verification' element={<EmailVerification/> }/>
         <Route path='/code-verification' element={<CodeVerification/>}/>
-
         <Route path='/dashboard' element={<PrivateRoutes><DashboardLayout/></PrivateRoutes> }>
         <Route index element={<Dashboard/>}/> 
         <Route path='user-profile' element={<Profile/>}/>

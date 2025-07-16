@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, Divider, IconButton, InputAdornment, Modal, Paper, TextField, Typography, useTheme } from '@mui/material'
+import { Box, Button, CircularProgress, Divider, IconButton, InputAdornment, Menu, MenuItem, Modal, Paper, TextField, Typography, useTheme } from '@mui/material'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
@@ -6,13 +6,13 @@ import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and
 import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/filter icon.svg"
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
-import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import { DataGrid, type GridRowSelectionModel, type GridColDef } from '@mui/x-data-grid';
 import { deleteProperty, listOccuppiedProperties, listProperties, listVacantProperties } from '../components/services/propertyService'
 import { listUnits } from '../components/services/unitsService'
 import editIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/edit icon.svg"
 import deleteIconGrey from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/deleted Icon grey.svg"
 import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
-import { debounce } from 'lodash';
+import { debounce, } from 'lodash';
 import NoRowsOverlay from '../components/common/NoRowsOverlay'
 import { showErrorToast, showInfoToast } from '../utils/toast'
 import type { AxiosError } from 'axios'
@@ -26,7 +26,10 @@ const Properties = () => {
   const [propertiesList,setPropertiesList] = useState<Property[]>([])
   const [loadingProperties,setLoadingProperties]  = useState<boolean>(false)
   const [unitsCount,setUnitsCount] = useState<number>(0);
-  const [searchQuery,setSearchQuery] = useState<string>("")
+  const [searchQuery,setSearchQuery] = useState<string>("");
+  const [sortOption,setSortOption] = useState<string>("newest");
+  const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>([]);
+
 
   const propertyColumns: GridColDef[] = [
     {field:"propertyImage", headerName:"Property Image" , flex:1,
@@ -80,11 +83,14 @@ const Properties = () => {
   }))
 
 
-
-const listAllProperties = useCallback( async (search = "") => {
+const listAllProperties = useCallback( async (search = "", sort="") => {
   try {
     setLoadingProperties(true);
-    const response = await listProperties(search ? { search } : undefined);
+    const params: { search?: string; sort?: string } = {};
+    if (search) params.search = search;
+    if (sort) params.sort = sort; 
+    const response = await listProperties(params);
+
     if (response.status === 200) {
       setPropertiesList(response.data.data);
     }
@@ -95,18 +101,62 @@ const listAllProperties = useCallback( async (search = "") => {
   }
 },[]);
 
- const debouncedSearch = useMemo(
+
+const handleSortSelection = (option: string) => {
+  let sortParam = "";
+  switch(option) {
+    case "Newest":
+      sortParam = "-createdAt";
+      break;
+    case "Oldest":
+      sortParam = "createdAt";
+      break;
+    case "Lowest Price":
+      sortParam = "price";
+      break;
+    case "Highest Price":
+      sortParam = "-price";
+      break;
+    case "Largest":
+      sortParam = "-size";
+      break;
+    case "Smallest":
+      sortParam = "size";
+      break;
+    default:
+      sortParam = "-createdAt";
+  }
+  
+  setSortOption(option.toLowerCase());
+  listAllProperties(searchQuery, sortParam);
+  handleCloseSortMenu();
+};
+
+
+const debouncedSearch = useMemo(
   () =>
     debounce((value: string) => {
-      listAllProperties(value);
-    },500),[listAllProperties]);
+      let sortParam = "";
+      switch(sortOption) {
+        case "newest": sortParam = "-createdAt"; break;
+        case "oldest": sortParam = "createdAt"; break;
+        case "lowest price": sortParam = "price"; break;
+        case "highest price": sortParam = "-price"; break;
+        case "largest": sortParam = "-size"; break;
+        case "smallest": sortParam = "size"; break;
+        default: sortParam = "-createdAt";
+      }
+      listAllProperties(value, sortParam);
+    }, 500),
+  [listAllProperties, sortOption]
+);
+
 
   const handleSearch = (e:React.ChangeEvent<HTMLInputElement>) =>{
     const value = e.target.value;
     setSearchQuery(value);
     debouncedSearch(value)
   }
-
 
 useEffect(() => {
   return () => {
@@ -211,7 +261,6 @@ useEffect(() => {
   const [openDeletePropertyModal,setOpenDeletePropertyModal]  = useState(false);
 
   const handleOpneDeletePropertyModal =(property:Property)=>{
-    console.log(property,"=>property...")
     setPropertyToDeleteId(property.id);
     setPropertyName(property.propertyName)
     setOpenDeletePropertyModal(true);
@@ -221,6 +270,33 @@ useEffect(() => {
     setOpenDeletePropertyModal(false);
     setPropertyToDeleteId("")
   }
+
+  const [anchorElSortMenu, setAnchorElSortMenu] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorElSortMenu);
+  const handleOpenSortMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorElSortMenu(event.currentTarget);
+  };
+  const handleCloseSortMenu = () => {
+    setAnchorElSortMenu(null);
+  };
+
+  const [anchorElPageSizeMenu,setAnchorElPageSizeMenu] = useState<null | HTMLElement>(null);
+  const openPageSizeMenu = Boolean(anchorElPageSizeMenu);
+  const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
+
+
+ const handleOpenPageSizeMenu = ( event:React.MouseEvent<HTMLButtonElement>)=>{
+  setAnchorElPageSizeMenu(event.currentTarget)
+ }
+
+ const handleClosePageSizeMenu = ()=>{
+  setAnchorElPageSizeMenu(null);
+ }
+
+   const handlePageSizeSelection = (size: number) => {
+    setPaginationModel(prev => ({ ...prev, pageSize: size }));
+    handleClosePageSizeMenu();
+  };
 
 
   return (
@@ -254,29 +330,70 @@ useEffect(() => {
         <Divider sx={{ borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1"}}/>
 
         <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
-          <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
-            <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>
-            <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+          <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"112px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
+
+            <Box onClick={handleOpenPageSizeMenu} component={"button"} sx={{ border:"none", backgroundColor:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"4px"}}>
+              <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>{paginationModel.pageSize}</Typography>
+              <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            </Box>
+
+            <Menu id="basic-menu" anchorEl={anchorElPageSizeMenu} open={openPageSizeMenu} onClose={handleClosePageSizeMenu} MenuListProps={{ 'aria-labelledby': 'basic-button'}} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
+                {[10, 20, 50, 100].map((size) => (
+                  <MenuItem key={size} onClick={() => handlePageSizeSelection(size)}>
+                    {size}
+                  </MenuItem>
+                ))}
+            </Menu>
+            
             <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
             <img src={refreshIcon} alt="refreshIcon" style={{ cursor:"pointer"}} onClick={()=>{listAllProperties()}} />
           </Box>
           <Box sx={{ display:"flex", gap:"20px"}}>
             <TextField placeholder='Search by name, category, status or type' value={searchQuery} onChange={handleSearch} sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
-             <Box sx={{ cursor:"pointer", height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
-               <Typography sx={{ color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
-               <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
-             </Box>
-             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <Box>
+                <Button  id="basic-button" aria-controls={open ? 'basic-menu' : undefined} aria-haspopup="true" aria-expanded={open ? 'true' : undefined} onClick={handleOpenSortMenu}
+                sx={{ backgroundColor: "#fff", cursor: "pointer", height: "42px", width: "124px", borderRadius: "8px", border: "1px solid #D1D5DB", display: "flex", alignItems: "center", gap:"10px", justifyContent: "center", paddingX: "10px", textTransform: 'none' }}>
+                <Typography sx={{ textWrap:"nowrap", color: "#4B5563", fontSize: "14px", fontWeight: "500" }}>
+                    {sortOption.charAt(0).toUpperCase() + sortOption.slice(1)}
+                  </Typography>                  
+                  <img src={filterIcon} alt="filterIcon" style={{ width: "20px", height: "20px" }} />
+                </Button>
+                <Menu id="basic-menu" anchorEl={anchorElSortMenu} open={open} onClose={handleCloseSortMenu} MenuListProps={{ 'aria-labelledby': 'basic-button',sx:{ width:"124px"} }} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
+                  <MenuItem onClick={() => handleSortSelection("Newest")}>Newest</MenuItem>
+                  <MenuItem onClick={() => handleSortSelection("Oldest")}>Oldest</MenuItem>
+                  <MenuItem onClick={() => handleSortSelection("Lowest Price")}>Lowest Price</MenuItem>
+                  <MenuItem onClick={() => handleSortSelection("Highest Price")}>Highest Price</MenuItem>
+                  <MenuItem onClick={() => handleSortSelection("Largest")}>Largest</MenuItem>
+                  <MenuItem onClick={() => handleSortSelection("Smallest")}>Smallest</MenuItem>
+                </Menu>
+              </Box>
+             <Box sx={{ cursor:"pointer", borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
               <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
              </Box>
-             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+             <Box sx={{ cursor:"pointer", borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
               <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
              </Box>
           </Box>
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid  slots={{ noRowsOverlay:NoRowsOverlay}} getRowHeight={()=>100} sx={{ width:"100%" }} loading={loadingProperties} columns={propertyColumns} rows={propertyRows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid
+            slots={{ noRowsOverlay:NoRowsOverlay}} 
+            getRowHeight={()=>100} 
+            sx={{ width:"100%" }} 
+            loading={loadingProperties} 
+            columns={propertyColumns} 
+            rows={propertyRows} 
+            paginationModel={paginationModel} 
+            onPaginationModelChange={setPaginationModel} 
+            pageSizeOptions={[10,20,50,100]}
+            checkboxSelection
+            // onRowSelectionModelChange={(newSelection: GridRowSelectionModel) => {
+            // setRowSelectionModel(newSelection);
+            // }}
+            // rowSelectionModel={rowSelectionModel}
+            // keepNonExistentRowsSelected
+            />
         </Box>
 
        {/* delete property  modal */}

@@ -106,10 +106,10 @@ const SignIn : React.FC = () => {
                   <Button variant="contained" sx={{ boxShadow:"none", borderRadius:"8px", width:"100%", height:"50px",  backgroundColor:"#000", fontWeight:"700", fontSize:"14px" }}> <img src={appleIcon} alt="appleIcon" style={{ marginRight:"10px", width:"20px", height:"20px"}}/> Sign in via Apple</Button>
                   <Button variant="contained" sx={{ boxShadow:"none", borderRadius:"8px", width:"100%", height:"50px" , backgroundColor:"#2563EB", fontWeight:"700", fontSize:"14px" }}> <img src={facebookIcon} alt="facebookIcon"  style={{ marginRight:"10px", width:"20px", height:"20px"}} /> Sign in via Facebook</Button>
                 </Box>
-                <Box sx={{ marginTop:"10px", width:"100%", display:"flex", gap:"4px"}}>
+                {/* <Box sx={{ marginTop:"10px", width:"100%", display:"flex", gap:"4px"}}>
                     <Typography variant="body2" sx={{fontSize:"14px", fontWeight:"500", textAlign:"start" }}>Doesn’t have account ?</Typography>
                     <Link to={"/create-account"} style={{ textDecoration:"none", color:"#2563EB" , fontWeight:"500", fontSize:"14px"}}>Create an account</Link>
-                </Box>
+                </Box> */}
               </form>
             </Box>
           </Box>
