@@ -48,3 +48,13 @@ export const deleteProperty = async (propertyToDeleteId:string)=>{
 
   }
 }
+
+export const restoreProperty =  async(propertyId:string)=>{
+  try {
+    const response = await newRequest.patch(`properties/property/restore/${propertyId}`, {}, config);
+    return response
+  } catch (error) {
+   console.log(error);
+   throw error
+  }
+}

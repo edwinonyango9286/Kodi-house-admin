@@ -16,4 +16,5 @@ export interface Property {
     public_id: string;
     _id: string;
   }>;
+  isDeleted:boolean;
 }

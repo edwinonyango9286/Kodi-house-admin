@@ -40,6 +40,7 @@ function App() {
           <Route path='/reset-password/:token' element={<ResetPassword/>}/>
           <Route path='/email-verification' element={<EmailVerification/> }/>
           <Route path='/code-verification' element={<CodeVerification/>}/>
+          
           <Route path='/dashboard' element={<PrivateRoutes><DashboardLayout/></PrivateRoutes> }>
           <Route index element={<Dashboard/>}/> 
           <Route path='user-profile' element={<Profile/>}/>

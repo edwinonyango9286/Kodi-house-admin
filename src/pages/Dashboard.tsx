@@ -7,7 +7,6 @@ import chartRedIcon from "../assets/logos and Icons-20230907T172301Z-001/logos a
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import {Link } from "react-router-dom"
 import userImage from "../assets/Avatars square-20230907T172556Z-001/Avatars square/WebP/Demi Wilkinson.webp"
-import adilFloyd from "../assets/Avatars square-20230907T172556Z-001/Avatars square/WebP/Adil Floyd.webp"
 import { useCallback, useEffect, useState } from 'react';
 import dotVerticalIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
 import {DataGrid} from "@mui/x-data-grid"
@@ -18,15 +17,16 @@ import  { listUnits } from '../components/services/unitsService';
 import { dateFormatter } from '../utils/dateFormatter';
 import { listTransactions } from '../components/services/transactionServices';
 import  CircularProgress from "@mui/material/CircularProgress";
-
+import type { User } from '../interfaces/users';
 
 
 const Dashboard = () => {
-  const [selectedTimePeriod, setSelectedTimePeriod] = useState<string>("Weekly")
-  const [landlordsCount,setLandlordsCount] = useState<number>(0)
-  const [tenantsCount,setTenantsCount] = useState<number>(0);
-  const [propertiesCount,setPropertiesCount] = useState<number>(0)
-  const [unitsCount,setUnitsCount] = useState<number>(0)
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState("Weekly")
+  const [latestlandlordList,setLatestLandlordList] = useState<User[]>([])
+  const [landlordsCount,setLandlordsCount] = useState(0)
+  const [tenantsCount,setTenantsCount] = useState(0);
+  const [propertiesCount,setPropertiesCount] = useState(0)
+  const [unitsCount,setUnitsCount] = useState(0)
 
   // transactions
 interface Transaction {
@@ -117,6 +117,9 @@ const listAllLandlords = useCallback(async () => {
   const response = await listLandlords()
   if(response.status === 200 ){
     setLandlordsCount(response.data.data.length)
+    const landlordsData= response.data.data;
+    const mostRecentLandlord = landlordsData.slice(0,5);
+    setLatestLandlordList(mostRecentLandlord);
   }
   } catch (error) {
    console.log(error);
@@ -129,6 +132,8 @@ const listAllLandlords = useCallback(async () => {
 useEffect(()=>{
 listAllLandlords()
 },[listAllLandlords])
+
+console.log(latestlandlordList,"list of latest landlords")
 
 
 const [fetchingTenants,setFetchingTenants] = useState<boolean>(false)
@@ -191,6 +196,8 @@ const listAllUnits = useCallback(async ()=>{
 useEffect(()=>{
 listAllUnits()
 },[listAllUnits])
+
+
 
 
   return (
@@ -323,23 +330,41 @@ listAllUnits()
 
           </Box>
          </Paper>
+{/* 
+          "properties": [
+                {
+                    "_id": "687b83eb8cacbd0ac44eaa41",
+                    "name": "Kilimani Houses"
+                },
+                {
+                    "_id": "687b84488cacbd0ac44eaa6d",
+                    "name": "Kilimani Flats"
+                }
+            ], */}
 
          <Box sx={{ display:"flex", gap:"20px", width:"100%",  }}>
           <Paper elevation={0} sx={{ display:"flex" , flexDirection:"column", gap:"16px", padding:"24px", width:"50%",height:"400px", backgroundColor:"#fff", boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)" }}>
             <Typography sx={{ textAlign:"start", fontSize:"20px", fontWeight:"600", color:"#111827"}}>Latest Landlords</Typography>
-            <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
+            <Box sx={{ display:"flex", flexDirection:"column", gap:"10px"}}>
+              {latestlandlordList.map((landlord)=>( 
+              <Box key={landlord._id} sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
               <Box sx={{ display:"flex", gap:"10px", width:"50%"}}>
-                <Avatar src={adilFloyd} alt=''  sx={{ }}/>
+                <Avatar src={landlord?.avatar?.secure_url}/>
                 <Box sx={{ display:"flex", flexDirection:"column"}}>
-                  <Typography variant='body2' sx={{fontSize:"16px", fontWeight:"600", color:"#374151"}}>Neil Sims</Typography>
-                  <Typography sx={{ fontSize:"12px", fontWeight:"400", color:"#374151"}}>email@example.com</Typography>
+                  <Typography variant='body2' sx={{fontSize:"16px", fontWeight:"600", color:"#374151"}}>{landlord.userName}</Typography>
+                  <Typography sx={{ fontSize:"12px", fontWeight:"400", color:"#374151"}}>{landlord.email}</Typography>
                 </Box>
               </Box>
               <Box sx={{ width:"50%" }}>
-                <Typography variant='body2' sx={{ textAlign:"end", fontSize:"16px", fontWeight:"600"}}>Found Property Group</Typography>
+                <Typography variant='body2' sx={{ textAlign:"end", fontSize:"16px", fontWeight:"600"}}>{landlord?.properties[0]?.name}</Typography>
               </Box>
             </Box>
+          ))}
+           
+          </Box>
+
           </Paper> 
+
            <Paper elevation={0} sx={{ display:"flex" , gap:"16px", flexDirection:"column", padding:"24px", width:"50%",height:"400px", backgroundColor:"#fff", boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)" }}>
             <Typography sx={{ textAlign:"start", fontSize:"20px", fontWeight:"600", color:"#111827"}}>Top properties</Typography>
             <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
@@ -352,6 +377,7 @@ listAllUnits()
               </Box>
             </Box>
           </Paper>
+
          </Box>
         </Box>
 

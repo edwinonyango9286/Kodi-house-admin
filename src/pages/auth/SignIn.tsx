@@ -15,14 +15,15 @@ import type { AxiosError } from "axios"
 import { showErrorToast } from "../../utils/toast"
 import { signIn } from "../../components/services/authServices"
 import Cookies from "js-cookie"
+const nodeEnvironment = import.meta.env.VITE_NODE_ENV
 
 
-const SignIn : React.FC = () => {
+const SignIn = () => {
   const navigate = useNavigate()
   const [formData,setFormData]  = useState<SignInPayload>({email:"",password:""})
-  const [showPassword,setShowPassword] = useState<boolean>(false);
-  const [storeAccessTokenInCookies,setStoreAccessTokenInCookies] = useState<boolean>(false)
-  const [isSubmitting,setIsSubmitting] = useState<boolean>(false)
+  const [showPassword,setShowPassword] = useState(false);
+  const [storeAccessTokenInCookies,setStoreAccessTokenInCookies] = useState(false)
+  const [isSubmitting,setIsSubmitting] = useState(false)
   
 
   const handleChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
@@ -38,10 +39,10 @@ const SignIn : React.FC = () => {
       if(response?.status === 200){
         navigate("/dashboard")
         setFormData({ email:"", password:""})
-        localStorage.setItem("userData", JSON.stringify(response.data.data) )
-         Cookies.set("accessToken", response.data.accessToken)
+         localStorage.setItem("userData", JSON.stringify(response.data.data) )
+         Cookies.set("accessToken", response.data.accessToken, { expires:7, sameSite:"strict", path:"/" , secure: nodeEnvironment === "production" })
         if(storeAccessTokenInCookies){
-          Cookies.set("accessToken", response.data.accessToken,{expires:7})
+          Cookies.set("accessToken", response.data.accessToken,{ expires:7, sameSite:"strict", path:"/" , secure: nodeEnvironment === "production" })
         }
       }
     } catch (err) {
@@ -53,6 +54,7 @@ const SignIn : React.FC = () => {
       setStoreAccessTokenInCookies(false)
     }
   }
+  
  const handleChecked = (e:ChangeEvent<HTMLInputElement>) => {
   setStoreAccessTokenInCookies(e.target.checked)
  }
@@ -101,10 +103,10 @@ const SignIn : React.FC = () => {
                 </Box>
 
                 <Box sx={{ width:"100%", display:"flex", flexDirection:"column", alignItems:"center", gap:"20px" }}> 
-                  <Button variant="contained" sx={{ boxShadow:"none", borderRadius:"8px", width:"100%", height:"50px", backgroundColor:"#fff", color:"#000" , fontWeight:"700", fontSize:"14px"}}> <img style={{width:"20px" , height:"20px", marginRight:"10px" }} src={googleIcon} alt="googleIcon" /> Sign in via Google</Button>
-                  <Button variant="contained" sx={{ boxShadow:"none", borderRadius:"8px", width:"100%", height:"50px", backgroundColor:"#1D9BF0", fontWeight:"700",fontSize:"14px" }}> <img style={{ marginRight:"10px", width:"20px", height:"20px"}} src={twitterIcon} alt="twitterIcon"/> Sign in via Twitter</Button>
-                  <Button variant="contained" sx={{ boxShadow:"none", borderRadius:"8px", width:"100%", height:"50px",  backgroundColor:"#000", fontWeight:"700", fontSize:"14px" }}> <img src={appleIcon} alt="appleIcon" style={{ marginRight:"10px", width:"20px", height:"20px"}}/> Sign in via Apple</Button>
-                  <Button variant="contained" sx={{ boxShadow:"none", borderRadius:"8px", width:"100%", height:"50px" , backgroundColor:"#2563EB", fontWeight:"700", fontSize:"14px" }}> <img src={facebookIcon} alt="facebookIcon"  style={{ marginRight:"10px", width:"20px", height:"20px"}} /> Sign in via Facebook</Button>
+                  <Button variant="contained" sx={{ ":hover":{boxShadow:"none"}, boxShadow:"none", borderRadius:"8px", width:"100%", height:"50px", backgroundColor:"#fff", color:"#000" , fontWeight:"700", fontSize:"14px"}}> <img style={{width:"20px" , height:"20px", marginRight:"10px" }} src={googleIcon} alt="googleIcon" /> Sign in via Google</Button>
+                  <Button variant="contained" sx={{ ":hover":{boxShadow:"none"}, boxShadow:"none", borderRadius:"8px", width:"100%", height:"50px", backgroundColor:"#1D9BF0", fontWeight:"700",fontSize:"14px" }}> <img style={{ marginRight:"10px", width:"20px", height:"20px"}} src={twitterIcon} alt="twitterIcon"/> Sign in via Twitter</Button>
+                  <Button variant="contained" sx={{ ":hover":{boxShadow:"none"}, boxShadow:"none", borderRadius:"8px", width:"100%", height:"50px",  backgroundColor:"#000", fontWeight:"700", fontSize:"14px" }}> <img src={appleIcon} alt="appleIcon" style={{ marginRight:"10px", width:"20px", height:"20px"}}/> Sign in via Apple</Button>
+                  <Button variant="contained" sx={{ ":hover":{boxShadow:"none"}, boxShadow:"none", borderRadius:"8px", width:"100%", height:"50px" , backgroundColor:"#2563EB", fontWeight:"700", fontSize:"14px" }}> <img src={facebookIcon} alt="facebookIcon"  style={{ marginRight:"10px", width:"20px", height:"20px"}} /> Sign in via Facebook</Button>
                 </Box>
                 {/* <Box sx={{ marginTop:"10px", width:"100%", display:"flex", gap:"4px"}}>
                     <Typography variant="body2" sx={{fontSize:"14px", fontWeight:"500", textAlign:"start" }}>Doesn’t have account ?</Typography>

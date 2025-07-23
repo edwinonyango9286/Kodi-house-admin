@@ -2,7 +2,7 @@ import { Avatar, Box, Button, FormControl, FormControlLabel, FormGroup, FormLabe
 import React, { useEffect, useState } from 'react'
 import uploadIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/upload icon.svg"
 import eyeIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/icon eye.svg"
-import type { UpdatePasswordPayload, UpdateUserInfoPayload, User } from '../interfaces/interfaces'
+import type { UpdatePasswordPayload, UpdateUserInfoPayload} from '../interfaces/interfaces'
 import { getUserProfile, updatePassword, updateUserInfo } from '../components/services/userServices'
 import { showErrorToast, showInfoToast } from '../utils/toast'
 import type { AxiosError } from 'axios'
@@ -10,17 +10,18 @@ import Cookies from 'js-cookie'
 import { useNavigate } from 'react-router-dom'
 import PhoneInput from "react-phone-input-2";
 import 'react-phone-input-2/lib/style.css'
+import type { User } from '../interfaces/users'
 
 
 const Profile = () => {
   const navigate = useNavigate()
-  const [showCurrentPassword,setShowCurrentPassword] = useState<boolean>(false)
-  const [showNewPassword,setShowNewPassword]  = useState<boolean>(false)
-  const [showConfirmNewPassword,setShowConfirmNewPassword] = useState<boolean>(false)
+  const [showCurrentPassword,setShowCurrentPassword] = useState(false)
+  const [showNewPassword,setShowNewPassword]  = useState(false)
+  const [showConfirmNewPassword,setShowConfirmNewPassword] = useState(false)
   const [passwordData,setPasswordData] = useState<UpdatePasswordPayload>({ currentPassword:"",newPassword:"", confirmNewPassword:""})
-  const [isSubmitting,setIsSubmitting] = useState<boolean>(false)
+  const [isSubmitting,setIsSubmitting] = useState(false)
   const [userInfoData,setUserInfoData] = useState<UpdateUserInfoPayload>({ email:"",phoneNumber:"", firstName:"", secondName:"", lastName:"", idNumber:"", address:"" })
-  const [updatingUserInfo,setUpdatingUserInfo] = useState<boolean>(false)
+  const [updatingUserInfo,setUpdatingUserInfo] = useState(false)
   const [securityAandNotificationsData,setSecurityAndNotificationsData] =  useState({twoFa:false, accountActivity:false, newMessages:false})
   
 
@@ -205,7 +206,7 @@ const [userData,setUserData] = useState<User | null >(null)
           <Box sx={{ width:"100%",display:"flex" , gap:"8px"}}>
                 <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"100%"}}>
                    <FormLabel  htmlFor="phoneNumber" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Phone Number</FormLabel>
-                   <PhoneInput  containerStyle={{ backgroundColor:"#fff" }} buttonStyle={{ borderRight:"none", width:"48px", backgroundColor:"#fff" }}  inputProps={{name: 'phone', required: true, autoFocus: true }} country={"ke"} inputStyle={{ backgroundColor:"#fff", height:"52px", width:"100%", }}   enableSearch={true}  value={userInfoData.phoneNumber} onChange={handlePhoneChange}/>
+                   <PhoneInput  containerStyle={{ backgroundColor:"#fff" }} buttonStyle={{ borderRight:"none", width:"48px", backgroundColor:"#fff" }}  inputProps={{ name: 'phone', required: true, autoFocus: true }} country={"ke"} inputStyle={{ backgroundColor:"#fff", height:"52px", width:"100%", }}   enableSearch={true}  value={userInfoData.phoneNumber} onChange={handlePhoneChange}/>
                 </FormControl>
           </Box>
 

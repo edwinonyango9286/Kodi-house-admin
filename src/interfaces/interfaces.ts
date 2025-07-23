@@ -130,16 +130,9 @@ export interface Landlord {
   phoneNumber?: string;
 }
 
-export interface User {
-  userName: string;
-  email: string;
-  role: {
-    name: string;
-  };
-  avatar: {
-    secure_url: string;
-  };
-}
+
+
+
 
 
 
