@@ -6,7 +6,7 @@ import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and
 import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/filter icon.svg"
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
-import { DataGrid, type GridRowSelectionModel, type GridColDef } from '@mui/x-data-grid';
+import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { deleteProperty, listOccuppiedProperties, listProperties, listVacantProperties, restoreProperty } from '../components/services/propertyService'
 import { listUnits } from '../components/services/unitsService'
 import editIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/edit icon.svg"
@@ -25,11 +25,13 @@ import CustomExportMenu from '../components/common/CustomExportMenu'
 const Properties = () => {
 
   const [propertiesList,setPropertiesList] = useState<Property[]>([])
+  const [propertiesCount,setPropertiesCount] = useState(0);
   const [loadingProperties,setLoadingProperties]  = useState(false)
   const [unitsCount,setUnitsCount] = useState(0);
   const [searchQuery,setSearchQuery] = useState("");
   const [sortOption,setSortOption] = useState("newest");
-  const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel[]>([]);
+  const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
+
 
   const [propertActionAnchorEl, setPropertActionAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
@@ -103,52 +105,50 @@ const Properties = () => {
   }))
 
 
-const listAllProperties = useCallback( async (search = "", sort="") => {
+const listAllProperties = useCallback(async (search = "", sort = "", page = 0, pageSize = 10) => {
   try {
     setLoadingProperties(true);
-    const params: { search?: string; sort?: string } = {};
-    if (search) params.search = search;
-    if (sort) params.sort = sort; 
+    const params: Record<string, string | number | undefined> = {
+      search: search.trim() || undefined,
+      sort: sort || undefined,
+      page: page + 1, 
+      limit: pageSize
+    };
+    Object.keys(params).forEach(key => {
+      if (params[key] === undefined || params[key] === '') {
+        delete params[key];
+      }
+    });
+    
     const response = await listProperties(params);
-
     if (response.status === 200) {
-      setPropertiesList(response.data.data);
+      setPropertiesList(response.data.data || []);
+      setPropertiesCount(response.data.totalCount || 0);
     }
   } catch (error) {
-    console.log(error);
+    console.error('Error fetching properties:', error);
+    setPropertiesList([]);
+    setPropertiesCount(0);
   } finally {
     setLoadingProperties(false);
   }
-},[]);
+}, []);
 
 
 const handleSortSelection = (option: string) => {
   let sortParam = "";
   switch(option) {
-    case "Newest":
-      sortParam = "-createdAt";
-      break;
-    case "Oldest":
-      sortParam = "createdAt";
-      break;
-    case "Lowest Price":
-      sortParam = "price";
-      break;
-    case "Highest Price":
-      sortParam = "-price";
-      break;
-    case "Largest":
-      sortParam = "-size";
-      break;
-    case "Smallest":
-      sortParam = "size";
-      break;
-    default:
-      sortParam = "-createdAt";
+    case "Newest": sortParam = "-createdAt"; break;
+    case "Oldest": sortParam = "createdAt"; break;
+    case "Lowest Price": sortParam = "price"; break;
+    case "Highest Price": sortParam = "-price"; break;
+    case "Largest": sortParam = "-numberOfUnits"; break; 
+    case "Smallest": sortParam = "numberOfUnits"; break; 
+    default: sortParam = "-createdAt";
   }
-  
   setSortOption(option.toLowerCase());
-  listAllProperties(searchQuery, sortParam);
+  setPaginationModel(prev => ({ ...prev, page: 0 }));
+  listAllProperties(searchQuery, sortParam, 0, paginationModel.pageSize);
   handleCloseSortMenu();
 };
 
@@ -162,31 +162,51 @@ const debouncedSearch = useMemo(
         case "oldest": sortParam = "createdAt"; break;
         case "lowest price": sortParam = "price"; break;
         case "highest price": sortParam = "-price"; break;
-        case "largest": sortParam = "-size"; break;
-        case "smallest": sortParam = "size"; break;
+        case "largest": sortParam = "-numberOfUnits"; break;
+        case "smallest": sortParam = "numberOfUnits"; break;
         default: sortParam = "-createdAt";
       }
-      listAllProperties(value, sortParam);
-    }, 500),
-  [listAllProperties, sortOption]
+      setPaginationModel(prev => ({ ...prev, page: 0 }));
+      listAllProperties(value, sortParam, 0, paginationModel.pageSize);
+    }, 500), 
+  [listAllProperties, sortOption, paginationModel.pageSize]
 );
 
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
-  const handleSearch = (e:React.ChangeEvent<HTMLInputElement>) =>{
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    debouncedSearch(value)
+    debouncedSearch.cancel();
+    debouncedSearch(value);
   }
 
-useEffect(() => {
-  return () => {
-    debouncedSearch.cancel();
-  };
-}, [debouncedSearch]);
+  useEffect(() => {
+    if (paginationModel.page === 0 && paginationModel.pageSize === 10 && !searchQuery && sortOption === "newest") {
+      return;
+    }
+    
+    let sortParam = "";
+    switch(sortOption) {
+      case "newest": sortParam = "-createdAt"; break;
+      case "oldest": sortParam = "createdAt"; break;
+      case "lowest price": sortParam = "price"; break;
+      case "highest price": sortParam = "-price"; break;
+      case "largest": sortParam = "-numberOfUnits"; break;
+      case "smallest": sortParam = "numberOfUnits"; break;
+      default: sortParam = "-createdAt";
+    }
+    listAllProperties(searchQuery, sortParam, paginationModel.page, paginationModel.pageSize);
+  }, [paginationModel.page, paginationModel.pageSize, searchQuery, sortOption, listAllProperties]);
 
-  useEffect(()=>{
-    listAllProperties()
-  },[listAllProperties])
+  useEffect(() => {
+    listAllProperties("", "-createdAt", 0, 10);
+  }, []);
   
 
   const [fetchingAllUnits,setFetchingAllUnits]  = useState(false)
@@ -195,7 +215,7 @@ useEffect(() => {
       setFetchingAllUnits(true)
       const response = await listUnits();
       if(response.status === 200){
-        setUnitsCount(response?.data?.data?.unitsCount)
+        setUnitsCount(response?.data?.totalCount)
       }
     } catch (error) {
       console.log(error)
@@ -209,6 +229,7 @@ useEffect(() => {
   },[])
   
   const [occuppiedProperties,setOccuppiedProperties] = useState([]);
+  const [occupiedPropertiesCount,setOccupiedPropertiesCount] = useState(0)
   const [fetchingOccupiedProperties,setFetchingOccupiedProperties] = useState(false)
 
   const listAllOccuppiedProperties = async() => {
@@ -216,7 +237,8 @@ useEffect(() => {
       setFetchingOccupiedProperties(true)
       const response = await listOccuppiedProperties()
       if(response.status === 200){
-        setOccuppiedProperties(response.data.data)
+        setOccuppiedProperties(response.data.data);
+        setOccupiedPropertiesCount(response.data.totalCount);
       }
     } catch (error) {
       console.log(error)
@@ -229,7 +251,8 @@ useEffect(() => {
     listAllOccuppiedProperties();
   },[])
 
-  const [vaccantProperties,setVaccantProperties] = useState([])
+  const [vaccantProperties,setVaccantProperties] = useState([]);
+  const [vacantPropertiesCount,setVacantPropertiesCount] = useState(0)
   const [fetchingVacantProperties,setFetchingVacantProperties]  = useState(false)
 
   const listAllVacantProperties =  async ()=>{
@@ -237,7 +260,8 @@ useEffect(() => {
       setFetchingVacantProperties(true)
       const response = await listVacantProperties();
       if(response.status === 200 ){
-        setVaccantProperties(response.data.data)
+        setVaccantProperties(response.data.data);
+        setVacantPropertiesCount(response.data.totalCount);
       }
     } catch (error) {
       console.log(error)
@@ -262,7 +286,27 @@ useEffect(() => {
       if(response.status === 200){
         showInfoToast(response.data.message);
         handleCloseDeletePropertyModal();
-        listAllProperties();
+        let sortParam = "";
+        switch(sortOption) {
+          case "newest": sortParam = "-createdAt"; break;
+          case "oldest": sortParam = "createdAt"; break;
+          case "lowest price": sortParam = "price"; break;
+          case "highest price": sortParam = "-price"; break;
+          case "largest": sortParam = "-numberOfUnits"; break; 
+          case "smallest": sortParam = "numberOfUnits"; break;
+          default: sortParam = "-createdAt";
+        }
+        const currentPage = paginationModel.page;
+        const totalItems = propertiesCount;
+        const itemsPerPage = paginationModel.pageSize;
+        const maxPage = Math.max(0, Math.ceil((totalItems - 1) / itemsPerPage) - 1);
+        const newPage = Math.min(currentPage, maxPage);
+        
+        if (newPage !== currentPage) {
+          setPaginationModel(prev => ({ ...prev, page: newPage }));
+        }
+        
+        listAllProperties(searchQuery, sortParam, newPage, paginationModel.pageSize);
         listAllVacantProperties();
         listAllOccuppiedProperties();
         listAllUnits();
@@ -302,7 +346,6 @@ useEffect(() => {
 
   const [anchorElPageSizeMenu,setAnchorElPageSizeMenu] = useState<null | HTMLElement>(null);
   const openPageSizeMenu = Boolean(anchorElPageSizeMenu);
-  const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
 
 
  const handleOpenPageSizeMenu = ( event:React.MouseEvent<HTMLButtonElement>)=>{
@@ -314,22 +357,36 @@ useEffect(() => {
  }
 
    const handlePageSizeSelection = (size: number) => {
-    setPaginationModel(prev => ({ ...prev, pageSize: size }));
+    const newPaginationModel = { pageSize: size, page: 0 };
+    setPaginationModel(newPaginationModel);
     handleClosePageSizeMenu();
   };
 
     const csvColumns = [
-        { label: "businessName", key: "businessName" },
-        { label: "businessNumber", key: "businessNumber" },
-        { label: "businessCategory", key: "businessCategory", },
-        { label: "convenientFeeAmount", key: "convenientFeeAmount" },
+        { label: "Property Name", key: "propertyName" },
+        { label: "Property Type", key: "propertyType" },
+        { label: "Property Category", key: "propertyCategory" },
+        { label: "Number of Units", key: "numberOfUnits" },
+        { label: "Occupied Units", key: "occupiedUnits" },
+        { label: "Landlord Name", key: "landlordName" },
+        { label: "Status", key: "status" },
     ]
 
     const handleRestoreProperty  = async (propertyId:string) => {
       try {
         const response = await restoreProperty(propertyId);
         if(response.status === 200){
-          listAllProperties();
+          let sortParam = "";
+          switch(sortOption) {
+            case "newest": sortParam = "-createdAt"; break;
+            case "oldest": sortParam = "createdAt"; break;
+            case "lowest price": sortParam = "price"; break;
+            case "highest price": sortParam = "-price"; break;
+            case "largest": sortParam = "-numberOfUnits"; break; 
+            case "smallest": sortParam = "numberOfUnits"; break; 
+            default: sortParam = "-createdAt";
+          }
+          listAllProperties(searchQuery, sortParam, paginationModel.page, paginationModel.pageSize);
           listAllVacantProperties();
           listAllOccuppiedProperties();
           listAllUnits();
@@ -338,9 +395,10 @@ useEffect(() => {
       } catch (error) {
         const err = error as AxiosError<{message?:string}>;
         showErrorToast(err.response?.data.message || err.message)
-        
       }
     }
+
+    
 
     
   return (
@@ -351,22 +409,22 @@ useEffect(() => {
 
           <Box sx={{ display:"flex", flexDirection:"column", gap:"6px",}}>
             <Typography variant='body2' sx={{color:"#4B5563", fontSize:"16px", fontWeight:"400" }}>Total Properties</Typography>
-             { loadingProperties ? <CircularProgress size={20} thickness={5} sx={{ color:"#333",  marginTop:"10px"}} /> :<Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{propertiesList?.length}</Typography> } 
+             { loadingProperties ? <CircularProgress size={20} thickness={5} sx={{ color:"#333",  marginTop:"10px"}} /> :<Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{propertiesCount}</Typography> } 
           </Box>
           <Divider orientation='vertical' sx={{ height:"80px", borderWidth:"1px", backgroundColor:"#9CA3AF"}} />
            <Box sx={{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"10px"}}>
             <Typography variant='body2' sx={{color:"#059669", fontSize:"16px", fontWeight:"400" }}>Occupied properties</Typography>
-           { fetchingOccupiedProperties ?  <CircularProgress size={20} thickness={5} sx={{ color:"#333", marginTop:"10px"}}/> : <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{occuppiedProperties.length}</Typography> }  
+           { fetchingOccupiedProperties ?  <CircularProgress size={20} thickness={5} sx={{ color:"#333", marginTop:"10px"}}/> : <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{occupiedPropertiesCount}</Typography> }  
           </Box>
           <Divider orientation='vertical' sx={{ height:"80px", borderWidth:"1px", backgroundColor:"#9CA3AF"}} />
            <Box sx={{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"10px"}}>
              <Typography variant='body2' sx={{color:"#DC2626", fontSize:"16px", fontWeight:"400" }}>Vacant properties</Typography>
-            { fetchingVacantProperties ? <CircularProgress size={20} thickness={5} sx={{ marginTop:"10px", color:"#333"}} />: <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{vaccantProperties.length}</Typography>}
+            { fetchingVacantProperties ? <CircularProgress size={20} thickness={5} sx={{ marginTop:"10px", color:"#333"}} />: <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{vacantPropertiesCount}</Typography>}
           </Box>
             <Divider orientation='vertical' sx={{ height:"80px", borderWidth:"1px" , backgroundColor:"#9CA3AF"}} />
            <Box sx={{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"10px"}}>
             <Typography variant='body2' sx={{color:"#4B5563", fontSize:"16px", fontWeight:"400" }}>Total Units</Typography>
-           {fetchingAllUnits ? <CircularProgress thickness={5} size={20} sx={{ color:"#333", marginTop:"10px" }}/> :<Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{unitsCount || 0}</Typography> }  
+           {fetchingAllUnits ? <CircularProgress thickness={5} size={20} sx={{ color:"#333", marginTop:"10px" }}/> :<Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{unitsCount}</Typography> }  
           </Box>
 
         </Box>
@@ -389,7 +447,19 @@ useEffect(() => {
                 ))}
             </Menu>
             <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
-            <img src={refreshIcon} alt="refreshIcon" style={{ cursor:"pointer"}} onClick={()=>{listAllProperties()}} />
+            <img src={refreshIcon} alt="refreshIcon" style={{ cursor:"pointer"}} onClick={()=>{
+              let sortParam = "";
+              switch(sortOption) {
+                case "newest": sortParam = "-createdAt"; break;
+                case "oldest": sortParam = "createdAt"; break;
+                case "lowest price": sortParam = "price"; break;
+                case "highest price": sortParam = "-price"; break;
+                case "largest": sortParam = "-numberOfUnits"; break; // Fixed: backend field is numberOfUnits
+                case "smallest": sortParam = "numberOfUnits"; break; // Fixed: backend field is numberOfUnits
+                default: sortParam = "-createdAt";
+              }
+              listAllProperties(searchQuery, sortParam, paginationModel.page, paginationModel.pageSize);
+            }} />
           </Box>
             <CustomExportMenu />
           </Box>
@@ -425,23 +495,20 @@ useEffect(() => {
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid
-            slots={{ noRowsOverlay:NoRowsOverlay}} 
-            getRowHeight={()=>100} 
-            sx={{ width:"100%" }} 
+         <DataGrid
+            slots={{ noRowsOverlay: NoRowsOverlay }} 
+            getRowHeight={() => 100} 
+            sx={{ width: "100%" }} 
             loading={loadingProperties} 
             columns={propertyColumns} 
             rows={propertyRows} 
             paginationModel={paginationModel} 
             onPaginationModelChange={setPaginationModel} 
-            pageSizeOptions={[10,20,50,100]}
+            pageSizeOptions={[10, 20, 50, 100]}
             checkboxSelection
-            // onRowSelectionModelChange={(newSelection: GridRowSelectionModel) => {
-            // setRowSelectionModel(newSelection);
-            // }}
-            // rowSelectionModel={rowSelectionModel}
-            // keepNonExistentRowsSelected
-            />
+            rowCount={propertiesCount}
+            paginationMode="server"
+           />
         </Box>
 
        {/* delete property  modal */}

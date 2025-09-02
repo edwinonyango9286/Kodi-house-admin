@@ -1,10 +1,10 @@
 import { config } from "../../utils/config"
 import { newRequest } from "../../utils/newRequest"
 
- // list all properties 
-export const listProperties = async (params?: { search?: string, sort?: string }) => {
+
+export const listProperties = async (params) => {
   try {
-    const requestConfig = { ...config,  params: params || {} };
+    const requestConfig = {...config, params: params || {} };
     const response = await newRequest.get(`properties/properties`, requestConfig);
     return response;
   } catch (error) {
@@ -12,7 +12,6 @@ export const listProperties = async (params?: { search?: string, sort?: string }
     throw error;
   }
 };
-
 
 //  const list vacant properties
 
