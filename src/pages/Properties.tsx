@@ -1,5 +1,5 @@
-import { Box, Button, CircularProgress, Divider, IconButton, InputAdornment, Menu, MenuItem, Modal, Paper, TextField, Typography, useTheme } from '@mui/material'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { Box, Button, CircularProgress, Divider, IconButton, InputAdornment, Menu, MenuItem, Modal, Paper, Select, TextField, Typography, useTheme, type SelectChangeEvent } from '@mui/material'
+import React, { useCallback, useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
@@ -12,7 +12,6 @@ import { listUnits } from '../components/services/unitsService'
 import editIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/edit icon.svg"
 import deleteIconGrey from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/deleted Icon grey.svg"
 import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
-import { debounce } from 'lodash';
 import NoRowsOverlay from '../components/common/NoRowsOverlay'
 import { showErrorToast, showInfoToast } from '../utils/toast'
 import type { AxiosError } from 'axios'
@@ -21,6 +20,7 @@ import { getModalStyle } from '../theme'
 import cancelIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/cancel Icon.svg"
 import warningIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/warning icon.svg"
 import CustomExportMenu from '../components/common/CustomExportMenu'
+import { useDebounce } from '../hooks/useDebounce'
 
 const Properties = () => {
 
@@ -28,10 +28,6 @@ const Properties = () => {
   const [propertiesCount,setPropertiesCount] = useState(0);
   const [loadingProperties,setLoadingProperties]  = useState(false)
   const [unitsCount,setUnitsCount] = useState(0);
-  const [searchQuery,setSearchQuery] = useState("");
-  const [sortOption,setSortOption] = useState("newest");
-  const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
-
 
   const [propertActionAnchorEl, setPropertActionAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
@@ -104,26 +100,27 @@ const Properties = () => {
     isDeleted:property?.isDeleted
   }))
 
+  const [searchQuery,setSearchQuery] = useState("");
+  const [sortOption,setSortOption] = useState("-createdAt");
+  const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
+  const debouncedSearchQuery = useDebounce(searchQuery,500);
 
-const listAllProperties = useCallback(async (search = "", sort = "", page = 0, pageSize = 10) => {
+const listAllProperties = useCallback(async () => {
   try {
     setLoadingProperties(true);
-    const params: Record<string, string | number | undefined> = {
-      search: search.trim() || undefined,
-      sort: sort || undefined,
-      page: page + 1, 
-      limit: pageSize
+    const params: Record<string, string | number > = {
+      page:paginationModel.page,
+      limit:paginationModel.pageSize,
+      sort: sortOption,
     };
-    Object.keys(params).forEach(key => {
-      if (params[key] === undefined || params[key] === '') {
-        delete params[key];
-      }
-    });
-    
+
+    if(debouncedSearchQuery.trim()){
+      params.search = debouncedSearchQuery.trim();
+    }
     const response = await listProperties(params);
     if (response.status === 200) {
-      setPropertiesList(response.data.data || []);
-      setPropertiesCount(response.data.totalCount || 0);
+      setPropertiesList(response.data.data);
+      setPropertiesCount(response.data.totalCount);
     }
   } catch (error) {
     console.error('Error fetching properties:', error);
@@ -132,82 +129,34 @@ const listAllProperties = useCallback(async (search = "", sort = "", page = 0, p
   } finally {
     setLoadingProperties(false);
   }
-}, []);
+}, [paginationModel, debouncedSearchQuery, sortOption]);
+
+useEffect(()=>{
+  listAllProperties()
+},[listAllProperties])
 
 
-const handleSortSelection = (option: string) => {
-  let sortParam = "";
-  switch(option) {
-    case "Newest": sortParam = "-createdAt"; break;
-    case "Oldest": sortParam = "createdAt"; break;
-    case "Lowest Price": sortParam = "price"; break;
-    case "Highest Price": sortParam = "-price"; break;
-    case "Largest": sortParam = "-numberOfUnits"; break; 
-    case "Smallest": sortParam = "numberOfUnits"; break; 
-    default: sortParam = "-createdAt";
-  }
-  setSortOption(option.toLowerCase());
-  setPaginationModel(prev => ({ ...prev, page: 0 }));
-  listAllProperties(searchQuery, sortParam, 0, paginationModel.pageSize);
-  handleCloseSortMenu();
-};
+const sortOptions = [
+  {value:"-createdAt", label:"Newest"},
+  {value:"createdAt", label:"Oldest"},
+  {value:"-numberOfUnits", label:"Largest"},
+  {value:"numberOfUnits", label:"Smallest"},
+  {value:"rent", label:"Lowest Price"},
+  {value:"-rent", label:"Highest Price"}
+]
 
 
-const debouncedSearch = useMemo(
-  () =>
-    debounce((value: string) => {
-      let sortParam = "";
-      switch(sortOption) {
-        case "newest": sortParam = "-createdAt"; break;
-        case "oldest": sortParam = "createdAt"; break;
-        case "lowest price": sortParam = "price"; break;
-        case "highest price": sortParam = "-price"; break;
-        case "largest": sortParam = "-numberOfUnits"; break;
-        case "smallest": sortParam = "numberOfUnits"; break;
-        default: sortParam = "-createdAt";
-      }
-      setPaginationModel(prev => ({ ...prev, page: 0 }));
-      listAllProperties(value, sortParam, 0, paginationModel.pageSize);
-    }, 500), 
-  [listAllProperties, sortOption, paginationModel.pageSize]
-);
+const handleSortChange =(e:SelectChangeEvent)=>{
+  setSortOption(e.target.value as string)
+  setPaginationModel({...paginationModel, page:0})
+}
 
-  useEffect(() => {
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [debouncedSearch]);
+const handleRefresh =()=>{
+  setSearchQuery("");
+  setSortOption("-createdAt");
+  setPaginationModel({ page:0, pageSize:10})
+}
 
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    debouncedSearch.cancel();
-    debouncedSearch(value);
-  }
-
-  useEffect(() => {
-    if (paginationModel.page === 0 && paginationModel.pageSize === 10 && !searchQuery && sortOption === "newest") {
-      return;
-    }
-    
-    let sortParam = "";
-    switch(sortOption) {
-      case "newest": sortParam = "-createdAt"; break;
-      case "oldest": sortParam = "createdAt"; break;
-      case "lowest price": sortParam = "price"; break;
-      case "highest price": sortParam = "-price"; break;
-      case "largest": sortParam = "-numberOfUnits"; break;
-      case "smallest": sortParam = "numberOfUnits"; break;
-      default: sortParam = "-createdAt";
-    }
-    listAllProperties(searchQuery, sortParam, paginationModel.page, paginationModel.pageSize);
-  }, [paginationModel.page, paginationModel.pageSize, searchQuery, sortOption, listAllProperties]);
-
-  useEffect(() => {
-    listAllProperties("", "-createdAt", 0, 10);
-  }, []);
-  
 
   const [fetchingAllUnits,setFetchingAllUnits]  = useState(false)
   const listAllUnits =  async ()=>{
@@ -286,30 +235,9 @@ const debouncedSearch = useMemo(
       if(response.status === 200){
         showInfoToast(response.data.message);
         handleCloseDeletePropertyModal();
-        let sortParam = "";
-        switch(sortOption) {
-          case "newest": sortParam = "-createdAt"; break;
-          case "oldest": sortParam = "createdAt"; break;
-          case "lowest price": sortParam = "price"; break;
-          case "highest price": sortParam = "-price"; break;
-          case "largest": sortParam = "-numberOfUnits"; break; 
-          case "smallest": sortParam = "numberOfUnits"; break;
-          default: sortParam = "-createdAt";
-        }
-        const currentPage = paginationModel.page;
-        const totalItems = propertiesCount;
-        const itemsPerPage = paginationModel.pageSize;
-        const maxPage = Math.max(0, Math.ceil((totalItems - 1) / itemsPerPage) - 1);
-        const newPage = Math.min(currentPage, maxPage);
-        
-        if (newPage !== currentPage) {
-          setPaginationModel(prev => ({ ...prev, page: newPage }));
-        }
-        
-        listAllProperties(searchQuery, sortParam, newPage, paginationModel.pageSize);
+        listAllProperties();
         listAllVacantProperties();
         listAllOccuppiedProperties();
-        listAllUnits();
       }
     } catch (error) {
       const err = error as AxiosError<{message?:string}>
@@ -335,14 +263,6 @@ const debouncedSearch = useMemo(
     setPropertyToDeleteId("")
   }
 
-  const [anchorElSortMenu, setAnchorElSortMenu] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorElSortMenu);
-  const handleOpenSortMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorElSortMenu(event.currentTarget);
-  };
-  const handleCloseSortMenu = () => {
-    setAnchorElSortMenu(null);
-  };
 
   const [anchorElPageSizeMenu,setAnchorElPageSizeMenu] = useState<null | HTMLElement>(null);
   const openPageSizeMenu = Boolean(anchorElPageSizeMenu);
@@ -357,8 +277,7 @@ const debouncedSearch = useMemo(
  }
 
    const handlePageSizeSelection = (size: number) => {
-    const newPaginationModel = { pageSize: size, page: 0 };
-    setPaginationModel(newPaginationModel);
+    setPaginationModel({ page:0, pageSize:size})
     handleClosePageSizeMenu();
   };
 
@@ -376,20 +295,9 @@ const debouncedSearch = useMemo(
       try {
         const response = await restoreProperty(propertyId);
         if(response.status === 200){
-          let sortParam = "";
-          switch(sortOption) {
-            case "newest": sortParam = "-createdAt"; break;
-            case "oldest": sortParam = "createdAt"; break;
-            case "lowest price": sortParam = "price"; break;
-            case "highest price": sortParam = "-price"; break;
-            case "largest": sortParam = "-numberOfUnits"; break; 
-            case "smallest": sortParam = "numberOfUnits"; break; 
-            default: sortParam = "-createdAt";
-          }
-          listAllProperties(searchQuery, sortParam, paginationModel.page, paginationModel.pageSize);
+          listAllProperties();
           listAllVacantProperties();
           listAllOccuppiedProperties();
-          listAllUnits();
           showInfoToast(response.data.message);
         }
       } catch (error) {
@@ -398,9 +306,7 @@ const debouncedSearch = useMemo(
       }
     }
 
-    
-
-    
+  
   return (
     <Box sx={{width:"100%",}}>
       <Paper elevation={0} sx={{ borderRadius:"4px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", width:"100#", backgroundColor:"#fff", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)"}}>
@@ -447,42 +353,27 @@ const debouncedSearch = useMemo(
                 ))}
             </Menu>
             <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
-            <img src={refreshIcon} alt="refreshIcon" style={{ cursor:"pointer"}} onClick={()=>{
-              let sortParam = "";
-              switch(sortOption) {
-                case "newest": sortParam = "-createdAt"; break;
-                case "oldest": sortParam = "createdAt"; break;
-                case "lowest price": sortParam = "price"; break;
-                case "highest price": sortParam = "-price"; break;
-                case "largest": sortParam = "-numberOfUnits"; break; // Fixed: backend field is numberOfUnits
-                case "smallest": sortParam = "numberOfUnits"; break; // Fixed: backend field is numberOfUnits
-                default: sortParam = "-createdAt";
-              }
-              listAllProperties(searchQuery, sortParam, paginationModel.page, paginationModel.pageSize);
-            }} />
+             <img src={refreshIcon} onClick={handleRefresh} alt="refreshIcon" style={{ cursor:"pointer"}} />
           </Box>
             <CustomExportMenu />
           </Box>
 
           <Box sx={{ display:"flex", gap:"20px"}}>
-            <TextField placeholder='Search by name, category, status or type' value={searchQuery} onChange={handleSearch} sx={{ width:"250px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{height:"42px"} }}/>
-              <Box>
-                <Button  id="basic-button" aria-controls={open ? 'basic-menu' : undefined} aria-haspopup="true" aria-expanded={open ? 'true' : undefined} onClick={handleOpenSortMenu}
-                sx={{ backgroundColor: "#fff", cursor: "pointer", height: "42px", width: "124px", borderRadius: "8px", border: "1px solid #D1D5DB", display: "flex", alignItems: "center", gap:"10px", justifyContent: "center", paddingX: "10px", textTransform: 'none' }}>
-                <Typography sx={{ textWrap:"nowrap", color: "#4B5563", fontSize: "14px", fontWeight: "500" }}>
-                    {sortOption.charAt(0).toUpperCase() + sortOption.slice(1)}
-                  </Typography>                  
-                  <img src={filterIcon} alt="filterIcon" style={{ width: "20px", height: "20px" }} />
-                </Button>
-                <Menu id="basic-menu" anchorEl={anchorElSortMenu} open={open} onClose={handleCloseSortMenu} MenuListProps={{ 'aria-labelledby': 'basic-button',sx:{ width:"124px"} }} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
-                  <MenuItem onClick={() => handleSortSelection("Newest")}>Newest</MenuItem>
-                  <MenuItem onClick={() => handleSortSelection("Oldest")}>Oldest</MenuItem>
-                  <MenuItem onClick={() => handleSortSelection("Lowest Price")}>Lowest Price</MenuItem>
-                  <MenuItem onClick={() => handleSortSelection("Highest Price")}>Highest Price</MenuItem>
-                  <MenuItem onClick={() => handleSortSelection("Largest")}>Largest</MenuItem>
-                  <MenuItem onClick={() => handleSortSelection("Smallest")}>Smallest</MenuItem>
-                </Menu>
-              </Box>
+            <TextField placeholder='Search by name, category, status or type' value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} sx={{ width:"250px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{height:"42px"} }}/>
+              <Box sx={{ height: "42px", width: "140px", borderRadius: "8px", border: "1px solid #D1D5DB", display: "flex", alignItems: "center", justifyContent: "space-between", paddingX: "10px" }}>
+              <Select
+                value={sortOption}
+                onChange={handleSortChange}
+                variant="standard"
+                disableUnderline
+                sx={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", border: "none", width: "100%" }}
+              >
+                {sortOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                ))}
+              </Select>
+              <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
+            </Box>
              <Box sx={{ cursor:"pointer", borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
               <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
              </Box>
@@ -490,11 +381,10 @@ const debouncedSearch = useMemo(
              <Box sx={{ cursor:"pointer", borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
               <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
              </Box>
-             
           </Box>
         </Box>
 
-        <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
+        <Box sx={{width:"100%", height:"500px"}}>
          <DataGrid
             slots={{ noRowsOverlay: NoRowsOverlay }} 
             getRowHeight={() => 100} 

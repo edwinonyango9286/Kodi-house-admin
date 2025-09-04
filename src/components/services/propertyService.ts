@@ -2,7 +2,7 @@ import { config } from "../../utils/config"
 import { newRequest } from "../../utils/newRequest"
 
 
-export const listProperties = async (params?: Record<string, string | number | undefined>) => {
+export const listProperties = async (params?: Record<string, string | number >) => {
   try {
     const requestConfig = {...config, params: params || {} };
     const response = await newRequest.get(`properties/properties`, requestConfig);

@@ -45,9 +45,10 @@ export const getUserProfile =  async () =>{
 }
 
 // list users type landlord 
- export const listLandlords =  async () => {
+ export const listLandlords =  async (params?:Record<string,string | number>) => {
   try {
-    const response = await newRequest.get(`user/list-users?role=Landlord&page=1&limit=10`,config)
+    const queryString = params ? "?" + new URLSearchParams(params as Record<string,string>).toString() : "";
+    const response = await newRequest.get(`user/list-users${queryString}`,config)
     return response;
   } catch (error) {
     console.log(error)

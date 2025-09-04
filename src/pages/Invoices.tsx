@@ -1,5 +1,5 @@
-import { Box, Divider, FormControl, FormLabel, InputAdornment, Menu, MenuItem, Paper, Select, TextField, Typography, type SelectChangeEvent } from '@mui/material'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { Box, Divider, FormControl, FormLabel, IconButton, InputAdornment, Menu, MenuItem, Paper, Select, TextField, Typography, type SelectChangeEvent } from '@mui/material'
+import React, { useCallback, useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
@@ -10,20 +10,22 @@ import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import NoRowsOverlay from '../components/common/NoRowsOverlay'
 import { listInvoices } from '../components/services/InvoiceService'
 import { dateFormatter } from '../utils/dateFormatter'
-import { debounce } from 'lodash'
 import type { Invoice } from '../interfaces/interfaces'
+import { useDebounce } from '../hooks/useDebounce'
+import CustomExportMenu from '../components/common/CustomExportMenu'
+import deleteIconSmall from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon small.svg"
+import editIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/edit icon.svg"
+import dotsVertical from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
 
 const Invoices = () => {
-const [page, setPage] = useState(0); 
-const [pageSize, setPageSize] = useState(10);
-const [rowCount, setRowCount] = useState(0);
-
   const statusCategories = [
-    {id:1, name: "All"},
-    {id:2, name: "Paid"},
-    {id:3, name: "Overdue"},
-    {id:4, name: "Partially paid"},
+    {value:"all", label:"All"},
+    {value:"Paid", label: "Paid"},
+    {value:"Draft", label: "Draft"},
+    {value:"Overdue", label: "Overdue"},
+    {value:"Partially paid", label: "Partially paid"},
   ]
+
   const [invoiceList,setInvoiceList] = useState<Invoice[]>([])
   const [loadingInvoices,setLoadingInvoices]  = useState<boolean>(false)
 
@@ -41,8 +43,7 @@ const [rowCount, setRowCount] = useState(0);
     status:invoice?.status
   }))
 
-           
-         
+          
   const invoiceColumns:GridColDef[] =[
     {field:"date", headerName:"Date", flex:1},
     {field:"invoiceNumber", headerName:"Invoice Number", flex:1},
@@ -53,38 +54,46 @@ const [rowCount, setRowCount] = useState(0);
     {field:"category", headerName:"Category",flex:1},
     {field:"dueDate", headerName:"Due Date", flex:1},
     {field:"status", headerName:"Status", flex:1},
-    {field:"action",headerName:"Action", flex:1}
+     {field:"action", headerName:"Action",flex:1, renderCell:(()=>(
+      <Box sx={{ display:"flex",gap:"10px"}}>
+        <IconButton> <img src={editIcon} alt="editIcon" style={{ width:"24px", height:"24px"}}/></IconButton>
+        <IconButton> <img src={deleteIconSmall} alt="deleteIconSmall" style={{ width:"24px", height:"24px"}} /></IconButton>
+        <IconButton> <img src={dotsVertical} alt="deleteIconSmall" style={{ width:"24px", height:"24px"}} /></IconButton>
+      </Box>
+    ))}
   ]
 
 
-  const [seletedInvoiceCategory,setSeletedInvoiceCategory] = useState("All");
+const [seletedInvoiceCategory,setSeletedInvoiceCategory] = useState("all");
 
-const handleSelectStatusCategory = async (e:SelectChangeEvent) => {
-  const status = e.target.value as string;
-  setSeletedInvoiceCategory(status);
-  setPage(0); 
-  setLoadingInvoices(true);
-  try {
-    await listAllInvoices(searchQuery, status, 0, pageSize);
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setLoadingInvoices(false);
-  }
-};
+const sortOptions = [
+  {value:"-createdAt", label:"Newest"},
+  {value:"createdAt", label:"0ldest"}
+]
 
   const [searchQuery,setSearchQuery] = useState<string>("");
+  const [paginationModel,setPaginationModel] = useState({ page:0, pageSize:10});
+  const debouncedSearchQuery = useDebounce(searchQuery,500)
+  const [sortOption,setSortOption] = useState("-createdAt")
+  const [rowCount, setRowCount] = useState(0);
 
-  const listAllInvoices = useCallback(async (search = "", status = "", page = 0, pageSize = 10) => {
+
+  const listAllInvoices = useCallback(async () => {
   try {
     setLoadingInvoices(true);
-    const params: { search?: string; status?: string; limit: number; offset: number } = {
-      limit: pageSize,
-      offset: page * pageSize,
+    const params: Record<string,string |number> = {
+      page:paginationModel.page+1,
+      limit: paginationModel.pageSize,
+      sort:sortOption,
     };   
-    if (search) params.search = search;
-    if (status && status !== "All") params.status = status;
 
+    if (debouncedSearchQuery){
+      params.search = debouncedSearchQuery.trim();
+    }
+
+    if(seletedInvoiceCategory && seletedInvoiceCategory !== "all") {
+      params.status = seletedInvoiceCategory
+    }
     const response = await listInvoices(params);
     if (response.status === 200) {
       setInvoiceList(response.data.data);
@@ -95,44 +104,38 @@ const handleSelectStatusCategory = async (e:SelectChangeEvent) => {
   } finally {
     setLoadingInvoices(false);
   }
-}, []);
+}, [debouncedSearchQuery, paginationModel,sortOption,seletedInvoiceCategory]);
 
-  const debouncedSearch = useMemo(
-    () =>
-      debounce((value: string) => {
-        listAllInvoices(value, seletedInvoiceCategory);
-      },500),
-      [listAllInvoices,seletedInvoiceCategory]);
+useEffect(()=>{
+  listAllInvoices()
+},[listAllInvoices])
+  const handleRefresh = ()=>{
+    setSeletedInvoiceCategory("all")
+    setSearchQuery("");
+    setSortOption("-createdAt")
+    setPaginationModel({ page:0, pageSize:10})
+  }
 
- const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const value = e.target.value;
-  setSearchQuery(value);
-  setPage(0); 
-  debouncedSearch(value);
- };
+  const handleSortChange = (e: SelectChangeEvent) => {
+      setSortOption(e.target.value as string)
+      setPaginationModel({ ...paginationModel, page: 0 }) 
+    }
 
-  useEffect(() => {
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [debouncedSearch]);
+  const [anchorElPageSizeMenu,setAnchorElPageSizeMenu] = useState<null | HTMLElement>(null);
+  const openPageSizeMenu = Boolean(anchorElPageSizeMenu);
 
+    const handleOpenPageSizeMenu = ( event:React.MouseEvent<HTMLButtonElement>)=>{
+    setAnchorElPageSizeMenu(event.currentTarget)
+    }
+  
+    const handleClosePageSizeMenu = ()=>{
+    setAnchorElPageSizeMenu(null);
+    }
 
-   useEffect(() => {
-   listAllInvoices(searchQuery, seletedInvoiceCategory, page, pageSize);
-   }, [listAllInvoices, searchQuery, seletedInvoiceCategory, page, pageSize]);
-
-
-
-  //  menu for exports 
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const handlePageSizeSelection = (size:number) =>{
+    setPaginationModel({ page:0, pageSize:size})
+    handleClosePageSizeMenu();
+  }
 
 
 
@@ -145,8 +148,8 @@ const handleSelectStatusCategory = async (e:SelectChangeEvent) => {
              <Box sx={{ marginY:"4px", width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"24%"}}>
                      <FormLabel  htmlFor="status" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
-                     <Select id='payment-status-select' value={seletedInvoiceCategory} onChange={handleSelectStatusCategory} sx={{height:"42px", borderRadius:"8px", width:"100%"}}>
-                       {statusCategories.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     <Select id='payment-status-select' value={seletedInvoiceCategory} onChange={(e)=>setSeletedInvoiceCategory(e.target.value)} sx={{height:"42px", borderRadius:"8px", width:"100%"}}>
+                       {statusCategories.map((status,index)=>(<MenuItem key={index} value={status.value}>{status.label}</MenuItem>))}
                      </Select>
                   </FormControl>
               </Box>
@@ -155,40 +158,49 @@ const handleSelectStatusCategory = async (e:SelectChangeEvent) => {
 
           <Box sx={{ display:"flex", gap:"20px"}}>
           <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
-            <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>
-            <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+             <Box onClick={handleOpenPageSizeMenu} component={"button"} sx={{ border:"none", backgroundColor:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"4px"}}>
+              <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>{paginationModel.pageSize}</Typography>
+              <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            </Box>
+             <Menu id="basic-menu" anchorEl={anchorElPageSizeMenu} open={openPageSizeMenu} onClose={handleClosePageSizeMenu} MenuListProps={{ 'aria-labelledby': 'basic-button'}} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
+                {[10, 20, 50, 100].map((size) => (
+                  <MenuItem key={size} onClick={() => handlePageSizeSelection(size)}>
+                    {size}
+                  </MenuItem>
+                ))}
+            </Menu>
             <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
-            <img onClick={()=>{ listAllInvoices(searchQuery, seletedInvoiceCategory, page, pageSize)}}  style={{ cursor:"pointer",}} src={refreshIcon} alt="refreshIcon" />
+            <img onClick={handleRefresh}  style={{ cursor:"pointer",}} src={refreshIcon} alt="refreshIcon" />
           </Box>
-
-          <Box sx={{ display:"flex", flexDirection:'column'}}>     
-          <Box component={"button"} onClick={handleClick} sx={{ backgroundColor:"#fff", cursor:"pointer", padding:"10px" ,border:"1px solid #D1D5DB", width:"142px", height:"42px", borderRadius:"8px"}}>
-            <Typography variant='body2' sx={{fontSize:"14px",fontWeight:"500",textAlign:"center",color:"#4B5563"}}>Export</Typography>
-          </Box>
-            <Menu id="basic-menu" anchorEl={anchorEl}  open={open} onClose={handleClose} slotProps={{ list: { 'aria-labelledby': 'basic-button' }}}>
-                <MenuItem onClick={handleClose}>Export to CSV</MenuItem>
-                <MenuItem onClick={handleClose}>Export to Excel</MenuItem>
-                <MenuItem onClick={handleClose}>Export to PDF</MenuItem>
-          </Menu>
-         </Box>
+            <CustomExportMenu/>
         </Box>
 
           <Box sx={{ display:"flex", gap:"20px"}}>
-            <TextField placeholder='Search by invoice number, category or status' value={searchQuery} onChange={handleSearch} sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
-             <Box sx={{ height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
-               <Typography sx={{ cursor:"pointer", color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
-               <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
-             </Box>
-             <Box sx={{ cursor:"pointer", borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+            <TextField value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} placeholder='Search users by name,email,phone number....' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
+             <Box sx={{ height: "42px", width: "140px", borderRadius: "8px", border: "1px solid #D1D5DB", display: "flex", alignItems: "center", justifyContent: "space-between", paddingX: "10px" }}>
+              <Select
+                value={sortOption}
+                onChange={handleSortChange}
+                variant="standard"
+                disableUnderline
+                sx={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", border: "none", width: "100%" }}
+              >
+                {sortOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                ))}
+              </Select>
+              <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
+            </Box>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
               <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
              </Box>
-             <Box sx={{ cursor:"pointer", borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
               <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
              </Box>
           </Box>
         </Box>
 
-        <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
+        <Box sx={{width:"100%", height:"500px" }}>
         <DataGrid
           loading={loadingInvoices}
           columns={invoiceColumns}
@@ -196,21 +208,12 @@ const handleSelectStatusCategory = async (e:SelectChangeEvent) => {
           rowCount={rowCount}
           slots={{ noRowsOverlay: NoRowsOverlay }}
           paginationMode="server"
-          paginationModel={{
-            page: page,
-            pageSize: pageSize,
-          }}
-          onPaginationModelChange={(model) => {
-            setPage(model.page);
-            setPageSize(model.pageSize);
-          }}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
           pageSizeOptions={[10, 20, 50, 100]}
         />
-      
         </Box>
-
       </Paper>
-
     </Box>
   )
 }

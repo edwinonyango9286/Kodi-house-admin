@@ -1,5 +1,5 @@
-import { Box, Divider, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { Box, Divider, IconButton, InputAdornment, Menu, MenuItem, Paper, Select, TextField, Typography, type SelectChangeEvent } from '@mui/material';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg";
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg";
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg";
@@ -14,6 +14,8 @@ import deleteIconGrey from "../assets/logos and Icons-20230907T172301Z-001/logos
 import type { Landlord } from '../interfaces/interfaces';
 import { useReactToPrint } from "react-to-print";
 import React from 'react';
+import { useDebounce } from '../hooks/useDebounce';
+import CustomExportMenu from '../components/common/CustomExportMenu';
 
 // Create a new component for the printable content
 const PrintableComponent = React.forwardRef<HTMLDivElement, { landlords: Landlord[] }>(({ landlords }, ref) => {
@@ -67,23 +69,59 @@ const Landlords = () => {
     documentTitle: 'Landlords List',
   });
 
-  const listAllLandlords = async () => {
+  const [paginationModel,setPaginationModel] = useState({ page:0, pageSize:10 });
+  const [landlordCount,setLandlordsCount] = useState(0);
+  const [searchQuery,setSearchQuery] = useState("");
+  const [sortOption,setSortOption] = useState("-createdAt");
+  const debouncedSearchQuery =useDebounce(searchQuery,500);
+
+  const listAllLandlords = useCallback(async () => {
     try {
       setLoadingLandlords(true);
-      const response = await listLandlords();
+      const params: Record<string, string | number> = {
+        page:paginationModel.page + 1,
+        limit:paginationModel.pageSize,
+        sort:sortOption,
+        role:"Landlord"
+      }
+      if(debouncedSearchQuery){
+        params.search = debouncedSearchQuery.trim();
+      }
+      const response = await listLandlords(params);
       if (response.status === 200) {
         setLandlords(response.data.data);
+        setLandlordsCount(response.data.totalCount);
       }
     } catch (error) {
       console.log(error);
     } finally {
       setLoadingLandlords(false);
     }
-  };
+  },[paginationModel, debouncedSearchQuery, sortOption])
 
   useEffect(() => {
     listAllLandlords();
-  }, []);
+  }, [listAllLandlords]);
+
+
+  const handleRefresh =()=>{
+    setSearchQuery("");
+    setSortOption("-createdAt");
+    setPaginationModel({ page:0, pageSize:10})
+  }
+
+  const handleSortChange =(e:SelectChangeEvent) =>{
+    setSortOption(e.target.value as string);
+    setPaginationModel({ ...paginationModel, page:0});
+  }
+
+
+  const sortOptions = [
+    {value:"-createdAt", label:"Newest"},
+    {value:"createdAt", label:"Oldest"},
+  ]
+
+
 
   const landlordColumns: GridColDef[] = [
     { field: "name", headerName: "Name", flex: 1 },
@@ -112,26 +150,63 @@ const Landlords = () => {
     status: landlord.status
   }));
 
+  const [anchorElPageSizeMenu,setAnchorElPageSizeMenu] = useState<null | HTMLElement>(null);
+  const openPageSizeMenu = Boolean(anchorElPageSizeMenu);
+
+  const handleOpenPageSizeMenu = ( event:React.MouseEvent<HTMLButtonElement>)=>{
+  setAnchorElPageSizeMenu(event.currentTarget)
+  }
+
+  const handleClosePageSizeMenu = ()=>{
+  setAnchorElPageSizeMenu(null);
+  }
+
+const handlePageSizeSelection = (size:number) =>{
+  setPaginationModel({ page:0, pageSize:size})
+  handleClosePageSizeMenu();
+}
+
   return (
     <Box sx={{ width: "100%" }}>
       <Paper elevation={0} sx={{ borderRadius: "4px", display: "flex", flexDirection: "column", gap: "20px", padding: "24px", width: "100%", backgroundColor: "#fff", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)" }}>
         <Typography sx={{ fontSize: "18px", fontWeight: "600", textAlign: "start", color: "#2C2E3E" }}>Landlords Overview</Typography>
-
         <Divider sx={{ borderWidth: "1px", width: "100%", backgroundColor: "#DDDFE1" }} />
         <Box sx={{ width: "100%", display: "flex", justifyContent: "space-between" }}>
+          <Box sx={{ display:"flex", gap:"20px"}}>
           <Box sx={{ cursor: "pointer", height: "42px", alignItems: "center", padding: "8px", width: "100px", borderRadius: "8px", border: "1px solid #D1D5DB", display: "flex", justifyContent: "space-between" }}>
-            <Typography variant='body2' sx={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", textAlign: "start" }}>10</Typography>
-            <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            <Box onClick={handleOpenPageSizeMenu} component={"button"} sx={{ border:"none", backgroundColor:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"4px"}}>
+              <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>{paginationModel.pageSize}</Typography>
+              <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            </Box>
+            <Menu id="basic-menu" anchorEl={anchorElPageSizeMenu} open={openPageSizeMenu} onClose={handleClosePageSizeMenu} MenuListProps={{ 'aria-labelledby': 'basic-button'}} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
+              {[10, 20, 50, 100].map((size) => (
+                <MenuItem key={size} onClick={() => handlePageSizeSelection(size)}>
+                  {size}
+                </MenuItem>
+              ))}
+            </Menu>
             <Divider orientation='vertical' sx={{ height: "42px", backgroundColor: "#9CA3AF", borderWidth: "1px" }} />
-            <img onClick={listAllLandlords} src={refreshIcon} alt="refreshIcon" />
+            <img onClick={handleRefresh} style={{ cursor:"pointer"}} src={refreshIcon} alt="refreshIcon" />
+          </Box>
+          <CustomExportMenu/>
           </Box>
           <Box sx={{ display: "flex", gap: "20px" }}>
-            <TextField placeholder='Search' sx={{ width: "190px" }} InputProps={{ startAdornment: (<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{ width: "20px", height: "20px" }} /></InputAdornment>), sx: { width: "200px", height: "42px" } }} />
-            <Box sx={{ height: "42px", width: "100px", borderRadius: "8px", border: "1px solid #D1D5DB", display: "flex", alignItems: "center", justifyContent: "space-between", paddingX: "10px" }}>
-              <Typography sx={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", textAlign: "start" }}>Newest</Typography>
-              <img src={filterIcon} alt="filterIcon" style={{ width: "20px", height: "20px" }} />
+            <TextField onChange={(e)=>setSearchQuery(e.target.value)} placeholder='Search by name,email, phone number....' sx={{ width: "190px" }} InputProps={{ startAdornment: (<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{ width: "20px", height: "20px" }} /></InputAdornment>), sx: { width: "200px", height: "42px" } }} />
+             <Box sx={{ height: "42px", width: "140px", borderRadius: "8px", border: "1px solid #D1D5DB", display: "flex", alignItems: "center", justifyContent: "space-between", paddingX: "10px" }}>
+              <Select
+                value={sortOption}
+                onChange={handleSortChange}
+                variant="standard"
+                disableUnderline
+                sx={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", border: "none", width: "100%" }}
+              >
+                {sortOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                ))}
+              </Select>
+              <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
             </Box>
-            <Box sx={{ borderRadius: "8px", border: "1px solid #D1D5DB", height: "42px", width: "50px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Box sx={{ cursor:"pointer", borderRadius: "8px", border: "1px solid #D1D5DB", height: "42px", width: "50px", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <img src={deleteIcon} alt="deleteIcon" style={{ height: "24px", width: "24px" }} />
             </Box>
             <Box onClick={handlePrint} sx={{ borderRadius: "8px", border: "1px solid #D1D5DB", height: "42px", width: "50px",display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", "&:hover": { backgroundColor: "#f5f5f5" }}}>
@@ -140,11 +215,11 @@ const Landlords = () => {
           </Box>
         </Box>
 
-        <div style={{ display: "none" }}>
+        <Box style={{ display: "none" }}>
           <PrintableComponent ref={componentRef} landlords={landlords} />
-        </div>
-        <Box sx={{ width: "100%", height: "500px", marginTop: "20px" }}>
-          <DataGrid  loading={loadingLandlords} sx={{ width: "100%" }} columns={landlordColumns} rows={landlordRows} pageSizeOptions={[10, 20, 50, 100]}/>
+        </Box>
+        <Box sx={{ width: "100%", height: "500px" }}>
+          <DataGrid rowCount={landlordCount}  paginationMode='server' paginationModel={paginationModel} onPaginationModelChange={setPaginationModel} loading={loadingLandlords} sx={{ width: "100%" }} columns={landlordColumns} rows={landlordRows} pageSizeOptions={[10, 20, 50, 100]}/>
         </Box>
       </Paper>
     </Box>

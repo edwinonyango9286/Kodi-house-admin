@@ -19,6 +19,7 @@ import { listRoles } from '../components/services/roleService'
 import { dateFormatter } from '../utils/dateFormatter'
 import type { AxiosError } from 'axios'
 import { useDebounce } from '../hooks/useDebounce'
+import CustomExportMenu from '../components/common/CustomExportMenu'
 
 const Users = () => {
   interface User {
@@ -70,8 +71,8 @@ const Users = () => {
         sort: sortOption
       }
 
-      if (debouncedSearchQuery.trim()) {
-      params.search = debouncedSearchQuery.trim();
+      if (debouncedSearchQuery) {
+        params.search = debouncedSearchQuery.trim();
       }
 
       const response =  await listSystemUsers(params)
@@ -226,7 +227,8 @@ const handleSortChange = (e: SelectChangeEvent) => {
 
         <Divider sx={{ borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1"}}/>
         <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
-
+         
+          <Box sx={{ display:"flex", gap:"20px"}}>
           <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
              <Box onClick={handleOpenPageSizeMenu} component={"button"} sx={{ border:"none", backgroundColor:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"4px"}}>
               <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>{paginationModel.pageSize}</Typography>
@@ -243,6 +245,8 @@ const handleSortChange = (e: SelectChangeEvent) => {
             <Box onClick={handleRefresh} sx={{ cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <img src={refreshIcon} alt="refreshIcon" />
             </Box>
+          </Box>
+          <CustomExportMenu/>
           </Box>
           <Box sx={{ display:"flex", gap:"20px"}}>
             <TextField value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} placeholder='Search users by name,email,phone number....' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
@@ -269,7 +273,7 @@ const handleSortChange = (e: SelectChangeEvent) => {
           </Box>
         </Box>
 
-        <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
+        <Box sx={{width:"100%", height:"500px"}}>
           <DataGrid sx={{ width:"100%"}} rowCount={usersCount} loading={fetchingUsers} columns={usersColumns} rows={usersRows} paginationMode='server' paginationModel={paginationModel} onPaginationModelChange={setPaginationModel} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
