@@ -2,7 +2,7 @@ import { config } from "../../utils/config"
 import { newRequest } from "../../utils/newRequest"
 
 
-export const listProperties = async (params) => {
+export const listProperties = async (params?: Record<string, string | number | undefined>) => {
   try {
     const requestConfig = {...config, params: params || {} };
     const response = await newRequest.get(`properties/properties`, requestConfig);
@@ -17,7 +17,7 @@ export const listProperties = async (params) => {
 
 export const listVacantProperties  = async()=>{
     try {
-        const response = await newRequest.get(`properties/properties?currentStatus=Vacant`, config)
+        const response = await newRequest.get(`properties/properties?currentStatus=Vacant&page=1&limit=10`, config)
         return response
     } catch (error) {
        console.log(error) 
@@ -29,7 +29,7 @@ export const listVacantProperties  = async()=>{
 
 export const listOccuppiedProperties = async ()=>{
     try {
-        const response = await newRequest.get(`properties/properties?currentStatus=Occupied`, config)
+        const response = await newRequest.get(`properties/properties?currentStatus=Occupied&page=1&limit=10`, config)
         return response
     } catch (error) {
         console.log(error)

@@ -44,14 +44,21 @@ interface Transaction {
 }
 
 const [transactionsList,setTransactionsList] = useState<Transaction[]>([]);
-const [loadingTransactions,setLoadingTransactions] = useState<boolean>(false)
+const [loadingTransactions,setLoadingTransactions] = useState<boolean>(false);
+const [transactionsCount,setTransactionsCount] = useState(0);
+const [paginationModel,setPaginationModel] = useState({ page:0, pageSize:10})
 
 const listAllTransactions = async ()=>{
   setLoadingTransactions(true);
   try {
-    const response = await listTransactions()
+    const response = await listTransactions({
+      page:paginationModel.page +1,
+      pageSize:paginationModel.pageSize
+    })
     if(response.status === 200){
       setTransactionsList(response.data.data)
+      setTransactionsCount(response.data.totalCount);
+      console.log(response.data.totalCount, "totalTransactionsCount");
     }
   } catch (error) {
     console.log(error)
@@ -62,7 +69,7 @@ const listAllTransactions = async ()=>{
 
 useEffect(()=>{
   listAllTransactions();
-},[])
+},[paginationModel])
 
 
 const transactionsRows = transactionsList.map((transaction)=>({
@@ -110,13 +117,12 @@ const transactionsRows = transactionsList.map((transaction)=>({
 ];
 
 const [fetchingLandlords,setFetchingLandlords] = useState<boolean>(false)
-
 const listAllLandlords = useCallback(async () => {
   try {
     setFetchingLandlords(true)
   const response = await listLandlords()
   if(response.status === 200 ){
-    setLandlordsCount(response.data.data.length)
+    setLandlordsCount(response.data.totalCount)
     const landlordsData= response.data.data;
     const mostRecentLandlord = landlordsData.slice(0,5);
     setLatestLandlordList(mostRecentLandlord);
@@ -135,15 +141,13 @@ listAllLandlords()
 
 console.log(latestlandlordList,"list of latest landlords")
 
-
 const [fetchingTenants,setFetchingTenants] = useState<boolean>(false)
-
 const listAllTenants = useCallback( async() => {
   try {
     setFetchingTenants(true)
     const response = await listTenants();
     if(response.status === 200){
-      setTenantsCount(response.data.data.length)
+      setTenantsCount(response.data.totalCount)
     }
   } catch (error) {
     console.log(error)
@@ -157,14 +161,13 @@ useEffect(()=>{
 },[listAllTenants])
 
 // list all properties  
-   const  [fetchingProperties,setFetchingProperties] = useState<boolean>(false)
-
+const  [fetchingProperties,setFetchingProperties] = useState<boolean>(false)
 const listAllProperties = useCallback (async()=>{
   try {
     setFetchingProperties(true)
     const response = await listProperties();
     if(response.status === 200){
-      setPropertiesCount(response.data.data.length)
+      setPropertiesCount(response.data.totalCount)
     }
   } catch (error) {
     console.log(error)
@@ -196,8 +199,6 @@ const listAllUnits = useCallback(async ()=>{
 useEffect(()=>{
 listAllUnits()
 },[listAllUnits])
-
-
 
 
   return (
@@ -293,11 +294,11 @@ listAllUnits()
               <Box sx={{display:"flex", justifyContent:"end", gap:"8px", width:"50%"}}>
                 <Box  onClick={()=>setSelectedTimePeriod("Weekly")} sx={{ cursor:"pointer", width:"72px", justifyContent:"center", display:"flex", flexDirection:"column", gap:"2px"}}>
                   <Typography sx={{ alignSelf:"center", color: selectedTimePeriod === "Weekly" ? "#2563EB" :"#4B5563",  fontSize:"14px", fontWeight:"600"}}>Weekly</Typography>
-                 { selectedTimePeriod === "Weekly" && <Divider sx={{borderWidth:"2px", borderRadius:"4px", width:"px", backgroundColor:"#2563EB" }}/>}
+                 { selectedTimePeriod === "Weekly" && <Divider sx={{borderWidth:"2px", borderRadius:"4px",  backgroundColor:"#2563EB" }}/>}
                 </Box>
                 <Box onClick={()=>setSelectedTimePeriod("Monthly")} sx={{ cursor:"pointer", width:"72px", justifyContent:"center", display:"flex", flexDirection:"column", gap:"2px"}}>
                   <Typography sx={{ alignSelf:"center", color: selectedTimePeriod === "Monthly" ? "#2563EB" :"#4B5563",  fontSize:"14px", fontWeight:"600"}}>Monthly</Typography>
-                  { selectedTimePeriod === "Monthly" && <Divider sx={{borderWidth:"2px", borderRadius:"4px", width:"px", backgroundColor:"#2563EB" }}/>}
+                  { selectedTimePeriod === "Monthly" && <Divider sx={{borderWidth:"2px", borderRadius:"4px", backgroundColor:"#2563EB" }}/>}
                 </Box>
                 <IconButton sx={{ }}>
                   <img src={dotVerticalIcon} alt="dotVerticalIcon" style={{ width:"25px", height:"25px"}} />
@@ -330,24 +331,16 @@ listAllUnits()
 
           </Box>
          </Paper>
-{/* 
-          "properties": [
-                {
-                    "_id": "687b83eb8cacbd0ac44eaa41",
-                    "name": "Kilimani Houses"
-                },
-                {
-                    "_id": "687b84488cacbd0ac44eaa6d",
-                    "name": "Kilimani Flats"
-                }
-            ], */}
+
 
          <Box sx={{ display:"flex", gap:"20px", width:"100%",  }}>
           <Paper elevation={0} sx={{ display:"flex" , flexDirection:"column", gap:"16px", padding:"24px", width:"50%",height:"400px", backgroundColor:"#fff", boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.10)" }}>
             <Typography sx={{ textAlign:"start", fontSize:"20px", fontWeight:"600", color:"#111827"}}>Latest Landlords</Typography>
             <Box sx={{ display:"flex", flexDirection:"column", gap:"10px"}}>
-              {latestlandlordList.map((landlord)=>( 
-              <Box key={landlord._id} sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
+              {latestlandlordList.map((landlord, index)=>( 
+              <Box key={index} sx={{ gap:"10px", width:"100%", display:"flex", flexDirection:"column"}}>
+               <Divider sx={{ borderWidth:"1px", color:"#E5E7EB", display: index === 0 ? "none":""}} />
+              <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
               <Box sx={{ display:"flex", gap:"10px", width:"50%"}}>
                 <Avatar src={landlord?.avatar?.secure_url}/>
                 <Box sx={{ display:"flex", flexDirection:"column"}}>
@@ -358,6 +351,7 @@ listAllUnits()
               <Box sx={{ width:"50%" }}>
                 <Typography variant='body2' sx={{ textAlign:"end", fontSize:"16px", fontWeight:"600"}}>{landlord?.properties[0]?.name}</Typography>
               </Box>
+            </Box>
             </Box>
           ))}
            
@@ -403,7 +397,7 @@ listAllUnits()
           <Typography sx={{fontWeight:"600", fontSize:"20px", color:"#111827", textAlign:"start"}}>Transactions</Typography>
           <Typography sx={{fontWeight:"400", fontSize:"14px", color:"##6B7280", textAlign:"start"}}>This is a list of latest transactions.</Typography>
           <Box sx={{ width:"100%", marginTop:"20px"}}>
-             <DataGrid sx={{ width:"100%", height:"476px"}} loading={loadingTransactions}  columns={transactionsColumns} rows={transactionsRows} pageSizeOptions={[10,20,50,100]} />
+             <DataGrid sx={{ width:"100%", height:"476px"}} paginationMode='server' paginationModel={paginationModel} onPaginationModelChange={setPaginationModel} rowCount={transactionsCount} loading={loadingTransactions}  columns={transactionsColumns} rows={transactionsRows} pageSizeOptions={[10,20,50,100]} />
           </Box>
         </Box>
       </Paper>

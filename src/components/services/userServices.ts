@@ -47,7 +47,7 @@ export const getUserProfile =  async () =>{
 // list users type landlord 
  export const listLandlords =  async () => {
   try {
-    const response = await newRequest.get(`user/list-users?role=Landlord`,config)
+    const response = await newRequest.get(`user/list-users?role=Landlord&page=1&limit=10`,config)
     return response;
   } catch (error) {
     console.log(error)
@@ -59,7 +59,7 @@ export const getUserProfile =  async () =>{
 
 export const listTenants =  async () =>{
   try {
-    const response = await newRequest.get(`user/list-users?role=Tenant`, config);
+    const response = await newRequest.get(`user/list-users?role=Tenant&page=1&limit=10`, config);
     return response
   } catch (error) {
     console.log(error)
@@ -67,12 +67,13 @@ export const listTenants =  async () =>{
   }
 }
 
-export const listSystemUsers =  async () => {
+export const listSystemUsers = async (params?: Record<string, string | number>) => {
   try {
-    const response = await newRequest.get(`/user/list-system-users`,config);
-    return response
+    const queryString = params ? '?' + new URLSearchParams(params as Record<string, string>).toString() : '';
+    const response = await newRequest.get(`/user/list-system-users${queryString}`, config);
+    return response;
   } catch (error) {
-    console.log(error)
-    throw error
+    console.log(error);
+    throw error;
   }
-}
+};

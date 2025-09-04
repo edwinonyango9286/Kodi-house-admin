@@ -1,4 +1,4 @@
-import { Box, Button, Divider, FormControl, FormLabel, IconButton, InputAdornment, MenuItem, Modal, Paper, Select, TextField, Typography, useTheme, type SelectChangeEvent } from '@mui/material'
+import { Box, Button, Divider, FormControl, FormLabel, IconButton, InputAdornment, Menu, MenuItem, Modal, Paper, Select, TextField, Typography, useTheme, type SelectChangeEvent } from '@mui/material'
 import React, { useCallback, useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
@@ -18,6 +18,7 @@ import { showErrorToast, showInfoToast } from '../utils/toast'
 import { listRoles } from '../components/services/roleService'
 import { dateFormatter } from '../utils/dateFormatter'
 import type { AxiosError } from 'axios'
+import { useDebounce } from '../hooks/useDebounce'
 
 const Users = () => {
   interface User {
@@ -52,24 +53,42 @@ const Users = () => {
     setOpenAddUserModal(false);
     setUserFormData({ firstName:"", lastName:"", status:"", role:"", email:"", description:"", phoneNumber:""}) 
   }
+  const [usersCount,setUsersCount] =  useState(0);
+  const [paginationModel,setPaginationModel] = useState({ page:0, pageSize:10});
+  const [searchQuery,setSearchQuery] = useState("");
+  const [sortOption,setSortOption] = useState("-createdAt");
+  const debouncedSearchQuery = useDebounce(searchQuery,500);
+  
 
-  const listAllUser = async () => { 
+  const listAllUser =  useCallback(async () => { 
     setFetchingUser(true)
     try {
-      const response =  await listSystemUsers()
+
+      const params: Record<string, string | number > = {
+        page:paginationModel.page +1,
+        limit:paginationModel.pageSize,
+        sort: sortOption
+      }
+
+      if (debouncedSearchQuery.trim()) {
+      params.search = debouncedSearchQuery.trim();
+      }
+
+      const response =  await listSystemUsers(params)
       if(response.status === 200){
         setUsersList(response.data.data)
+        setUsersCount(response.data.totalCount)
       }
     } catch (error) {
       console.log(error)
     }finally{
       setFetchingUser(false)
     }
-  }
+  },[paginationModel, debouncedSearchQuery, sortOption])
 
   useEffect(()=>{
   listAllUser()
-  },[])
+  },[listAllUser])
 
   const handleCreateUser = async (e:React.FormEvent<HTMLFormElement>) =>{
     e.preventDefault();
@@ -108,8 +127,6 @@ const Users = () => {
     console.log(userFormData.role,"userRole")
   }
 
-  
-
   const usersColumns:GridColDef[] = [
     {field:"name",headerName:"Name", flex:1},
     {field:"email", headerName:"Email", flex:1},
@@ -141,8 +158,6 @@ const Users = () => {
     createdBy:user?.createdBy?.userName
   }))
 
-
-
   // list user roles 
   interface Role{
     _id:string,
@@ -151,7 +166,6 @@ const Users = () => {
   }
 
   const [assignableRoles,setAssignableRoles] = useState<Role[]>([])
-  
   const listAllRoles = useCallback( async ()=>{
     try {
       const response = await listRoles();
@@ -170,6 +184,40 @@ listAllRoles()
 },[listAllRoles])
 
 
+const sortOptions = [
+  { value: '-createdAt', label: 'Newest' },
+  { value: 'createdAt', label: 'Oldest' },
+]
+
+
+const handleSortChange = (e: SelectChangeEvent) => {
+    setSortOption(e.target.value as string)
+    setPaginationModel({ ...paginationModel, page: 0 }) 
+  }
+
+  const handleRefresh = () => {
+    setSearchQuery('');
+    setSortOption('-createdAt');
+    setPaginationModel({ page: 0, pageSize: 10 });
+  };
+
+
+    const [anchorElPageSizeMenu,setAnchorElPageSizeMenu] = useState<null | HTMLElement>(null);
+    const openPageSizeMenu = Boolean(anchorElPageSizeMenu);
+
+   const handleOpenPageSizeMenu = ( event:React.MouseEvent<HTMLButtonElement>)=>{
+    setAnchorElPageSizeMenu(event.currentTarget)
+   }
+  
+   const handleClosePageSizeMenu = ()=>{
+    setAnchorElPageSizeMenu(null);
+   }
+
+  const handlePageSizeSelection = (size:number) =>{
+    setPaginationModel({ page:0, pageSize:size})
+    handleClosePageSizeMenu();
+  }
+
   return (
      <Box sx={{width:"100%",}}>
       <Paper elevation={0} sx={{ borderRadius:"4px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", width:"100#", backgroundColor:"#fff", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)"}}>
@@ -180,17 +228,38 @@ listAllRoles()
         <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
 
           <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
-            <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>
-            <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+             <Box onClick={handleOpenPageSizeMenu} component={"button"} sx={{ border:"none", backgroundColor:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"4px"}}>
+              <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>{paginationModel.pageSize}</Typography>
+              <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            </Box>
+              <Menu id="basic-menu" anchorEl={anchorElPageSizeMenu} open={openPageSizeMenu} onClose={handleClosePageSizeMenu} MenuListProps={{ 'aria-labelledby': 'basic-button'}} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
+                  {[10, 20, 50, 100].map((size) => (
+                    <MenuItem key={size} onClick={() => handlePageSizeSelection(size)}>
+                      {size}
+                    </MenuItem>
+                  ))}
+              </Menu>
             <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
-            <img src={refreshIcon} alt="refreshIcon" />
+            <Box onClick={handleRefresh} sx={{ cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <img src={refreshIcon} alt="refreshIcon" />
+            </Box>
           </Box>
           <Box sx={{ display:"flex", gap:"20px"}}>
-            <TextField placeholder='Search' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
-             <Box sx={{ height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
-               <Typography sx={{ color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
-               <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
-             </Box>
+            <TextField value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} placeholder='Search users by name,email,phone number....' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
+             <Box sx={{ height: "42px", width: "140px", borderRadius: "8px", border: "1px solid #D1D5DB", display: "flex", alignItems: "center", justifyContent: "space-between", paddingX: "10px" }}>
+              <Select
+                value={sortOption}
+                onChange={handleSortChange}
+                variant="standard"
+                disableUnderline
+                sx={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", border: "none", width: "100%" }}
+              >
+                {sortOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                ))}
+              </Select>
+              <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
+            </Box>
              <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
               <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
              </Box>
@@ -201,7 +270,7 @@ listAllRoles()
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid sx={{ width:"100%"}} loading={fetchingUsers} columns={usersColumns} rows={usersRows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid sx={{ width:"100%"}} rowCount={usersCount} loading={fetchingUsers} columns={usersColumns} rows={usersRows} paginationMode='server' paginationModel={paginationModel} onPaginationModelChange={setPaginationModel} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
        {/* add user modal */}
@@ -269,15 +338,11 @@ listAllRoles()
                             <TextField type="text"  multiline rows={4} maxRows={4} name="description" value={userFormData.description} onChange={handleAddUserChange} fullWidth variant="outlined" sx={{ width:"100%", borderRadius:"8px"}}/>
                           </FormControl>
                       </Box>
-        
                       <Button type='submit' loading={isSubmiting} variant='contained' disabled={!userFormData.firstName || !userFormData.lastName || !userFormData.description || !userFormData.email || !userFormData.phoneNumber || !userFormData.role || !userFormData.status || isSubmiting } sx={{backgroundColor:"#2563EB",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Submit</Button>
                  </form>
-        
                 </Box>
               </Modal>
-
       </Paper>
-
     </Box>
   )
 }
