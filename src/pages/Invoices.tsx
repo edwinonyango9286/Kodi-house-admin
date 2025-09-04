@@ -192,10 +192,10 @@ useEffect(()=>{
               <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
             </Box>
              <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
-              <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
+              <img src={deleteIcon}  alt="deleteIcon" style={{ cursor:"pointer", height:"24px", width:"24px"}} />
              </Box>
              <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
-              <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
+              <img src={printerIcon} alt="printerIcon" style={{ cursor:"pointer", height:"24px", width:"24px"}} />
              </Box>
           </Box>
         </Box>

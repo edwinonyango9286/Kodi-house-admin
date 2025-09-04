@@ -48,7 +48,7 @@ const [loadingTransactions,setLoadingTransactions] = useState<boolean>(false);
 const [transactionsCount,setTransactionsCount] = useState(0);
 const [paginationModel,setPaginationModel] = useState({ page:0, pageSize:10})
 
-const listAllTransactions = async ()=>{
+const listAllTransactions = useCallback(async ()=>{
   setLoadingTransactions(true);
   try {
     const response = await listTransactions({
@@ -65,11 +65,11 @@ const listAllTransactions = async ()=>{
   }finally{
     setLoadingTransactions(false)
   }
-}
+},[paginationModel])
 
 useEffect(()=>{
   listAllTransactions();
-},[paginationModel])
+},[listAllTransactions])
 
 
 const transactionsRows = transactionsList.map((transaction)=>({
@@ -119,8 +119,11 @@ const transactionsRows = transactionsList.map((transaction)=>({
 const [fetchingLandlords,setFetchingLandlords] = useState<boolean>(false)
 const listAllLandlords = useCallback(async () => {
   try {
-    setFetchingLandlords(true)
-  const response = await listLandlords()
+  setFetchingLandlords(true)
+  const params:Record<string, string> ={
+    role:"Landlord"
+  }
+  const response = await listLandlords(params)
   if(response.status === 200 ){
     setLandlordsCount(response.data.totalCount)
     const landlordsData= response.data.data;
