@@ -18,7 +18,9 @@ import Landlords from './pages/Landlords'
 import Properties from './pages/Properties'
 import {ToastContainer} from  "react-toastify"
 import { PrivateRoutes } from './utils/PrivateRoutes'
+import { PublicRoutes } from "./utils/PublicRoutes"
 import ErrorBoundary from './components/common/ErrorBoundary'
+
 
 const nodeInvironment = import.meta.env.VITE_NODE_ENV 
 if(nodeInvironment === "production"){
@@ -33,15 +35,17 @@ function App() {
          toastStyle={{ textAlign:"left", fontWeight:"400", fontSize:"14px", width:"auto", height:'auto'}}/>    
         <ErrorBoundary>
           <Routes>
-          <Route path="*" element={<PageNotFound/>}/>
-          <Route path='/' element={ <SignIn/>  } /> 
+            <Route element={<PublicRoutes/>}>
+              <Route path="*" element={<PageNotFound/>}/>
+              <Route path='/' element={<SignIn/>} /> 
+              <Route path='/forgot-password' element={<ForgotPassword/>}/>
+              <Route path='/reset-password/:token' element={<ResetPassword/>}/>
+              <Route path='/email-verification' element={ <EmailVerification/> }/>
+              <Route path='/code-verification' element={ <CodeVerification/>}/>
+            </Route>
           {/* <Route path='/create-account' element={<CreateAccount/>}/> */}
-          <Route path='/forgot-password' element={<ForgotPassword/> }/>
-          <Route path='/reset-password/:token' element={<ResetPassword/>}/>
-          <Route path='/email-verification' element={<EmailVerification/> }/>
-          <Route path='/code-verification' element={<CodeVerification/>}/>
-          
           <Route path='/dashboard' element={<PrivateRoutes><DashboardLayout/></PrivateRoutes> }>
+          <Route path="*" element={<PageNotFound/>}/>
           <Route index element={<Dashboard/>}/> 
           <Route path='user-profile' element={<Profile/>}/>
           <Route path='payments' element={<Payments/>} />
