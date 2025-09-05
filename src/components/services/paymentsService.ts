@@ -10,5 +10,5 @@ import { newRequest } from "../../utils/newRequest"
        console.log(error) 
        throw error
     }
-
 }
+

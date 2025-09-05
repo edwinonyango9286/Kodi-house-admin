@@ -26,7 +26,6 @@ const Payments = () => {
   }
 
   const [paymentsList,setPaymentsList] = useState<Payments[]>([])
-
   const listAllPayments = useCallback( async()=>{
     try {
       const response = await listPayments()
@@ -36,8 +35,7 @@ const Payments = () => {
     } catch (error) {
       console.log(error)
     }
-  },
-  [])
+  },[])
 
  useEffect(()=>{
   listAllPayments()
