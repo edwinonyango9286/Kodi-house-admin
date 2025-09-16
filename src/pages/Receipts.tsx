@@ -1,5 +1,5 @@
-import { Box, Divider, FormControl, FormLabel, InputAdornment, MenuItem, Paper, Select, TextField, Typography, type SelectChangeEvent } from '@mui/material'
-import React, { useCallback, useEffect, useState } from 'react'
+import { Box, Divider, FormControl, FormLabel, InputAdornment, Menu, MenuItem, Paper, Select, TextField, Typography, type SelectChangeEvent } from '@mui/material'
+import { useCallback, useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
@@ -9,19 +9,18 @@ import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos an
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import type { Receipts } from '../interfaces/interfaces'
 import { listReceipts } from '../components/services/receiptServices'
+import { useDebounce } from '../hooks/useDebounce'
+import CustomExportMenu from '../components/common/CustomExportMenu'
 
 const Receipts = () => {
-
-  const [seletedReceiptCategory,setSelectedReceiptCategory]  = React.useState("All");
-  const handleSelectReceiptChange = (e:SelectChangeEvent) => {
-    setSelectedReceiptCategory(e.target.value as string)
-  }
+  const [seletedReceiptCategory,setSelectedReceiptCategory]  = useState("all");
+  console.log(seletedReceiptCategory,"selectedreceiptcategoryhere.......")
 
   const receiptStatus = [
-    {id:1, name:"All" },
-    {id:2 , name:"Paid"},
-    {id:2 , name:"Overdue"},
-    {id:2 , name:"Partially paid"}
+    {value:"all", label:"All" },
+    {value:"Paid" , label:"Paid"},
+    {value:"Overdue" , label:"Overdue"},
+    {value:"Partially paid" , label:"Partially paid"}
   ]
 
   const receiptColums:GridColDef[]  = [
@@ -36,30 +35,84 @@ const Receipts = () => {
   ]
 
   const [receiptList,setReceiptList] = useState<Receipts[]>([]);
-  const [loadingReceipts,setLoadingReceipts] = useState<boolean>(false)
+  const [loadingReceipts,setLoadingReceipts] = useState<boolean>(false);
+  const [receiptsCount,setReceiptsCount] = useState(0);
+  const [paginationModel,setPaginationModel] = useState({ page:0, pageSize:10});
+
 
   const receiptRows = receiptList.map((receipt)=>({
     id:receipt._id
   }))
 
+  const [sortOption,setSortOption] = useState("-createdAt");
+  const sortOptions  = [
+    {value:"-createdAt",label:"Newest"},
+    {value:"createdAt", label:"Oldest"}
+  ]
+
+  const handleSortChange  =(e:SelectChangeEvent) =>{
+    setSortOption(e.target.value as string);
+    setPaginationModel({ ...paginationModel, page:0});
+  }
+
+  const [searchQuery,setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery,500);
+
 
   const listAllReceipts = useCallback(async()=>{
     try {
-      setLoadingReceipts(true)
-      const response = await listReceipts();
+       setLoadingReceipts(true)
+      const params:Record<string,string|number> = {
+        page:paginationModel.page+1,
+        limit:paginationModel.pageSize,
+        sort:sortOption
+      }
+
+      if(debouncedSearchQuery){
+        params.search = debouncedSearchQuery.trim();
+      }
+
+      if(seletedReceiptCategory && seletedReceiptCategory !=="all"){
+        params.status = seletedReceiptCategory
+      }
+      const response = await listReceipts(params);
       if(response.status===200){
-        setReceiptList(response.data.data)
+        setReceiptList(response.data.data);
+        setReceiptsCount(response.data.totalCount);
       }
     } catch (error) {
       console.log(error)
     }finally{
       setLoadingReceipts(false)
     }
-  },[])
+  },[paginationModel,sortOption, debouncedSearchQuery, seletedReceiptCategory]);
 
   useEffect(()=>{
    listAllReceipts()
   },[listAllReceipts])
+
+  const handleRefresh =() =>{
+    setSearchQuery("");
+    setSortOption("-createdAt");
+    setPaginationModel({ page:0, pageSize:10})
+  }
+
+
+   const [anchorElPageSizeMenu,setAnchorElPageSizeMenu] = useState<null | HTMLElement>(null);
+    const openPageSizeMenu = Boolean(anchorElPageSizeMenu);
+  
+      const handleOpenPageSizeMenu = ( event:React.MouseEvent<HTMLButtonElement>)=>{
+      setAnchorElPageSizeMenu(event.currentTarget)
+      }
+    
+      const handleClosePageSizeMenu = ()=>{
+      setAnchorElPageSizeMenu(null);
+      }
+  
+    const handlePageSizeSelection = (size:number) =>{
+      setPaginationModel({ page:0, pageSize:size})
+      handleClosePageSizeMenu();
+    }
 
 
 
@@ -72,8 +125,8 @@ const Receipts = () => {
              <Box sx={{ marginY:"4px", width:"100%",display:"flex" , gap:"8px"}}>
                   <FormControl fullWidth sx={{ display:"flex", flexDirection:"column", gap:"8px", width:"24%"}}>
                      <FormLabel  htmlFor="status" sx={{ fontWeight:"500", fontSize:"14px", textAlign:"start", color:"#1F2937" }}>Status</FormLabel>
-                     <Select id='payment-status-select' value={seletedReceiptCategory} onChange={handleSelectReceiptChange} sx={{height:"42px", borderRadius:"8px", width:"100%"}}>
-                       {receiptStatus.map((status)=>(<MenuItem key={status.id} value={status.name}>{status.name}</MenuItem>))}
+                     <Select id='payment-status-select' value={seletedReceiptCategory} onChange={(e)=>setSelectedReceiptCategory(e.target.value)} sx={{height:"42px", borderRadius:"8px", width:"100%"}}>
+                       {receiptStatus.map((status, index)=>(<MenuItem key={index} value={status.value}>{status.label}</MenuItem>))}
                      </Select>
                   </FormControl>
               </Box>
@@ -81,34 +134,51 @@ const Receipts = () => {
 
         <Box sx={{ width:"100%", display:"flex", justifyContent:"space-between"}}>
          <Box sx={{ display:"flex", gap:"20px"}}>
-          <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
-            <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>10</Typography>
-            <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+       <Box sx={{height:"42px", alignItems:"center", padding:"8px", width:"100px", borderRadius:"8px", border:"1px solid #D1D5DB", display:"flex", justifyContent:"space-between"}}>
+             <Box onClick={handleOpenPageSizeMenu} component={"button"} sx={{ border:"none", backgroundColor:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"4px"}}>
+              <Typography variant='body2' sx={{ color:"#4B5563",fontSize:"14px", fontWeight:"500", textAlign:"start"}}>{paginationModel.pageSize}</Typography>
+              <img src={dropdownGreyIcon} alt="dropdownGreyIcon" />
+            </Box>
+             <Menu id="basic-menu" anchorEl={anchorElPageSizeMenu} open={openPageSizeMenu} onClose={handleClosePageSizeMenu} MenuListProps={{ 'aria-labelledby': 'basic-button'}} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
+                {[10, 20, 50, 100].map((size) => (
+                  <MenuItem key={size} onClick={() => handlePageSizeSelection(size)}>
+                    {size}
+                  </MenuItem>
+                ))}
+            </Menu>
             <Divider orientation='vertical' sx={{height:"42px", backgroundColor:"#9CA3AF",borderWidth:"1px"}}/>
-            <img src={refreshIcon} alt="refreshIcon" />
+            <img onClick={handleRefresh}  style={{ cursor:"pointer",}} src={refreshIcon} alt="refreshIcon" />
           </Box>
-          <Box sx={{ padding:"10px" ,border:"1px solid #D1D5DB", width:"100px", height:"42px", borderRadius:"8px"}}>
-            <Typography variant='body2' sx={{fontSize:"14px",fontWeight:"500",textAlign:"center",color:"#4B5563"}}>Export</Typography>
-          </Box>
+            <CustomExportMenu/>
           </Box>
 
           <Box sx={{ display:"flex", gap:"20px"}}>
-            <TextField placeholder='Search' sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
-             <Box sx={{ height:"42px", width:"100px", borderRadius:"8px",border:"1px solid #D1D5DB", display:"flex", alignItems:"center", justifyContent:"space-between",paddingX:"10px"}}>
-               <Typography sx={{ color:"#4B5563", fontSize:"14px", fontWeight:"500", textAlign:"start"}}>Newest</Typography>
-               <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
-             </Box>
-             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+            <TextField placeholder='Search' onChange={(e)=>setSearchQuery(e.target.value)} sx={{ width:"190px"}} InputProps={{ startAdornment:(<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{width:"20px", height:"20px"}} /></InputAdornment>),sx:{width:"200px", height:"42px"} }}/>
+              <Box sx={{ height: "42px", width: "140px", borderRadius: "8px", border: "1px solid #D1D5DB", display: "flex", alignItems: "center", justifyContent: "space-between", paddingX: "10px" }}>
+              <Select
+                value={sortOption}
+                onChange={handleSortChange}
+                variant="standard"
+                disableUnderline
+                sx={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", border: "none", width: "100%" }}
+              >
+                {sortOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                ))}
+              </Select>
+              <img src={filterIcon} alt="filterIcon" style={{width:"20px", height:"20px"}} />
+            </Box>
+             <Box sx={{ cursor:"pointer", borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
               <img src={deleteIcon} alt="deleteIcon" style={{ height:"24px", width:"24px"}} />
              </Box>
-             <Box sx={{ borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
-              <img src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
+             <Box  sx={{cursor:"pointer", borderRadius:"8px", border:"1px solid #D1D5DB", height:"42px", width:"50px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <img  src={printerIcon} alt="printerIcon" style={{ height:"24px", width:"24px"}} />
              </Box>
           </Box>
         </Box>
 
         <Box sx={{width:"100%", height:"500px", marginTop:"20px"}}>
-          <DataGrid  loading={loadingReceipts} sx={{ width:"100%"}} columns={receiptColums} rows={receiptRows} pageSizeOptions={[10,20,50,100]}/>
+          <DataGrid rowCount={receiptsCount} paginationModel={paginationModel}  onPaginationModelChange={setPaginationModel} loading={loadingReceipts} sx={{ width:"100%"}} columns={receiptColums} rows={receiptRows} pageSizeOptions={[10,20,50,100]}/>
         </Box>
 
       </Paper>
