@@ -1,4 +1,4 @@
-export const dateFormatter = (date: Date) => {
+export const dateFormatter = (date: string) => {
   try {
     if (date) {
       const dateObj = new Date(date);

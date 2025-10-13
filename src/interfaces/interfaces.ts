@@ -5,6 +5,44 @@ export interface CreateAccountPayload {
   termsAndConditionsAccepted: boolean;
 }
 
+export interface Transaction {
+  _id?:string;
+  transactionDate: string;
+  transactionName:string;
+  amount: string;
+  status: 'pending' | 'completed' | 'failed' | 'refunded'; 
+  transactionId: string;
+  currency?: string;
+  description?: string;
+  transactionBy:{
+    userName:string;
+  }
+}
+
+ export interface AppBarProps {
+  open?:boolean
+  toggleDrawer?:()=>void
+  handleLogout:()=>Promise<void>
+  loggingOut : boolean
+}
+export interface DrawerProps  {
+  open: boolean;
+  toggleDrawer?: () => void;
+  children?: React.ReactNode;
+  navItems?: DrawerItem[];
+  handleLogout : ()=>Promise<void>
+  loggingOut:boolean
+};
+
+ export interface DrawerItem {
+  id:string;
+  text: React.ReactElement;
+  icon?: React.ReactNode;
+  path?: string;
+  children?: DrawerItem[];
+  divider?: boolean;
+};
+
 export interface VerifyCodePayload {
   activationToken: string;
   activationCode: string;
@@ -58,7 +96,6 @@ export interface UpdateUserInfoPayload {
   idNumber: string;
   address: string;
 }
-
 
 export interface CreatePropertyCategoryPayload {
   name: string;
@@ -130,12 +167,6 @@ export interface Landlord {
   phoneNumber?: string;
 }
 
-
-
-
-
-
-
 export interface Invoice {
   _id: string;
   createdBy: {
@@ -162,8 +193,8 @@ export interface Invoice {
 }
 
 export interface RenameRolePayload {
-   roleId:string
-   name: string;
+  roleId: string;
+  name: string;
 }
 
 export interface Role {
@@ -231,10 +262,23 @@ export interface PropertyCategory {
   createdAt: Date;
 }
 
-
-
 export interface Permission {
-  _id:string,
-  permissionName:string,
-  status:string,
- }
+  _id: string;
+  permissionName: string;
+  status: string;
+}
+
+export interface User {
+  _id: string;
+  avatar: {
+    secure_url: string;
+    public_id: string;
+  };
+  userName: string;
+  email: string;
+  role: {
+    _id: string;
+    name: string;
+  };
+  status: string;
+}

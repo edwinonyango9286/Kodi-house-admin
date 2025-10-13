@@ -1,4 +1,4 @@
-import { Box, Typography, Paper ,Avatar, Divider, IconButton} from '@mui/material';
+import { Box, Typography, Paper ,Avatar, Divider, IconButton, useTheme, useMediaQuery} from '@mui/material';
 import dotsVerticalIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dots vertical icon.svg"
 import arrowUpIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/arrow up icon.svg"
 import chatIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/chat Icon.svg"
@@ -18,35 +18,22 @@ import { dateFormatter } from '../utils/dateFormatter';
 import { listTransactions } from '../components/services/transactionServices';
 import  CircularProgress from "@mui/material/CircularProgress";
 import type { User } from '../interfaces/users';
+import type { Transaction } from '../interfaces/interfaces';
 
 
 const Dashboard = () => {
-  const [selectedTimePeriod, setSelectedTimePeriod] = useState("Weekly")
-  const [latestlandlordList,setLatestLandlordList] = useState<User[]>([])
-  const [landlordsCount,setLandlordsCount] = useState(0)
-  const [tenantsCount,setTenantsCount] = useState(0);
-  const [propertiesCount,setPropertiesCount] = useState(0)
-  const [unitsCount,setUnitsCount] = useState(0)
-
-  // transactions
-interface Transaction {
-  _id:string;
-  transactionDate: Date;
-  transactionName:string;
-  amount: string;
-  status: 'pending' | 'completed' | 'failed' | 'refunded'; 
-  transactionId: string;
-  currency?: string;
-  description?: string;
-  transactionBy:{
-    userName:string;
-  }
-}
-
+const [selectedTimePeriod, setSelectedTimePeriod] = useState("Weekly")
+const [latestlandlordList,setLatestLandlordList] = useState<User[]>([])
+const [landlordsCount,setLandlordsCount] = useState(0)
+const [tenantsCount,setTenantsCount] = useState(0);
+const [propertiesCount,setPropertiesCount] = useState(0)
+const [unitsCount,setUnitsCount] = useState(0)
 const [transactionsList,setTransactionsList] = useState<Transaction[]>([]);
 const [loadingTransactions,setLoadingTransactions] = useState<boolean>(false);
 const [transactionsCount,setTransactionsCount] = useState(0);
 const [paginationModel,setPaginationModel] = useState({ page:0, pageSize:10})
+// const theme = useTheme();
+// const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
 const listAllTransactions = useCallback(async ()=>{
   setLoadingTransactions(true);
@@ -83,12 +70,12 @@ const transactionsRows = transactionsList.map((transaction)=>({
 }))
 
   const transactionsColumns: GridColDef<Transaction>[] =[
-    { field: 'transactionName', headerName: 'Transaction Name', flex:1 },
-    { field: 'transactionId', headerName: 'Transaction Id', flex:1 },
-    { field: 'transactionDate',headerName: 'Date', flex:1,},
-    { field: 'amount', headerName: 'Amount', flex:1 },
-    { field: 'transactionBy', headerName: 'Transaction By', flex:1 },
-    { field: 'status', headerName: 'Status', flex:1 , renderCell:(params) =>(<Typography sx={{ paddingY:"4px", display:"flex",alignItems:"center", justifyContent:"center", borderRadius:"16px", marginTop:"10px", width:"100px", color: params.value === "completed" ? "#027A48" : params.value === "pending" ? "#2563EB" : params.value === "failed" ? "#B42318": params.value === "refunded" ? "#344054" : "", textAlign:"center",  backgroundColor: params.value === "completed" ? "#ECFDF3": params.value ==="pending" ? "#EFF6FF" : params.value === "failed" ? "#FEF3F2" : params.value === "refunded" ? "#F2F4F7" :"" }}>{params.value}</Typography>) },
+    { field: 'transactionName', headerName: 'Transaction Name', minWidth:160,flex:1 },
+    { field: 'transactionId', headerName: 'Transaction Id', minWidth:160, flex:1 },
+    { field: 'transactionDate',headerName: 'Date', minWidth:160, flex:1,},
+    { field: 'amount', headerName: 'Amount', minWidth:100, flex:1 },
+    { field: 'transactionBy', headerName: 'Transaction By', minWidth:160, flex:1 },
+    { field: 'status', headerName: 'Status', minWidth:100, flex:1 , renderCell:(params) =>(<Typography sx={{ paddingY:"4px", display:"flex",alignItems:"center", justifyContent:"center", borderRadius:"16px", marginTop:"10px", width:"100px", color: params.value === "completed" ? "#027A48" : params.value === "pending" ? "#2563EB" : params.value === "failed" ? "#B42318": params.value === "refunded" ? "#344054" : "", textAlign:"center",  backgroundColor: params.value === "completed" ? "#ECFDF3": params.value ==="pending" ? "#EFF6FF" : params.value === "failed" ? "#FEF3F2" : params.value === "refunded" ? "#F2F4F7" :"" }}>{params.value}</Typography>) },
   ]  
 
     const salesData = [
