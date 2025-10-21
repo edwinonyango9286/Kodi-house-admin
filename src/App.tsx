@@ -20,16 +20,37 @@ import {ToastContainer} from  "react-toastify"
 import { PrivateRoutes } from './utils/PrivateRoutes'
 import { PublicRoutes } from "./utils/PublicRoutes"
 import ErrorBoundary from './components/common/ErrorBoundary'
-
+import {QueryClientProvider, QueryClient, keepPreviousData } from "@tanstack/react-query"
 
 const nodeInvironment = import.meta.env.VITE_NODE_ENV 
 if(nodeInvironment === "production"){
   console.log = function () {}
 }
 
+const queryClient = new QueryClient({
+  defaultOptions:{
+    queries:{
+      staleTime:5*60*1000,
+      placeholderData:keepPreviousData,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus:false,
+      refetchOnMount:true,
+      refetchOnReconnect:true,
+      refetchInterval:false,
+      retry:3,
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations :{
+      retry:2,
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    }
+  }
+})
+
 function App() {
   return (
     <>
+   <QueryClientProvider client={queryClient}>
     <Router>
         <ToastContainer position="top-right" autoClose={5000} hideProgressBar={true} newestOnTop={false} closeOnClick  rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored"
          toastStyle={{ textAlign:"left", fontWeight:"400", fontSize:"14px", width:"auto", height:'auto'}}/>    
@@ -59,6 +80,7 @@ function App() {
         </Routes>
         </ErrorBoundary>
     </Router>
+    </QueryClientProvider>
     </>
   )
 }

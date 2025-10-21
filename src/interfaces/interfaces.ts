@@ -6,42 +6,42 @@ export interface CreateAccountPayload {
 }
 
 export interface Transaction {
-  _id?:string;
+  _id?: string;
   transactionDate: string;
-  transactionName:string;
+  transactionName: string;
   amount: string;
-  status: 'pending' | 'completed' | 'failed' | 'refunded'; 
+  status: "pending" | "completed" | "failed" | "refunded";
   transactionId: string;
   currency?: string;
   description?: string;
-  transactionBy:{
-    userName:string;
-  }
+  transactionBy: {
+    userName: string;
+  };
 }
 
- export interface AppBarProps {
-  open?:boolean
-  toggleDrawer?:()=>void
-  handleLogout:()=>Promise<void>
-  loggingOut : boolean
+export interface AppBarProps {
+  open?: boolean;
+  toggleDrawer?: () => void;
+  handleLogout: () => Promise<void>;
+  loggingOut: boolean;
 }
-export interface DrawerProps  {
+export interface DrawerProps {
   open: boolean;
   toggleDrawer?: () => void;
   children?: React.ReactNode;
   navItems?: DrawerItem[];
-  handleLogout : ()=>Promise<void>
-  loggingOut:boolean
-};
+  handleLogout: () => Promise<void>;
+  loggingOut: boolean;
+}
 
- export interface DrawerItem {
-  id:string;
+export interface DrawerItem {
+  id: string;
   text: React.ReactElement;
   icon?: React.ReactNode;
   path?: string;
   children?: DrawerItem[];
   divider?: boolean;
-};
+}
 
 export interface VerifyCodePayload {
   activationToken: string;
@@ -281,4 +281,54 @@ export interface User {
     name: string;
   };
   status: string;
+}
+
+export interface features {
+  swimmingPool: boolean;
+  airConditioning: boolean;
+  internet: boolean;
+  terrace: boolean;
+  coffeePot: boolean;
+  towels: boolean;
+  radio: boolean;
+  balcony: boolean;
+  roofTerrace: boolean;
+  grill: boolean;
+  computer: boolean;
+  gym: boolean;
+  tvCable: boolean;
+  parquet: boolean;
+  oven: boolean;
+}
+
+export interface Image {
+  secure_url: string;
+  public_id: string;
+  asset_id: string;
+  _id: string;
+}
+export interface Property {
+  features: features;
+  _id: string;
+  createdBy: User;
+  updatedAt: string;
+  type: string;
+  category: string;
+  currentOccupant: string;
+  name: string;
+  users: User[];
+  occupiedUnits: number;
+  vacantUnits: number;
+  rent: number;
+  briefDescription: string;
+  googleMap: string;
+  images: Image[];
+  numberOfBedRooms: number;
+  numberOfBathRooms: number;
+  location: string;
+  currentStatus: string;
+  isDeleted: string;
+  deletedAt: string | null;
+  videos: [];
+  createdAt: string;
 }

@@ -1,6 +1,5 @@
 import axios from "axios";
 import type { AxiosInstance, AxiosRequestConfig } from "axios";
-
 const base_url:string = import.meta.env.VITE_BASE_URL
 
 interface CustomAxiosConfig extends AxiosRequestConfig {

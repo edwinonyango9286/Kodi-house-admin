@@ -12,13 +12,13 @@ import dotVerticalIcon from "../assets/logos and Icons-20230907T172301Z-001/logo
 import {DataGrid} from "@mui/x-data-grid"
 import type {GridColDef,} from "@mui/x-data-grid"
 import { listLandlords, listTenants } from '../components/services/userServices';
-import { listProperties } from '../components/services/propertyService';
 import  { listUnits } from '../components/services/unitsService';
 import { dateFormatter } from '../utils/dateFormatter';
 import { listTransactions } from '../components/services/transactionServices';
 import  CircularProgress from "@mui/material/CircularProgress";
 import type { User } from '../interfaces/users';
 import type { Transaction } from '../interfaces/interfaces';
+import { useGetProperties } from '../hooks/useProperties';
 
 
 const Dashboard = () => {
@@ -26,7 +26,6 @@ const [selectedTimePeriod, setSelectedTimePeriod] = useState("Weekly")
 const [latestlandlordList,setLatestLandlordList] = useState<User[]>([])
 const [landlordsCount,setLandlordsCount] = useState(0)
 const [tenantsCount,setTenantsCount] = useState(0);
-const [propertiesCount,setPropertiesCount] = useState(0)
 const [unitsCount,setUnitsCount] = useState(0)
 const [transactionsList,setTransactionsList] = useState<Transaction[]>([]);
 const [loadingTransactions,setLoadingTransactions] = useState<boolean>(false);
@@ -150,28 +149,10 @@ useEffect(()=>{
   listAllTenants()
 },[listAllTenants])
 
-// list all properties  
-const  [fetchingProperties,setFetchingProperties] = useState<boolean>(false)
-const listAllProperties = useCallback (async()=>{
-  try {
-    setFetchingProperties(true)
-    const response = await listProperties();
-    if(response.status === 200){
-      setPropertiesCount(response.data.totalCount)
-    }
-  } catch (error) {
-    console.log(error)
-  }finally{
-    setFetchingProperties(false)
-  }
-},[])
-
-useEffect(()=>{
- listAllProperties()
-},[listAllProperties])
+const {data,isLoading:fetchingProperties} = useGetProperties();
+const propertiesCount = data?.data?.totalCount
 
 const [fetchingUnits,setFetchingUnits] = useState<boolean>(false);
-
 const listAllUnits = useCallback(async ()=>{
   try {
     setFetchingUnits(true)

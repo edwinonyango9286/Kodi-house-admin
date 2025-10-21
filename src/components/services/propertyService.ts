@@ -26,7 +26,6 @@ export const listVacantProperties  = async()=>{
 }
 
 // list occupied properties 
-
 export const listOccuppiedProperties = async ()=>{
     try {
         const response = await newRequest.get(`properties/properties?currentStatus=Occupied&page=1&limit=10`, config)

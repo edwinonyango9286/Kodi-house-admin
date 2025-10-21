@@ -83,7 +83,7 @@ const AppBar = ({ open, toggleDrawer, handleLogout , loggingOut} : AppBarProps) 
 
           <Box onClick={handleOpenUserProfile} sx={{ cursor:"pointer", display:"flex", alignItems:"center", gap:"4px" }}>
               <Avatar src={userData?.avatar?.secure_url} alt='userImage' sx={{ width:"34px", height:"34px"}} />
-              {!isMobile || isTablet && <Typography sx={{fontSize:"16px", fontWeight:"400", color:"#374151" }}>{userData?.userName}</Typography> } 
+              {!isMobile && !isTablet && <Typography sx={{fontSize:"16px", fontWeight:"400", color:"#374151" }}>{userData?.userName}</Typography> } 
               <img src={dropdownIcon} alt="dropdownIcon" />
           </Box>
 
