@@ -1,5 +1,5 @@
 import { Box, Button, CircularProgress, Divider, IconButton, InputAdornment, Menu, MenuItem, Modal, Paper, Select, TextField, Typography, useTheme, type SelectChangeEvent } from '@mui/material'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import dropdownGreyIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/dropdown Icon grey.svg"
 import refreshIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/refresh icon.svg"
 import searchIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/search icon.svg"
@@ -7,7 +7,6 @@ import filterIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and
 import deleteIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/delete Icon.svg"
 import printerIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/printer icon.svg"
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
-import { deleteProperty, listOccuppiedProperties, listProperties, listVacantProperties, restoreProperty } from '../components/services/propertyService'
 import { listUnits } from '../components/services/unitsService'
 import editIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/edit icon.svg"
 import deleteIconGrey from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/deleted Icon grey.svg"
@@ -21,14 +20,10 @@ import cancelIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and
 import warningIcon from "../assets/logos and Icons-20230907T172301Z-001/logos and Icons/warning icon.svg"
 import CustomExportMenu from '../components/common/CustomExportMenu'
 import { useDebounce } from '../hooks/useDebounce'
+import { useDeleteProperty, useFetchOccupiedProperties, useFetchVacantProperties, useGetProperties, useRestoreProperty } from '../hooks/useProperties'
 
 const Properties = () => {
-
-  const [propertiesList,setPropertiesList] = useState<Property[]>([])
-  const [propertiesCount,setPropertiesCount] = useState(0);
-  const [loadingProperties,setLoadingProperties]  = useState(false)
   const [unitsCount,setUnitsCount] = useState(0);
-
   const [propertActionAnchorEl, setPropertActionAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const openPropertyActionMenu = Boolean(propertActionAnchorEl);
@@ -87,7 +82,22 @@ const Properties = () => {
   )}
   ]
 
-  const propertyRows = propertiesList.map((property)=>({
+  const [searchQuery,setSearchQuery] = useState("");
+  const [sortOption,setSortOption] = useState("-createdAt");
+  const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
+  const debouncedSearchQuery = useDebounce(searchQuery,500);
+
+  const queryParams = {
+      page:paginationModel.page,
+      limit:paginationModel.pageSize,
+      sort: sortOption,
+      ...(debouncedSearchQuery.trim() && { search: debouncedSearchQuery.trim() })
+  }
+
+  const {data, isLoading:loadingProperties}  = useGetProperties(queryParams);
+  const propertiesList =data?.data?.data || [];
+  const propertiesCount = data?.data?.totalCount;
+  const propertyRows = propertiesList.map((property:Property)=>({
     id:property?._id,
     propertyName:property?.name,
     propertyType:property?.type || "N/A",
@@ -99,42 +109,6 @@ const Properties = () => {
     propertyImage: property?.images?.[0]?.secure_url,
     isDeleted:property?.isDeleted
   }))
-
-  const [searchQuery,setSearchQuery] = useState("");
-  const [sortOption,setSortOption] = useState("-createdAt");
-  const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
-  const debouncedSearchQuery = useDebounce(searchQuery,500);
-
-const listAllProperties = useCallback(async () => {
-  try {
-    setLoadingProperties(true);
-    const params: Record<string, string | number > = {
-      page:paginationModel.page,
-      limit:paginationModel.pageSize,
-      sort: sortOption,
-    };
-
-    if(debouncedSearchQuery.trim()){
-      params.search = debouncedSearchQuery.trim();
-    }
-    const response = await listProperties(params);
-    if (response.status === 200) {
-      setPropertiesList(response.data.data);
-      setPropertiesCount(response.data.totalCount);
-    }
-  } catch (error) {
-    console.error('Error fetching properties:', error);
-    setPropertiesList([]);
-    setPropertiesCount(0);
-  } finally {
-    setLoadingProperties(false);
-  }
-}, [paginationModel, debouncedSearchQuery, sortOption]);
-
-useEffect(()=>{
-  listAllProperties()
-},[listAllProperties])
-
 
 const sortOptions = [
   {value:"-createdAt", label:"Newest"},
@@ -157,7 +131,6 @@ const handleRefresh =()=>{
   setPaginationModel({ page:0, pageSize:10})
 }
 
-
   const [fetchingAllUnits,setFetchingAllUnits]  = useState(false)
   const listAllUnits =  async ()=>{
     try {
@@ -177,93 +150,36 @@ const handleRefresh =()=>{
    listAllUnits()
   },[])
   
-  const [occuppiedProperties,setOccuppiedProperties] = useState([]);
-  const [occupiedPropertiesCount,setOccupiedPropertiesCount] = useState(0)
-  const [fetchingOccupiedProperties,setFetchingOccupiedProperties] = useState(false)
-
-  const listAllOccuppiedProperties = async() => {
-    try {
-      setFetchingOccupiedProperties(true)
-      const response = await listOccuppiedProperties()
-      if(response.status === 200){
-        setOccuppiedProperties(response.data.data);
-        setOccupiedPropertiesCount(response.data.totalCount);
-      }
-    } catch (error) {
-      console.log(error)
-    }finally{
-      setFetchingOccupiedProperties(false);
-    }
-  }
-
-  useEffect(()=>{
-    listAllOccuppiedProperties();
-  },[])
-
-  const [vaccantProperties,setVaccantProperties] = useState([]);
-  const [vacantPropertiesCount,setVacantPropertiesCount] = useState(0)
-  const [fetchingVacantProperties,setFetchingVacantProperties]  = useState(false)
-
-  const listAllVacantProperties =  async ()=>{
-    try {
-      setFetchingVacantProperties(true)
-      const response = await listVacantProperties();
-      if(response.status === 200 ){
-        setVaccantProperties(response.data.data);
-        setVacantPropertiesCount(response.data.totalCount);
-      }
-    } catch (error) {
-      console.log(error)
-    }finally{
-      setFetchingVacantProperties(false)
-    }
-  }
-
-  useEffect(()=>{
-    listAllVacantProperties()
-  },[])
-
-  
-  const [deletingProperty,setDeletingProperty]  = useState(false);
+  const {data:occupiedProperties, isLoading:loadingOccupiedProperties} = useFetchOccupiedProperties();
+  const occupiedPropertiesCount =  occupiedProperties?.data.totalCount || 0
+  const {data:vacantProperties , isLoading:loadingVacantProperties} = useFetchVacantProperties();
+  const vacantPropertiesCount = vacantProperties?.data.totalCount || 0 
   const [propertyToDeleteId,setPropertyToDeleteId]  = useState<string>("")
   const [propertyName,setPropertyName]  = useState<string>("")
-
+  const deleteMutation = useDeleteProperty();
   const handleDeleteProperty = async ()=>{
     try {
-      setDeletingProperty(true)
-      const response = await deleteProperty(propertyToDeleteId);
-      if(response.status === 200){
+        const response = await deleteMutation.mutateAsync(propertyToDeleteId);
         showInfoToast(response.data.message);
         handleCloseDeletePropertyModal();
-        listAllProperties();
-        listAllVacantProperties();
-        listAllOccuppiedProperties();
-      }
     } catch (error) {
       const err = error as AxiosError<{message?:string}>
       showErrorToast(err.response?.data.message || err.message)
-    }finally{
-      setDeletingProperty(false)
     }
   }
 
   const theme = useTheme()
   const modalStyles =  getModalStyle(theme.palette.mode)
-
   const [openDeletePropertyModal,setOpenDeletePropertyModal]  = useState(false);
-
   const handleOpneDeletePropertyModal =(property:Property)=>{
     setPropertyToDeleteId(property.id);
     setPropertyName(property.propertyName)
     setOpenDeletePropertyModal(true);
   }
-
   const handleCloseDeletePropertyModal = ()=>{
     setOpenDeletePropertyModal(false);
     setPropertyToDeleteId("")
   }
-
-
   const [anchorElPageSizeMenu,setAnchorElPageSizeMenu] = useState<null | HTMLElement>(null);
   const openPageSizeMenu = Boolean(anchorElPageSizeMenu);
 
@@ -291,22 +207,17 @@ const handleRefresh =()=>{
         { label: "Status", key: "status" },
     ]
 
+    const restoreMutation = useRestoreProperty();
     const handleRestoreProperty  = async (propertyId:string) => {
       try {
-        const response = await restoreProperty(propertyId);
-        if(response.status === 200){
-          listAllProperties();
-          listAllVacantProperties();
-          listAllOccuppiedProperties();
-          showInfoToast(response.data.message);
-        }
+        const response = await restoreMutation.mutateAsync(propertyId)
+        showInfoToast(response.data.message);
       } catch (error) {
         const err = error as AxiosError<{message?:string}>;
         showErrorToast(err.response?.data.message || err.message)
       }
     }
 
-  
   return (
     <Box sx={{width:"100%",}}>
       <Paper elevation={0} sx={{ borderRadius:"4px", display:"flex", flexDirection:"column", gap:"20px", padding:"24px", width:"100#", backgroundColor:"#fff", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)"}}>
@@ -320,19 +231,18 @@ const handleRefresh =()=>{
           <Divider orientation='vertical' sx={{ height:"80px", borderWidth:"1px", backgroundColor:"#9CA3AF"}} />
            <Box sx={{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"10px"}}>
             <Typography variant='body2' sx={{color:"#059669", fontSize:"16px", fontWeight:"400" }}>Occupied properties</Typography>
-           { fetchingOccupiedProperties ?  <CircularProgress size={20} thickness={5} sx={{ color:"#333", marginTop:"10px"}}/> : <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{occupiedPropertiesCount}</Typography> }  
+           { loadingOccupiedProperties ?  <CircularProgress size={20} thickness={5} sx={{ color:"#333", marginTop:"10px"}}/> : <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{occupiedPropertiesCount}</Typography> }  
           </Box>
           <Divider orientation='vertical' sx={{ height:"80px", borderWidth:"1px", backgroundColor:"#9CA3AF"}} />
            <Box sx={{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"10px"}}>
              <Typography variant='body2' sx={{color:"#DC2626", fontSize:"16px", fontWeight:"400" }}>Vacant properties</Typography>
-            { fetchingVacantProperties ? <CircularProgress size={20} thickness={5} sx={{ marginTop:"10px", color:"#333"}} />: <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{vacantPropertiesCount}</Typography>}
+            { loadingVacantProperties ? <CircularProgress size={20} thickness={5} sx={{ marginTop:"10px", color:"#333"}} />: <Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{vacantPropertiesCount}</Typography>}
           </Box>
             <Divider orientation='vertical' sx={{ height:"80px", borderWidth:"1px" , backgroundColor:"#9CA3AF"}} />
            <Box sx={{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"10px"}}>
             <Typography variant='body2' sx={{color:"#4B5563", fontSize:"16px", fontWeight:"400" }}>Total Units</Typography>
            {fetchingAllUnits ? <CircularProgress thickness={5} size={20} sx={{ color:"#333", marginTop:"10px" }}/> :<Typography variant='body2' sx={{ fontSize:"36px", fontWeight:"600", textAlign:"start", color:"#1F2937" }}>{unitsCount}</Typography> }  
           </Box>
-
         </Box>
 
         <Divider sx={{ borderWidth:"1px", width:"100%", backgroundColor:"#DDDFE1"}}/>
@@ -405,15 +315,14 @@ const handleRefresh =()=>{
           <Modal open={openDeletePropertyModal} onClose={handleCloseDeletePropertyModal} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
           <Box sx={modalStyles}>
             <Box sx={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"10px"}}>
+                 <Box sx={{ alignContent:"center", display:"flex", gap:"10px"}}>
                   <IconButton sx={{ width:"48px", height:"48px", backgroundColor:"#fde8ee", cursor:"pointer",}}>
                     <img style={{ }} src={warningIcon} alt="warningIcon" />
                   </IconButton>
+                   <Typography  id="modal-modal-title" sx={{ marginTop:"10px", fontSize:"18px",fontWeight:"700", color:"#1F2937" }} variant="body2">Delete {propertyName}?</Typography>
+                  </Box>
                 <IconButton onClick={handleCloseDeletePropertyModal}><img src={cancelIcon} alt="cancelIcon" style={{width:"24px", height:"24px"}} /></IconButton>
             </Box>
-            <Box sx={{ width:"100%", marginTop:"10px", marginBottom:"10px"}}>
-               <Typography id="modal-modal-title" sx={{ fontSize:"20px",fontWeight:"700", color:"#1F2937" }} variant="body2">Delete {propertyName}?</Typography>
-            </Box>
-  
             <Box style={{ width:"100%", display:"flex", flexDirection:"column", gap:"10px", alignItems:"start"}}>
                <Typography style={{fontSize:"14px" , fontWeight:"700"}}>Deleting this  property  will:</Typography>
             <Box sx={{ display:"flex", flexDirection:"column", marginTop:"-6px"}}>
@@ -422,13 +331,12 @@ const handleRefresh =()=>{
             </Box>
             <Box sx={{ display:"flex", alignSelf:"end", gap:"20px"}}>
                 <Button type='submit' onClick={()=>{handleCloseDeletePropertyModal()}}  variant='contained' sx={{ ":hover":{ boxShadow:"none"},  border:"solid 1px #ee1d52" ,boxShadow:"none", marginTop:"10px", width:"156px",  backgroundColor:"#fff",fontSize:"16px", fontWeight:"500", color:"#ee1d52"}}>Cancel</Button>
-                <Button type='submit' onClick={handleDeleteProperty} loading={deletingProperty} variant='contained' disabled={deletingProperty} sx={{ ":hover":{boxShadow:"none"}, boxShadow:"none", marginTop:"10px", width:"156px",  backgroundColor:"#111",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Delete</Button>
+                <Button type='submit' onClick={handleDeleteProperty} loading={deleteMutation.isPending} variant='contained' disabled={deleteMutation.isPending} sx={{ ":hover":{boxShadow:"none"}, boxShadow:"none", marginTop:"10px", width:"156px",  backgroundColor:"#111",fontSize:"16px", fontWeight:"500", color:"#fff"}}>Delete</Button>
             </Box>
             </Box>
           </Box>
         </Modal>
       </Paper>
-
     </Box>
   )
 }

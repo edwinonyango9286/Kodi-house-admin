@@ -17,7 +17,6 @@ import React from 'react';
 import { useDebounce } from '../hooks/useDebounce';
 import CustomExportMenu from '../components/common/CustomExportMenu';
 
-// Create a new component for the printable content
 const PrintableComponent = React.forwardRef<HTMLDivElement, { landlords: Landlord[] }>(({ landlords }, ref) => {
   return (
     <div ref={ref} style={{ padding: '20px' }}>
@@ -167,7 +166,7 @@ const handlePageSizeSelection = (size:number) =>{
 }
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ width: "100%", minHeight:"100vh", overflow:"hidden"}}>
       <Paper elevation={0} sx={{ borderRadius: "4px", display: "flex", flexDirection: "column", gap: "20px", padding: "24px", width: "100%", backgroundColor: "#fff", boxShadow: "0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)" }}>
         <Typography sx={{ fontSize: "18px", fontWeight: "600", textAlign: "start", color: "#2C2E3E" }}>Landlords Overview</Typography>
         <Divider sx={{ borderWidth: "1px", width: "100%", backgroundColor: "#DDDFE1" }} />
@@ -193,13 +192,7 @@ const handlePageSizeSelection = (size:number) =>{
           <Box sx={{ display: "flex", gap: "20px" }}>
             <TextField onChange={(e)=>setSearchQuery(e.target.value)} placeholder='Search by name,email, phone number....' sx={{ width: "190px" }} InputProps={{ startAdornment: (<InputAdornment position='start'><img src={searchIcon} alt="searchIcon" style={{ width: "20px", height: "20px" }} /></InputAdornment>), sx: { width: "200px", height: "42px" } }} />
              <Box sx={{ height: "42px", width: "140px", borderRadius: "8px", border: "1px solid #D1D5DB", display: "flex", alignItems: "center", justifyContent: "space-between", paddingX: "10px" }}>
-              <Select
-                value={sortOption}
-                onChange={handleSortChange}
-                variant="standard"
-                disableUnderline
-                sx={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", border: "none", width: "100%" }}
-              >
+              <Select value={sortOption} onChange={handleSortChange} variant="standard" disableUnderline sx={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", border: "none", width: "100%" }}>
                 {sortOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
                 ))}
